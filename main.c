@@ -52,6 +52,13 @@ function void print_board()
     printf("\n\n");
 }
 
+function void reset_board()
+{
+    for (u8 i = 0; i < board_size; ++i) {
+        board[i] = empty;
+    }
+}
+
 
 function b8 winner(s8 current_player)
 {   
@@ -95,6 +102,8 @@ void copy(s32 size, void *obj, void *target)
 
 s32 main() {
   u8 current_player = player1;
+  u8 winner_player = 0;  
+  u8 win_message_size = 220;  
 
 
   s32 screen_w = 800;
@@ -113,13 +122,15 @@ s32 main() {
     s8 position = hover_col + hover_row * row_size;
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+      winner_player = 0;
       if (board[position] == empty) {
         // Update board
         board[position] = current_player;
 
         // Winner?
         if (winner(current_player)) {
-          break;
+          winner_player = current_player;
+          reset_board();
         }
 
         // Update player
@@ -153,6 +164,13 @@ s32 main() {
 
 
     DrawText(TextFormat("Mouse: %f %f Board: %i %i", mouse.x, mouse.y, hover_col, hover_row), 20, 20, 20, BLACK);
+    DrawText(TextFormat("Mouse: %f %f Board: %i %i", mouse.x, mouse.y, hover_col, hover_row), 20, 20, 20, BLACK);
+
+
+    if (winner_player != 0) {
+      DrawText((winner_player == player1) ? "Player 1 Wins!" : "Player 2 Wins!", screen_w / 2 - win_message_size/2, screen_h / 2, 30, DARKGREEN);
+    }
+    
     EndDrawing();
   }
   CloseWindow();
