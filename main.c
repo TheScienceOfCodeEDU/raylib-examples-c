@@ -103,8 +103,10 @@ void copy(s32 size, void *obj, void *target)
 s32 main() {
   u8 current_player = player1;
   u8 winner_player = 0;  
-  u8 win_message_size = 220;  
 
+  u8 font_size = 30;
+  char *text_win_1 = "Player 1 Wins!";
+  char *text_win_2 = "Player 2 Wins!";  
 
   s32 screen_w = 800;
   s32 screen_h = 600;
@@ -122,22 +124,26 @@ s32 main() {
     s8 position = hover_col + hover_row * row_size;
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-      winner_player = 0;
-      if (board[position] == empty) {
-        // Update board
-        board[position] = current_player;
+      if (winner_player != 0) {
+        winner_player = 0;
+        reset_board();
+      } else {
+        if (board[position] == empty) {
+          // Update board
+          board[position] = current_player;
 
-        // Winner?
-        if (winner(current_player)) {
-          winner_player = current_player;
-          reset_board();
+          // Winner?
+          if (winner(current_player)) {
+            winner_player = current_player;
+          } else{
+            // Update player
+            if (current_player == player1)
+                current_player = player2;
+            else
+                current_player = player1;
+
+          }       
         }
-
-        // Update player
-        if (current_player == player1)
-            current_player = player2;
-        else
-            current_player = player1;
       }
     }
 
@@ -148,14 +154,14 @@ s32 main() {
     // Board lines
     for (s8 i = 0; i < row_size; ++i) {
       for (s8 j = 0; j < row_number; ++j) {
-        DrawRectangleLines(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, RED);
+        DrawRectangleLines(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, LIGHTGRAY);
 
         switch (board[i * row_size + j]) {
         case player1: 
-          DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, BLUE); 
+          DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, RED); 
           break;
         case player2: 
-          DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, GREEN);
+          DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, BLUE);
           break;
         }
       }
@@ -164,11 +170,13 @@ s32 main() {
 
 
     DrawText(TextFormat("Mouse: %f %f Board: %i %i", mouse.x, mouse.y, hover_col, hover_row), 20, 20, 20, BLACK);
-    DrawText(TextFormat("Mouse: %f %f Board: %i %i", mouse.x, mouse.y, hover_col, hover_row), 20, 20, 20, BLACK);
-
 
     if (winner_player != 0) {
-      DrawText((winner_player == player1) ? "Player 1 Wins!" : "Player 2 Wins!", screen_w / 2 - win_message_size/2, screen_h / 2, 30, DARKGREEN);
+      char *current_text = winner_player == 1 ? text_win_1 : text_win_2;
+      u8 text_size = MeasureText(current_text, font_size);
+
+      DrawText(current_text, screen_w / 2 - text_size / 2 - 2, screen_h / 2 + 2, font_size, BLACK);
+      DrawText(current_text, screen_w / 2 - text_size / 2, screen_h / 2, font_size, GREEN);
     }
     
     EndDrawing();
