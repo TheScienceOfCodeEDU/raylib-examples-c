@@ -38,17 +38,17 @@ u8 board[board_size] = { 0 };
 struct {
   s8 positions [slots];
   s8 index;
-} typedef player_previous_movements;
+} typedef Movements;
 
-player_previous_movements previous_movements [2] = { 0 };
+Movements previous_movements [2] = { 0 };
 
-player_previous_movements make_player_previous_movements()
+Movements make_movements()
 {
-  player_previous_movements result = { {-1,-1,-1}, 0};
+  Movements result = { {-1,-1,-1}, 0};
   return result;
 }
 
-void store_position_and_update(player_previous_movements *player, s8 new_position)
+void store_movements_and_update(Movements *player, s8 new_position)
 {  
   s8 prev_position = player->positions[player->index];
   if (prev_position != -1) {
@@ -83,8 +83,8 @@ function void reset_board()
     for (u8 i = 0; i < board_size; ++i) {
         board[i] = empty;
     }
-    previous_movements[0] = make_player_previous_movements();
-    previous_movements[1] = make_player_previous_movements();
+    previous_movements[0] = make_movements();
+    previous_movements[1] = make_movements();
 }
 
 
@@ -164,7 +164,7 @@ s32 main() {
           // Update board
           board[position] = current_player;
 
-          store_position_and_update(&previous_movements[current_player - 1], position);
+          store_movements_and_update(&previous_movements[current_player - 1], position);
 
           // Winner?
           if (winner(current_player)) {
