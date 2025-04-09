@@ -27,11 +27,37 @@ typedef s32         b32;    // boolean 32 bits
 #define board_size  9
 #define row_size    3
 #define row_number  3
+#define slots 3
 u8 board[board_size] = { 0 };
 
 #define empty   (u8)0
 #define player1 (u8)1
 #define player2 (u8)2 
+
+
+struct {
+  s8 positions [slots];
+  s8 index;
+} typedef player_previous_movements;
+
+player_previous_movements previous_movements [2] = { 0 };
+
+player_previous_movements make_player_previous_movements()
+{
+  player_previous_movements result = { {-1,-1,-1}, 0};
+  return result;
+}
+
+void store_position_and_update(player_previous_movements *player, s8 new_position)
+{  
+  s8 prev_position = player->positions[player->index];
+  if (prev_position != -1) {
+    board[prev_position] = empty;
+  }
+
+  player->positions[player->index] = new_position;
+  player->index = (player->index + 1) % slots; 
+}
 
 function void print_board()
 {
@@ -57,6 +83,8 @@ function void reset_board()
     for (u8 i = 0; i < board_size; ++i) {
         board[i] = empty;
     }
+    previous_movements[0] = make_player_previous_movements();
+    previous_movements[1] = make_player_previous_movements();
 }
 
 
@@ -100,6 +128,8 @@ void copy(s32 size, void *obj, void *target)
     }
 }
 
+
+
 s32 main() {
   u8 current_player = player1;
   u8 winner_player = 0;  
@@ -112,6 +142,8 @@ s32 main() {
   s32 screen_h = 600;
   s32 rectangle_w = screen_w / row_size;
   s32 rectangle_h = screen_h / row_number;
+
+  reset_board();
 
   InitWindow(screen_w, screen_h, "raylib basic window");
   SetTargetFPS(60);
@@ -131,6 +163,8 @@ s32 main() {
         if (board[position] == empty) {
           // Update board
           board[position] = current_player;
+
+          store_position_and_update(&previous_movements[current_player - 1], position);
 
           // Winner?
           if (winner(current_player)) {
