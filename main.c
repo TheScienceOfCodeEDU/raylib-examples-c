@@ -128,6 +128,8 @@ void copy(s32 size, void *obj, void *target)
     }
 }
 
+  
+
 
 
 s32 main() {
@@ -146,7 +148,35 @@ s32 main() {
   reset_board();
 
   InitWindow(screen_w, screen_h, "raylib basic window");
+  ////////////////////////////////////
+  InitAudioDevice();      // Initialize audio device
+
+  Sound fxButton = LoadSound("resources/buttonfx.wav");   // Load button sound
+  Texture2D button = LoadTexture("resources/button.png");
+  Sound fxButton2 = LoadSound("resources/buttonfx.wav");   // Load button sound
+  Texture2D button2 = LoadTexture("resources/button.png"); // Load button texture
+
+  // Define frame rectangle for drawing
+  float frameHeight = (float)button.height/3;
+  float frameHeight2 = (float)button2.height/3;
+  Rectangle sourceRec = { 0, 0, (float)button.width, frameHeight };
+  Rectangle sourceRec2 = { 0, 0, (float)button2.width, frameHeight };
+
+    // Define button bounds on screen
+  Rectangle btnBounds = { screen_w/2.0f - button.width/2.0f, screen_h/2.0f - button.height/3.0/2.0f, (float)button.width, frameHeight };
+  Rectangle btnBounds2 = { screen_w/2.0f - button2.width/2.0f, screen_h/2.0f - button2.height/2.0, (float)button2.width, frameHeight2 };
+
+  int btnState = 0;               // Button state: 0-NORMAL, 1-MOUSE_HOVER, 2-PRESSED
+  bool btnAction = false;
+  int btn2State = 0;               // Button state: 0-NORMAL, 1-MOUSE_HOVER, 2-PRESSED
+  bool btn2Action = false;            // Button action should be activated
+
+  Vector2 mousePoint = { 0.0f, 0.0f };
+
+  //////////////////////////////////
   SetTargetFPS(60);
+
+  
   while (!WindowShouldClose()) {
 
     Vector2 mouse = GetMousePosition();
@@ -180,6 +210,51 @@ s32 main() {
         }
       }
     }
+    ////////////////////////////////////////////////////
+
+    mousePoint = GetMousePosition();\
+    btnAction = false;
+    btn2Action = false;
+
+        // Check button state
+    if (CheckCollisionPointRec(mousePoint, btnBounds))
+    {
+      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) btnState = 2;
+      else btnState = 1;
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) btnAction = true;
+    }
+    else btnState = 0;
+
+    if (btnAction)
+    {
+      PlaySound(fxButton);
+
+            // TODO: Any desired action
+    }
+
+        // Calculate button frame rectangle to draw depending on button state
+    sourceRec.y = btnState*frameHeight;
+
+    if (CheckCollisionPointRec(mousePoint, btnBounds2))
+    {
+      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) btn2State = 2;
+      else btn2State = 1;
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) btn2Action = true;
+    }
+    else btn2State = 0;
+
+    if (btn2Action)
+    {
+      PlaySound(fxButton2);
+
+            // TODO: Any desired action
+    }
+
+        // Calculate button frame rectangle to draw depending on button state
+    sourceRec2.y = btn2State*frameHeight2;
+    //////////////////////////////////////////////////
 
 
     BeginDrawing();
@@ -212,9 +287,19 @@ s32 main() {
       DrawText(current_text, screen_w / 2 - text_size / 2 - 2, screen_h / 2 + 2, font_size, BLACK);
       DrawText(current_text, screen_w / 2 - text_size / 2, screen_h / 2, font_size, GREEN);
     }
+
+
+    DrawTextureRec(button, sourceRec, (Vector2){ btnBounds.x, btnBounds.y }, WHITE); 
+    DrawTextureRec(button2, sourceRec2, (Vector2){ btnBounds2.x, btnBounds2.y }, WHITE); 
     
     EndDrawing();
   }
+  UnloadTexture(button);  // Unload button texture
+  UnloadSound(fxButton);  // Unload sound
+  UnloadTexture(button2);  // Unload button texture
+  UnloadSound(fxButton2);  // Unload sound
+
+    CloseAudioDevice();     
   CloseWindow();
   return 0;
 }
