@@ -32,7 +32,10 @@ u8 board[board_size] = { 0 };
 
 #define empty   (u8)0
 #define player1 (u8)1
-#define player2 (u8)2 
+#define player2 (u8)2
+
+#define MENU_STATE 0
+#define GAME_STATE 1
 
 
 struct {
@@ -132,78 +135,143 @@ void copy(s32 size, void *obj, void *target)
 
 s32 main() {
   u8 current_player = player1;
-  u8 winner_player = 0;  
+  u8 winner_player = 0;
+  
+  u8 gameState = MENU_STATE;
 
   u8 font_size = 30;
   char *text_win_1 = "Player 1 Wins!";
-  char *text_win_2 = "Player 2 Wins!";  
+  char *text_win_2 = "Player 2 Wins!"; 
+  
+  char *text_title = "Tic Tac Toe";
+  char *text_start = "Start Game";
+  char *text_exit = "Exit";
 
   s32 screen_w = 800;
   s32 screen_h = 600;
   s32 rectangle_w = screen_w / row_size;
   s32 rectangle_h = screen_h / row_number;
 
+   // Define button dimensions and positions
+
+  u8 buttonWidth = 200;
+  u8 buttonHeight = 50;
+  u16 startButtonX = screen_w/2 - buttonWidth/2;
+  u16 startButtonY = screen_h/2 - 30;
+  u16 exitButtonX = screen_w/2 - buttonWidth/2;
+  u16 exitButtonY = screen_h/2 + 40;
+
+  Rectangle startButtonRect = { startButtonX, startButtonY, buttonWidth, buttonHeight };
+  Rectangle exitButtonRect = { exitButtonX, exitButtonY, buttonWidth, buttonHeight };
+
   reset_board();
 
   InitWindow(screen_w, screen_h, "raylib basic window");
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
+    Vector2 mousePoint = GetMousePosition();
 
-    Vector2 mouse = GetMousePosition();
-    s8 hover_row = mouse.y / rectangle_h;
-    s8 hover_col = mouse.x / rectangle_w;
-    
-    s8 position = hover_col + hover_row * row_size;
+    if(gameState == MENU_STATE){
+      b8 startButtonHover = CheckCollisionPointRec(mousePoint, startButtonRect);
+      b8 exitButtonHover = CheckCollisionPointRec(mousePoint, exitButtonRect);
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-      if (winner_player != 0) {
-        winner_player = 0;
+      if(startButtonHover && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
+        gameState = GAME_STATE;
         reset_board();
-      } else {
-        if (board[position] == empty) {
-          // Update board
-          board[position] = current_player;
+        current_player = player1;
+        winner_player = 0;
+      }
+      if(exitButtonHover && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
+        CloseWindow();
+        return 0;
+      }
+    }
+    else if (gameState == GAME_STATE) {
+      Vector2 mouse = GetMousePosition();
+      s8 hover_row = mouse.y / rectangle_h;
+      s8 hover_col = mouse.x / rectangle_w;
+    
+      s8 position = hover_col + hover_row * row_size;
 
-          store_movements_and_update(&previous_movements[current_player - 1], position);
+      
+      if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (winner_player != 0) {
+          winner_player = 0;
+          reset_board();
+        } else {
+          if (board[position] == empty) {
+            // Update board
+            board[position] = current_player;
 
-          // Winner?
-          if (winner(current_player)) {
-            winner_player = current_player;
-          } else{
-            // Update player
-            if (current_player == player1)
-                current_player = player2;
-            else
-                current_player = player1;
+            store_movements_and_update(&previous_movements[current_player - 1], position);
 
-          }       
+            // Winner?
+            if (winner(current_player)) {
+              winner_player = current_player;
+            } else{
+              // Update player
+              if (current_player == player1)
+                  current_player = player2;
+              else
+                  current_player = player1;
+
+            }       
+          }
         }
       }
     }
-
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    // Board lines
-    for (s8 i = 0; i < row_size; ++i) {
-      for (s8 j = 0; j < row_number; ++j) {
-        DrawRectangleLines(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, LIGHTGRAY);
+    if(gameState == MENU_STATE){
+      u8 titleWidth = MeasureText(text_title, 40);
+      DrawText(text_title, screen_w/2 - titleWidth/2, screen_h/4, 40, BLACK);
 
-        switch (board[i * row_size + j]) {
-        case player1: 
-          DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, RED); 
-          break;
-        case player2: 
-          DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, BLUE);
-          break;
+      Color startButtonColor = CheckCollisionPointRec(mousePoint, startButtonRect) ? SKYBLUE : LIGHTGRAY;
+      DrawRectangleRec(startButtonRect, startButtonColor);
+      DrawRectangleLinesEx(startButtonRect, 2, BLACK);
+
+      u8 startTextWidth = MeasureText(text_start, 20);
+      DrawText(text_start, startButtonX + buttonWidth/2 - startTextWidth/2, startButtonY + buttonHeight/2 - 10, 20, BLACK);
+
+      Color exitButtonColor = CheckCollisionPointRec(mousePoint, exitButtonRect) ? SKYBLUE : LIGHTGRAY;
+      DrawRectangleRec(exitButtonRect, exitButtonColor);
+      DrawRectangleLinesEx(exitButtonRect, 2, BLACK);
+
+      u8 exitTextWidth = MeasureText(text_exit, 20);
+      DrawText(text_exit, exitButtonX + buttonWidth/2 - exitTextWidth/2, exitButtonY + buttonHeight/2 - 10, 20, BLACK);
+    }
+    else if (gameState == GAME_STATE) {
+      Vector2 mouse = GetMousePosition();
+      s8 hover_row = mouse.y / rectangle_h;
+      s8 hover_col = mouse.x / rectangle_w;
+
+      // Board lines
+      for (s8 i = 0; i < row_size; ++i) {
+        for (s8 j = 0; j < row_number; ++j) {
+          DrawRectangleLines(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, LIGHTGRAY);
+
+          switch (board[i * row_size + j]) {
+          case player1: 
+            DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, RED); 
+            break;
+          case player2: 
+            DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, BLUE);
+            break;
+          }
         }
       }
+      DrawRectangle(hover_col * rectangle_w, hover_row * rectangle_h, rectangle_w, rectangle_h, ColorAlpha(BLACK, 0.1));
+
     }
-    DrawRectangle(hover_col * rectangle_w, hover_row * rectangle_h, rectangle_w, rectangle_h, ColorAlpha(BLACK, 0.1));
 
+    if (winner_player == 0) {
+      char *turn_text = current_player == player1 ? "Player 1's Turn (Red)" : "Player 2's Turn (Blue)";
+      u8 turnTextSize = MeasureText(turn_text, 20);
+      DrawText(turn_text, screen_w/2 - turnTextSize/2, 20, 20, BLACK);
 
-    DrawText(TextFormat("Mouse: %f %f Board: %i %i", mouse.x, mouse.y, hover_col, hover_row), 20, 20, 20, BLACK);
+    }
 
     if (winner_player != 0) {
       char *current_text = winner_player == 1 ? text_win_1 : text_win_2;
