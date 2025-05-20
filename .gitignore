@@ -1,3 +1,14 @@
-build
+bin
+tmp
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+
+.vs
+vs-project
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
