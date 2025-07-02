@@ -40,6 +40,8 @@ u8 board[board_size] = { 0 };
 #define MENU_STATE 0
 #define GAME_STATE 1
 
+#define DEBUG_CAMERA 0
+
 /* Memory */
 
 typedef struct
@@ -229,6 +231,12 @@ s32 main() {
   // Art rects
   Rectangle backgroundRect = {0, 0, 242, 118};
 
+  Camera2D camera;
+    Vector2 offset = { screen_w * 0.5f, screen_h * 0.5f };
+    camera.offset = offset;
+    camera.rotation = 0.0f;
+    camera.zoom = 4.0f;
+
 
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
@@ -256,7 +264,7 @@ s32 main() {
     
       s8 position = hover_col + hover_row * row_size;
 
-      
+      // Player input
       if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         if (winner_player != 0) {
           winner_player = 0;
@@ -284,9 +292,21 @@ s32 main() {
       }
     }
 
+    // Update camera
+    Vector2 mouse = GetMousePosition();
+    camera.zoom += GetMouseWheelMove() * 1.0f;
+    camera.offset = (Vector2){(float)screen_w / 2, (float)screen_h/ 2 };
+    camera.target = (Vector2){backgroundRect.width / 2, backgroundRect.height / 2 };
+
+    if (DEBUG_CAMERA) {
+      DrawText(TextFormat("%f", camera.zoom), 10, 10, 10, RED);
+      DrawText(TextFormat("%f %f", camera.offset.x, camera.offset.y), 10, 20, 10, RED);
+      DrawText(TextFormat("%f %f", camera.target.x, camera.target.y), 10, 30, 10, RED);
+    }
+
     BeginDrawing();
     ClearBackground(RAYWHITE);
-
+    
     if(gameState == MENU_STATE){
       u8 titleWidth = MeasureText(text_title, 40);
       DrawText(text_title, screen_w/2 - titleWidth/2, screen_h/4, 40, BLACK);
@@ -310,7 +330,9 @@ s32 main() {
       s8 hover_row = mouse.y / rectangle_h;
       s8 hover_col = mouse.x / rectangle_w;
 
+      BeginMode2D(camera);
       DrawTextureRec(artTexture, backgroundRect, Vector2Zero(), WHITE);
+      EndMode2D();
 
       // Board lines
       for (s8 i = 0; i < row_size; ++i) {
