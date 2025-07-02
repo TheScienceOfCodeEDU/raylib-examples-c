@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "raymath.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -218,6 +219,17 @@ s32 main() {
   reset_board();
 
   InitWindow(screen_w, screen_h, "raylib basic window");
+
+  Image artImage = LoadImage("art.png");
+  if (artImage.data == NULL) {
+      artImage = GenImageColor(800, 600, RED);
+  }
+  Texture artTexture = LoadTextureFromImage(artImage);
+
+  // Art rects
+  Rectangle backgroundRect = {0, 0, 242, 118};
+
+
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
     Vector2 mousePoint = GetMousePosition();
@@ -297,6 +309,8 @@ s32 main() {
       Vector2 mouse = GetMousePosition();
       s8 hover_row = mouse.y / rectangle_h;
       s8 hover_col = mouse.x / rectangle_w;
+
+      DrawTextureRec(artTexture, backgroundRect, Vector2Zero(), WHITE);
 
       // Board lines
       for (s8 i = 0; i < row_size; ++i) {

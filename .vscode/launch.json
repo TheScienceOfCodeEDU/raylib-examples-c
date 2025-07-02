@@ -5,7 +5,7 @@
       "type": "gdb",
       "request": "launch",
       "target": "${workspaceRoot}/bin/dbg-linux/run",
-      "cwd": "${workspaceRoot}/bin/dbg-linux/",
+      "cwd": "${workspaceRoot}/root/",
       "valuesFormatting": "parseText",
       "env": {
         "LD_LIBRARY_PATH": "/usr/local/lib64/:${env:LD_LIBRARY_PATH}"
@@ -18,7 +18,7 @@
       "program": "${workspaceRoot}/bin/dbg-mac/run",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${fileDirname}",
+      "cwd": "${workspaceRoot}/root/",
       "environment": [],
       "externalConsole": false,
       "MIMode": "lldb"
@@ -30,7 +30,7 @@
       "program": "${workspaceFolder}/bin/dbg-win/run.exe",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceRoot}/root/",
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
@@ -55,7 +55,7 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceRoot}/root/",
       "program": "${workspaceFolder}/bin/dbg-linux/run",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
