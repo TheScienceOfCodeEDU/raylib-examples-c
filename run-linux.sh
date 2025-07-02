@@ -1,5 +1,5 @@
 #!/bin/bash
+export ROOT_DIR=${PWD}/root
+export LD_LIBRARY_PATH=/usr/local/lib64/
 
-export LD_LIBRARY_PATH=.:LD_LIBRARY_PATH
-cd build/linux
-./main
+./bin/dbg-linux/run

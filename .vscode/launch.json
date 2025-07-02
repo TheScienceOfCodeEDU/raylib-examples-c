@@ -4,8 +4,8 @@
       "name": "Debug linux",
       "type": "gdb",
       "request": "launch",
-      "target": "${workspaceRoot}/build/linux/main",
-      "cwd": "${workspaceRoot}/build/linux/",
+      "target": "${workspaceRoot}/bin/dbg-linux/run",
+      "cwd": "${workspaceRoot}/bin/dbg-linux/",
       "valuesFormatting": "parseText",
       "env": {
         "LD_LIBRARY_PATH": "/usr/local/lib64/:${env:LD_LIBRARY_PATH}"
@@ -15,7 +15,7 @@
       "name": "Debug mac",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceRoot}/build/mac/main",
+      "program": "${workspaceRoot}/bin/dbg-mac/run",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -27,7 +27,7 @@
       "name": "Debug windows",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/win/main.exe",
+      "program": "${workspaceFolder}/bin/dbg-win/run.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
@@ -56,7 +56,7 @@
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "${workspaceFolder}",
-      "program": "${workspaceFolder}/build/linux/main",
+      "program": "${workspaceFolder}/bin/dbg-linux/run",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

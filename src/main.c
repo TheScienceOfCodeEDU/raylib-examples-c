@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/mman.h> // For mmap, munmap
 
 typedef int8_t      s8;     // From -127 to  +127
 typedef int16_t     s16;    
@@ -37,13 +39,54 @@ u8 board[board_size] = { 0 };
 #define MENU_STATE 0
 #define GAME_STATE 1
 
+/* Memory */
+
+typedef struct
+{
+	u32 Size;
+	u8 *Base;
+	u32 Used;
+} memory_arena;
+
+function void
+InitializeArena(memory_arena *Arena, u32 Size, u8 *Base)
+{
+	Arena->Size = Size;
+	Arena->Base = Base;
+	Arena->Used = 0;
+}
+
+#define PushStruct(Arena, Type) (Type *) PushSize_(Arena, sizeof(Type))
+#define PushArray(Arena, Count, Type) (Type *) PushSize_(Arena, sizeof(Type) * Count)
+void*
+PushSize_(memory_arena* Arena, u32 Size)
+{
+	// Assert
+	u8 *Base = Arena->Base + Arena->Used;
+	Arena->Used += Size;
+	return Base;
+}
+
+#define Kilobytes(Value) ((Value)*1024)
+#define Megabytes(Value) (Kilobytes(Value)*1024)
+#define Gigabytes(Value) (Megabytes(Value)*1024)
+/* End Memory */
+
+
 
 struct {
   s8 positions [slots];
   s8 index;
 } typedef Movements;
 
-Movements previous_movements [2] = { 0 };
+
+struct {
+  memory_arena arena;
+  Movements *movements;
+} typedef GameState;
+
+GameState game_state;
+//Movements previous_movements [2] = { 0 };
 
 Movements make_movements()
 {
@@ -86,8 +129,8 @@ function void reset_board()
     for (u8 i = 0; i < board_size; ++i) {
         board[i] = empty;
     }
-    previous_movements[0] = make_movements();
-    previous_movements[1] = make_movements();
+    game_state.movements[0] = make_movements();
+    game_state.movements[1] = make_movements();
 }
 
 
@@ -134,6 +177,14 @@ void copy(s32 size, void *obj, void *target)
 
 
 s32 main() {
+  
+  InitializeArena(&game_state.arena, Megabytes(1000), (u8 *)mmap(NULL, Megabytes(1000), PROT_READ | PROT_WRITE, 
+    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+
+  memset(game_state.arena.Base, 0, game_state.arena.Size); // Touch all pages
+
+  game_state.movements = PushArray(&game_state.arena, 2, Movements);
+  
   u8 current_player = player1;
   u8 winner_player = 0;
   
@@ -203,7 +254,7 @@ s32 main() {
             // Update board
             board[position] = current_player;
 
-            store_movements_and_update(&previous_movements[current_player - 1], position);
+            store_movements_and_update(&game_state.movements[current_player - 1], position);
 
             // Winner?
             if (winner(current_player)) {
@@ -286,3 +337,16 @@ s32 main() {
   CloseWindow();
   return 0;
 }
+
+
+
+/*
+stack  -->
+heap    ---> dinámico new
+
+List<int> 
+
+[ooooooooooooo      oooooooooooooooooooooo                                                              ]             
+*/
+
+
