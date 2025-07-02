@@ -230,6 +230,8 @@ s32 main() {
 
   // Art rects
   Rectangle backgroundRect = {0, 0, 242, 118};
+  Rectangle player1Rect = {0, 118, 35, 74};
+  Rectangle player2Rect = {48, 118, 39, 74};
 
   Camera2D camera;
     Vector2 offset = { screen_w * 0.5f, screen_h * 0.5f };
@@ -332,6 +334,39 @@ s32 main() {
 
       BeginMode2D(camera);
       DrawTextureRec(artTexture, backgroundRect, Vector2Zero(), WHITE);
+
+      // Manual adjs -> art.aseprite
+      const int BACKGROUND_DX = 50;
+      const int BACKGROUND_DY = 32;
+      const int BACKGROUND_START_X = 103;      
+      const int BACKGROUND_START_Y = 23 + BACKGROUND_DY / 2;
+      DrawPixel(BACKGROUND_START_X, BACKGROUND_START_Y, RED);
+      for (s8 i = 0; i < row_size; ++i) {
+        for (s8 j = 0; j < row_number; ++j) {
+          Vector2 target_World = { BACKGROUND_START_X + j * BACKGROUND_DX, BACKGROUND_START_Y + i * BACKGROUND_DY};
+          Vector2 startPlayerFigure_Local, playerFigureTarget_World;
+          
+          switch (board[i * row_size + j]) {
+          case player1:
+            startPlayerFigure_Local.x = player1Rect.width /2;
+            startPlayerFigure_Local.y = player1Rect.height + 6; // -6 Manual adj            
+
+            playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);            
+            DrawTextureRec(artTexture, player1Rect, playerFigureTarget_World, WHITE);
+            DrawPixel(playerFigureTarget_World.x, playerFigureTarget_World.y, BLUE);
+            break;
+          case player2:
+            startPlayerFigure_Local.x = player1Rect.width /2;
+            startPlayerFigure_Local.y = player1Rect.height;
+            
+
+            playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);
+            DrawTextureRec(artTexture, player2Rect, playerFigureTarget_World, WHITE);
+            break;
+          }
+        }
+      }          
+
       EndMode2D();
 
       // Board lines
@@ -341,10 +376,10 @@ s32 main() {
 
           switch (board[i * row_size + j]) {
           case player1: 
-            DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, RED); 
+            DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, ColorAlpha(RED, 0.1)); 
             break;
           case player2: 
-            DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, BLUE);
+            DrawRectangle(j * rectangle_w, i * rectangle_h, rectangle_w, rectangle_h, ColorAlpha(BLUE, 0.1));
             break;
           }
         }
