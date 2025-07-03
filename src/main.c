@@ -1,5 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
+#define RAYGUI_IMPLEMENTATION
+#include "../lib/raygui/raygui.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -43,6 +45,7 @@ u8 board[board_size] = { 0 };
 #define START_STATE GAME_STATE
 
 #define DEBUG_CAMERA 0
+#define DEBUG_COLLS  1
 
 /* Memory */
 
@@ -241,6 +244,15 @@ s32 main() {
     camera.rotation = 0.0f;
     camera.zoom = 4.0f;
 
+  const s8 COLLS = 9;
+  Rectangle board_Coll[9] = {
+    {0.f, 0.f, 30.f, 20.f},
+    {0.f, 0.f, 20.f, 20.f},
+    {0.f, 0.f, 20.f, 20.f},
+    {0.f, 0.f, 20.f, 20.f},
+    {0.f, 0.f, 20.f, 20.f},
+  };
+  s8 currentColl_Idx = 0;
 
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
@@ -330,12 +342,13 @@ s32 main() {
       DrawText(text_exit, exitButtonX + buttonWidth/2 - exitTextWidth/2, exitButtonY + buttonHeight/2 - 10, 20, BLACK);
     }
     else if (gameState == GAME_STATE) {
-      Vector2 mouse = GetMousePosition();
-      s8 hover_row = mouse.y / rectangle_h;
-      s8 hover_col = mouse.x / rectangle_w;
-
       BeginMode2D(camera);
       DrawTextureRec(artTexture, backgroundRect, Vector2Zero(), WHITE);
+
+      Vector2 mouse = GetMousePosition();
+      Vector2 mouse_World2d = GetScreenToWorld2D(mouse, camera);
+      s8 hover_row = mouse.y / rectangle_h;
+      s8 hover_col = mouse.x / rectangle_w;
 
       // Manual adjs -> art.aseprite
       const int BACKGROUND_START_X = 106;      
@@ -379,7 +392,18 @@ s32 main() {
             break;
           }
         }
-      }          
+      }
+
+      if (DEBUG_COLLS)
+      {
+        Rectangle current_Coll = board_Coll[currentColl_Idx];
+        Color dbg_coll_color = CheckCollisionPointRec(mouse_World2d, current_Coll) ? RED : GREEN;
+
+        DrawPixel(current_Coll.x, current_Coll.y, dbg_coll_color);
+        DrawPixel(current_Coll.x + current_Coll.width, current_Coll.y, dbg_coll_color);
+        DrawPixel(current_Coll.x, current_Coll.y + current_Coll.height, dbg_coll_color);
+        DrawPixel(current_Coll.x + current_Coll.width, current_Coll.y + current_Coll.height, dbg_coll_color);
+      }
 
       EndMode2D();
 
@@ -400,6 +424,22 @@ s32 main() {
       }
       DrawRectangle(hover_col * rectangle_w, hover_row * rectangle_h, rectangle_w, rectangle_h, ColorAlpha(BLACK, 0.1));
 
+
+      if (DEBUG_COLLS)
+      {
+        Rectangle current_Coll = board_Coll[currentColl_Idx];
+        const int PANEL_SCREEN_W = 100;
+        const int PANEL_SCREEN_X = screen_w - PANEL_SCREEN_W;
+        GuiPanel((Rectangle){ PANEL_SCREEN_X, 25, PANEL_SCREEN_W, 140 }, "Panel Info");
+        
+        GuiLabel((Rectangle){ PANEL_SCREEN_X, 25, PANEL_SCREEN_W, 140 }, TextFormat("x: %.2f y: %.2f", current_Coll.x, current_Coll.y));
+        GuiLabel((Rectangle){ PANEL_SCREEN_X, 25, PANEL_SCREEN_W, 160 }, TextFormat("x: %.2f y: %.2f", current_Coll.width, current_Coll.height));
+
+        if (GuiButton((Rectangle){ PANEL_SCREEN_X, 50, PANEL_SCREEN_W, 10 }, GuiIconText(ICON_ARROW_RIGHT_FILL, "Next")))
+        {
+          currentColl_Idx = (currentColl_Idx + 1) % COLLS;
+        }
+      }
     }
 
     if (winner_player == 0) {
