@@ -40,6 +40,8 @@ u8 board[board_size] = { 0 };
 #define MENU_STATE 0
 #define GAME_STATE 1
 
+#define START_STATE GAME_STATE
+
 #define DEBUG_CAMERA 0
 
 /* Memory */
@@ -130,7 +132,7 @@ function void print_board()
 function void reset_board()
 {
     for (u8 i = 0; i < board_size; ++i) {
-        board[i] = empty;
+        board[i] = 0;
     }
     game_state.movements[0] = make_movements();
     game_state.movements[1] = make_movements();
@@ -191,7 +193,7 @@ s32 main() {
   u8 current_player = player1;
   u8 winner_player = 0;
   
-  u8 gameState = MENU_STATE;
+  u8 gameState = START_STATE;
 
   u8 font_size = 30;
   char *text_win_1 = "Player 1 Wins!";
@@ -203,8 +205,8 @@ s32 main() {
 
   s32 screen_w = 800;
   s32 screen_h = 600;
-  s32 rectangle_w = screen_w / row_size;
-  s32 rectangle_h = screen_h / row_number;
+  s32 rectangle_w = screen_w * 0.1;
+  s32 rectangle_h = screen_h * 0.1;
 
    // Define button dimensions and positions
 
@@ -336,28 +338,40 @@ s32 main() {
       DrawTextureRec(artTexture, backgroundRect, Vector2Zero(), WHITE);
 
       // Manual adjs -> art.aseprite
-      const int BACKGROUND_DX = 50;
-      const int BACKGROUND_DY = 32;
-      const int BACKGROUND_START_X = 103;      
-      const int BACKGROUND_START_Y = 23 + BACKGROUND_DY / 2;
-      DrawPixel(BACKGROUND_START_X, BACKGROUND_START_Y, RED);
+      const int BACKGROUND_START_X = 106;      
+      const int BACKGROUND_START_Y = 39;
+      
+      const Vector2 player1_figures_World[9] = {
+        // Row 1
+        {BACKGROUND_START_X + 0, BACKGROUND_START_Y},
+        {BACKGROUND_START_X + 48, BACKGROUND_START_Y},
+        {BACKGROUND_START_X + 96, BACKGROUND_START_Y},
+        // Row 2
+        {BACKGROUND_START_X + 0 - 33, BACKGROUND_START_Y + 33},
+        {BACKGROUND_START_X + 48 - 33, BACKGROUND_START_Y + 33},
+        {BACKGROUND_START_X + 96 - 33, BACKGROUND_START_Y + 33},
+        // Row 3
+        {BACKGROUND_START_X + 0 - 64, BACKGROUND_START_Y + 64},
+        {BACKGROUND_START_X + 48 - 64, BACKGROUND_START_Y + 64},
+        {BACKGROUND_START_X + 96 - 64, BACKGROUND_START_Y + 64},
+      };
+
       for (s8 i = 0; i < row_size; ++i) {
         for (s8 j = 0; j < row_number; ++j) {
-          Vector2 target_World = { BACKGROUND_START_X + j * BACKGROUND_DX, BACKGROUND_START_Y + i * BACKGROUND_DY};
+          Vector2 target_World = player1_figures_World[i * row_size + j];
           Vector2 startPlayerFigure_Local, playerFigureTarget_World;
           
           switch (board[i * row_size + j]) {
           case player1:
-            startPlayerFigure_Local.x = player1Rect.width /2;
-            startPlayerFigure_Local.y = player1Rect.height + 6; // -6 Manual adj            
+            startPlayerFigure_Local.x = player1Rect.width / 2;
+            startPlayerFigure_Local.y = player1Rect.height + 4;          
 
             playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);            
             DrawTextureRec(artTexture, player1Rect, playerFigureTarget_World, WHITE);
-            DrawPixel(playerFigureTarget_World.x, playerFigureTarget_World.y, BLUE);
             break;
           case player2:
-            startPlayerFigure_Local.x = player1Rect.width /2;
-            startPlayerFigure_Local.y = player1Rect.height;
+            startPlayerFigure_Local.x = player1Rect.width /2 + 2;
+            startPlayerFigure_Local.y = player1Rect.height + 2;
             
 
             playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);
