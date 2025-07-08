@@ -41,11 +41,13 @@ u8 board[board_size] = { 0 };
 
 #define MENU_STATE 0
 #define GAME_STATE 1
+#define PLAYERS    2 // Note: This may be changed but arrays that use this define may require manual updates!
 
 #define START_STATE GAME_STATE
 
 #define DEBUG_CAMERA 0
 #define DEBUG_COLLS  0
+#define FORCE_MONITOR 1
 
 #define MAX_SNAP_DIST 5.0f
 
@@ -298,8 +300,27 @@ void DrawQuad(Quad quad, Color color) {
   DrawTriangle(quad.points[3], quad.points[2], quad.points[0], color); // Second triangle
 }
 
+void DrawPlayerFigure(Texture2D artTexture, Rectangle playerRect, Vector2 target_World, s8 occupied_by, Color color) {
+    Vector2 startPlayerFigure_Local, playerFigureTarget_World;
+
+    switch (occupied_by) {
+        case player1:
+            startPlayerFigure_Local.x = playerRect.width / 2;
+            startPlayerFigure_Local.y = playerRect.height + 4;
+            break;
+        case player2:
+            startPlayerFigure_Local.x = playerRect.width / 2 + 2;
+            startPlayerFigure_Local.y = playerRect.height + 2;
+            break;
+    }
+
+    playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);
+        DrawTextureRec(artTexture, playerRect, playerFigureTarget_World, color);
+}
+
 
 s32 main() {
+ // NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
   
   InitializeArena(&game_state.arena, Megabytes(1000), (u8 *)mmap(NULL, Megabytes(1000), PROT_READ | PROT_WRITE, 
     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
@@ -321,8 +342,8 @@ s32 main() {
   char *text_start = "Start Game";
   char *text_exit = "Exit";
 
-  s32 screen_w = 800;
-  s32 screen_h = 600;
+  s32 screen_w = 1080;
+  s32 screen_h = 720;
   s32 rectangle_w = screen_w * 0.1;
   s32 rectangle_h = screen_h * 0.1;
 
@@ -340,7 +361,12 @@ s32 main() {
 
   reset_board();
 
+  // NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
   InitWindow(screen_w, screen_h, "raylib basic window");
+
+  while (GetCurrentMonitor() != FORCE_MONITOR)
+        SetWindowMonitor(FORCE_MONITOR);
+  // ToggleFullscreen();
 
   Image artImage = LoadImage("art.png");Rectangle MoveRectangle(Rectangle rect, Vector2 start, Vector2 end);
   if (artImage.data == NULL) {
@@ -350,14 +376,15 @@ s32 main() {
 
   // Art rects
   Rectangle backgroundRect = {0, 0, 242, 118};
-  Rectangle player1Rect = {0, 118, 35, 74};
-  Rectangle player2Rect = {48, 118, 39, 74};
+  Rectangle playerArt1Rect = {0, 118, 35, 74};
+  Rectangle playerArt2Rect = {48, 118, 39, 74};
+  Rectangle playerArtRects[PLAYERS] = { playerArt1Rect, playerArt2Rect };
 
   Camera2D camera;
     Vector2 offset = { screen_w * 0.5f, screen_h * 0.5f };
     camera.offset = offset;
     camera.rotation = 0.0f;
-    camera.zoom = 4.0f;
+    camera.zoom = 3.0f;
 
   Quad board_Coll[board_size] = {
     {97.f, 10.f, 142.f, 10.f, 112.f, 41.f, 66.f, 41.f},
@@ -372,10 +399,16 @@ s32 main() {
     {79.f, 74.f, 127.f, 74.f, 97.f, 105.f, 48.f, 105.f},
     {128.f, 74.f, 174.f, 74.f, 144.f, 104.f, 98.f, 104.f},
   };
-  s8 currentColl_Idx = 0;
+  
+  s8 dbgColl_Idx = 0;
   bool movingCurrentColl = false;
   s8 movingCurrentCollCorner_Idx = -1;
-  Vector2 movingLast_World2d;
+  Vector2 movingLastMouse_World2d, movingLastMouse;
+
+  s8 current_position = -1;
+
+  bool movingCamera = false;
+  bool resetCamera = true;
 
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
@@ -400,10 +433,10 @@ s32 main() {
       Vector2 mouse = GetMousePosition();
       Vector2 mouse_World2d = GetScreenToWorld2D(mouse, camera);
 
-      s8 position = -1;
+      current_position = -1;
       for (int i = 0; i < board_size; ++i) {
         if (CheckCollisionPointPoly(mouse_World2d, board_Coll[i].points, QUAD_POINTS)) {
-          position = i;
+          current_position = i;
           break;
         }
       }
@@ -414,11 +447,11 @@ s32 main() {
           winner_player = 0;
           reset_board();
         } else {
-          if (position != -1 && board[position] == empty) {
+          if (current_position != -1 && board[current_position] == empty) {
             // Update board
-            board[position] = current_player;
+            board[current_position] = current_player;
 
-            store_movements_and_update(&game_state.movements[current_player - 1], position);
+            store_movements_and_update(&game_state.movements[current_player - 1], current_position);
 
             // Winner?
             if (winner(current_player)) {
@@ -443,7 +476,30 @@ s32 main() {
 
     camera.zoom += GetMouseWheelMove() * 1.0f;
     camera.offset = (Vector2){(float)screen_w / 2, (float)screen_h/ 2 };
-    camera.target = (Vector2){backgroundRect.width / 2, backgroundRect.height / 2 };
+
+    if (resetCamera) {
+      camera.target = (Vector2){backgroundRect.width / 2, backgroundRect.height / 2 };
+      resetCamera = false;
+    } else {
+      if (IsKeyReleased(KEY_R)) {
+        resetCamera = true;
+      }
+    }
+
+    if (movingCamera) {
+      Vector2 displacement = Vector2Subtract(movingLastMouse, mouse_World2d);
+      DrawText(TextFormat("%f\n", Vector2Length(displacement)), 10, 10, 10, RED);
+      if (Vector2Length(displacement) > 1.5f) {
+        camera.target = Vector2Add(camera.target, displacement);
+      }
+      if (IsMouseButtonReleased(MOUSE_MIDDLE_BUTTON)) {
+        movingCamera = false;
+      }
+    } else {
+      if (IsMouseButtonPressed(MOUSE_MIDDLE_BUTTON)) {
+        movingCamera = true;
+      }
+    }
 
     if (DEBUG_CAMERA) {
       DrawText(TextFormat("%f", camera.zoom), 10, 10, 10, RED);
@@ -457,19 +513,19 @@ s32 main() {
     bool collideCurrentRect = false;
     if (DEBUG_COLLS) {      
       if (movingCurrentColl) {
-        Quad *current_Coll = &board_Coll[currentColl_Idx];
+        Quad *current_Coll = &board_Coll[dbgColl_Idx];
 
         if (movingCurrentCollCorner_Idx != -1) {
-          *current_Coll = MoveQuadCorner(*current_Coll, movingCurrentCollCorner_Idx, movingLast_World2d, mouse_World2d);
+          *current_Coll = MoveQuadCorner(*current_Coll, movingCurrentCollCorner_Idx, movingLastMouse_World2d, mouse_World2d);
         } else {
-          *current_Coll = MoveQuad(*current_Coll, movingLast_World2d, mouse_World2d);
+          *current_Coll = MoveQuad(*current_Coll, movingLastMouse_World2d, mouse_World2d);
         }
         if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON)) {
           movingCurrentColl = false;          
         }
       } else {  
         
-        Quad current_Coll = board_Coll[currentColl_Idx];
+        Quad current_Coll = board_Coll[dbgColl_Idx];
         // Update moving corner idx
         movingCurrentCollCorner_Idx = GetQuadCornerIndex(current_Coll, mouse_World2d, MAX_SNAP_DIST);
         // Only, if there is no direct coll against a point
@@ -482,8 +538,11 @@ s32 main() {
           movingCurrentColl = true;
         }
       }
-      movingLast_World2d = mouse_World2d;
     }
+
+    // Last update steps
+    movingLastMouse = mouse;
+    movingLastMouse_World2d = mouse_World2d;
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
@@ -514,7 +573,7 @@ s32 main() {
       const int BACKGROUND_START_X = 106;      
       const int BACKGROUND_START_Y = 39;
       
-      const Vector2 player1_figures_World[board_size] = {
+      const Vector2 player_figures_World[board_size] = {
         // Row 1
         {BACKGROUND_START_X + 0, BACKGROUND_START_Y},
         {BACKGROUND_START_X + 48, BACKGROUND_START_Y},
@@ -528,35 +587,34 @@ s32 main() {
         {BACKGROUND_START_X + 48 - 64, BACKGROUND_START_Y + 64},
         {BACKGROUND_START_X + 96 - 64, BACKGROUND_START_Y + 64},
       };
-
+      
+      // Draw Board
       for (s8 i = 0; i < row_size; ++i) {
         for (s8 j = 0; j < row_number; ++j) {
-          Vector2 target_World = player1_figures_World[i * row_size + j];
-          Vector2 startPlayerFigure_Local, playerFigureTarget_World;
-          
-          switch (board[i * row_size + j]) {
-          case player1:
-            startPlayerFigure_Local.x = player1Rect.width / 2;
-            startPlayerFigure_Local.y = player1Rect.height + 4;          
 
-            playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);            
-            DrawTextureRec(artTexture, player1Rect, playerFigureTarget_World, WHITE);
-            break;
-          case player2:
-            startPlayerFigure_Local.x = player1Rect.width /2 + 2;
-            startPlayerFigure_Local.y = player1Rect.height + 2;
-            
-
-            playerFigureTarget_World = Vector2Subtract(target_World, startPlayerFigure_Local);
-            DrawTextureRec(artTexture, player2Rect, playerFigureTarget_World, WHITE);
-            break;
+          Vector2 target_World = player_figures_World[i * row_size + j];
+          s8 occupied_by = board[i * row_size + j];   
+          if (occupied_by != empty) {    
+            DrawPlayerFigure(artTexture, playerArtRects[occupied_by - 1], target_World, occupied_by, WHITE);
           }
         }
       }
 
+      // Draw preview if available
+      if (current_position != -1 && board[current_position] == empty)
+      {
+        DrawPlayerFigure(artTexture, playerArtRects[current_player - 1], player_figures_World[current_position], current_player, WHITE);
+      }
+
+      // Draw current player figure
+      Rectangle currentPlayer_rect = playerArtRects[current_player - 1];
+      Vector2 currentPlayer_figure_adj = { currentPlayer_rect.width / 2, currentPlayer_rect.height };
+      DrawTextureRec(artTexture, currentPlayer_rect, Vector2Subtract(mouse_World2d, currentPlayer_figure_adj), ColorAlpha(WHITE, 0.5f));
+      
+
       if (DEBUG_COLLS)
       {
-        Quad current_Coll = board_Coll[currentColl_Idx];
+        Quad current_Coll = board_Coll[dbgColl_Idx];
         Color dbg_coll_color = collideCurrentRect ? ColorAlpha(RED, 0.5) : ColorAlpha(GREEN, 0.5);
 
         DrawQuad(current_Coll, dbg_coll_color);
@@ -572,7 +630,7 @@ s32 main() {
 
       if (DEBUG_COLLS)
       {
-        Quad current_Coll = board_Coll[currentColl_Idx];
+        Quad current_Coll = board_Coll[dbgColl_Idx];
         const int PANEL_SCREEN_W = 100;
         const int PANEL_SCREEN_X = screen_w - PANEL_SCREEN_W;
         GuiPanel((Rectangle){ PANEL_SCREEN_X, 25, PANEL_SCREEN_W, 140 }, "Panel Info");
@@ -585,7 +643,7 @@ s32 main() {
         
 
         if (GuiButton((Rectangle){ PANEL_SCREEN_X, 50, PANEL_SCREEN_W, 10 }, GuiIconText(ICON_ARROW_RIGHT_FILL, "Next"))) {
-          currentColl_Idx = (currentColl_Idx + 1) % board_size;
+          dbgColl_Idx = (dbgColl_Idx + 1) % board_size;
         }
         if (GuiButton((Rectangle){ PANEL_SCREEN_X, 60, PANEL_SCREEN_W, 10 }, GuiIconText(ICON_ARROW_RIGHT_FILL, "Copy values"))) {
           SetClipboardText(TextFormat("%.0f.f, %.0f.f, %.0f.f, %.0f.f, %.0f.f, %.0f.f, %.0f.f, %.0f.f",
