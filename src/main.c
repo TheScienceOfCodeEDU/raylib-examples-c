@@ -2,9 +2,10 @@
 
 void DrawButton(bool status, float scale) 
 {
-    int fontSize = 20;
     int paddingTop = 8;
     int paddingLeft = 12;
+
+    int fontSize = 20 ;    
 
     Color bg_color = status ? (Color) { 116, 100, 67, 255 } : (Color) { 80, 67, 48, 255 };
 
@@ -13,12 +14,20 @@ void DrawButton(bool status, float scale)
     Color lightBorder = { 33, 33, 33, 200 };
     Color darkBorder = { 118, 118, 118, 200 };
 
+    Vector2 text_shape = MeasureTextEx(GetFontDefault(), "Hello raylib", fontSize, 1.0);
+
     float border = 2 * scale;
-    Rectangle button = { 0, 0, 250, 30 };
+    Rectangle button = { 
+        0, 0, 250, text_shape.y + paddingTop * 2
+    };
     button.x *= scale;
     button.y *= scale;
     button.width *= scale;
     button.height *= scale;
+
+    fontSize *= scale;
+    paddingTop *= scale;
+    paddingLeft *= scale;    
 
     // Draw the button background
     DrawRectangleRec(button, bg_color);
@@ -35,7 +44,7 @@ void DrawButton(bool status, float scale)
     // Draw right border (vertical line)
     DrawRectangle(button.x + button.width - border, button.y, border, button.height, lightBorder);
 
-    DrawText("Hello raylib", button.x + paddingLeft, button.y + paddingTop, fontSize * scale, tx_color);
+    DrawText("Hello raylib", button.x + paddingLeft, button.y + paddingTop, fontSize, tx_color);
     DrawPixel(0, 0, RED);
 }
 
