@@ -1,5 +1,44 @@
 #include "raylib.h"
 
+void DrawButton(bool status, float scale) 
+{
+    int fontSize = 20;
+    int paddingTop = 8;
+    int paddingLeft = 12;
+
+    Color bg_color = status ? (Color) { 116, 100, 67, 255 } : (Color) { 80, 67, 48, 255 };
+
+    Color tx_color = status ? (Color) { 238, 208, 147, 255 } : (Color) { 171, 158, 127, 255 };
+
+    Color lightBorder = { 33, 33, 33, 200 };
+    Color darkBorder = { 118, 118, 118, 200 };
+
+    float border = 2 * scale;
+    Rectangle button = { 0, 0, 250, 30 };
+    button.x *= scale;
+    button.y *= scale;
+    button.width *= scale;
+    button.height *= scale;
+
+    // Draw the button background
+    DrawRectangleRec(button, bg_color);
+
+    // Draw top border (horizontal line)    
+    DrawRectangle(button.x, button.y, button.width, border, darkBorder);
+
+    // Draw left border (vertical line)
+    DrawRectangle(button.x, button.y, border, button.height, darkBorder);
+
+    // Draw bottom border (horizontal line)
+    DrawRectangle(button.x, button.y + button.height - border, button.width, border, lightBorder);
+
+    // Draw right border (vertical line)
+    DrawRectangle(button.x + button.width - border, button.y, border, button.height, lightBorder);
+
+    DrawText("Hello raylib", button.x + paddingLeft, button.y + paddingTop, fontSize * scale, tx_color);
+    DrawPixel(0, 0, RED);
+}
+
 #define CHARACTERS              4
 #define CHARACTER_MAX_SPEED     4
 
@@ -11,7 +50,7 @@ struct  {
 int main(void) {
     const int screenWidth = 800;
     const int screenHeight = 600;
-    InitWindow(screenWidth, screenHeight, "Raylib Movement");
+    InitWindow(screenWidth, screenHeight, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
     SetTargetFPS(60);
 
     int current_character = 0;
@@ -52,6 +91,11 @@ int main(void) {
         if (camera.zoom > 3.0f) camera.zoom = 3.0f;
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 
+        static float ui_zoom = 1.0f;
+        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) ui_zoom += 0.25;
+        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) ui_zoom -= 0.25;
+
+
         // 
         // DRAW
         //
@@ -65,6 +109,8 @@ int main(void) {
             }
             
             EndMode2D();
+
+            DrawButton(IsMouseButtonDown(MOUSE_LEFT_BUTTON), ui_zoom);
 
         EndDrawing();
     }
