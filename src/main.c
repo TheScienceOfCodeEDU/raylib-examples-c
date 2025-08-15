@@ -1,51 +1,74 @@
 #include "raylib.h"
 
-void DrawButton(bool status, float scale) 
+enum {
+    UI_Status_Default,
+    UI_Status_Focus,
+    UI_Status_Click
+} typedef UI_ElementStatus;
+
+
+float GetButtonHeightDefault(float fontSize)
 {
-    int paddingTop = 8;
-    int paddingLeft = 12;
+    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", fontSize, 1.0);
+    return textShape.y;
+}
 
-    int fontSize = 20 ;    
+void DrawButton(Rectangle shape, Vector2 padding, float border, UI_ElementStatus status, float fontSize) 
+{
+    Color bg_color = status == UI_Status_Default ? (Color) { 116, 100, 67, 255 } : (Color) { 80, 67, 48, 255 };
+    Color tx_color = status == UI_Status_Click ? (Color) { 171, 158, 127, 255 } : (Color) { 238, 208, 147, 255 };
 
-    Color bg_color = status ? (Color) { 116, 100, 67, 255 } : (Color) { 80, 67, 48, 255 };
+    Color lightBorder = status == UI_Status_Click ? (Color) { 118, 118, 118, 255 } : (Color) { 33, 33, 33, 255 };
+    Color darkBorder = status == UI_Status_Click ? (Color) { 33, 33, 33, 255 } : (Color) { 118, 118, 118, 255 };      
 
-    Color tx_color = status ? (Color) { 238, 208, 147, 255 } : (Color) { 171, 158, 127, 255 };
+    // Draw the button background
+    DrawRectangleRec(shape, bg_color);
 
-    Color lightBorder = { 33, 33, 33, 200 };
-    Color darkBorder = { 118, 118, 118, 200 };
+    // Draw top border (horizontal line)    
+    DrawRectangle(shape.x, shape.y, shape.width, border, darkBorder);
 
-    Vector2 text_shape = MeasureTextEx(GetFontDefault(), "Hello raylib", fontSize, 1.0);
+    // Draw left border (vertical line)
+    DrawRectangle(shape.x, shape.y, border, shape.height, darkBorder);
+
+    // Draw bottom border (horizontal line)
+    DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, lightBorder);
+
+    // Draw right border (vertical line)
+    DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, lightBorder);
+
+    DrawText("Hello raylib 2", shape.x + padding.x, shape.y + padding.y, fontSize, tx_color);
+    DrawPixel(0, 0, RED);
+}
+
+void UpdateAndDrawButton(Vector2 position, float scale)
+{
+    Vector2 padding = { 12, 8 };
+    int fontSize = 20 ;
+
+    float height = GetButtonHeightDefault(fontSize);
 
     float border = 2 * scale;
     Rectangle button = { 
-        0, 0, 250, text_shape.y + paddingTop * 2
+        position.x, position.y, 250, height + padding.y * 2
     };
-    button.x *= scale;
-    button.y *= scale;
     button.width *= scale;
     button.height *= scale;
 
     fontSize *= scale;
-    paddingTop *= scale;
-    paddingLeft *= scale;    
+    padding.y *= scale;
+    padding.x *= scale;
 
-    // Draw the button background
-    DrawRectangleRec(button, bg_color);
-
-    // Draw top border (horizontal line)    
-    DrawRectangle(button.x, button.y, button.width, border, darkBorder);
-
-    // Draw left border (vertical line)
-    DrawRectangle(button.x, button.y, border, button.height, darkBorder);
-
-    // Draw bottom border (horizontal line)
-    DrawRectangle(button.x, button.y + button.height - border, button.width, border, lightBorder);
-
-    // Draw right border (vertical line)
-    DrawRectangle(button.x + button.width - border, button.y, border, button.height, lightBorder);
-
-    DrawText("Hello raylib", button.x + paddingLeft, button.y + paddingTop, fontSize, tx_color);
-    DrawPixel(0, 0, RED);
+    Vector2 mouse = GetMousePosition();
+    UI_ElementStatus status = UI_Status_Default;
+    if (CheckCollisionPointRec(mouse, button)) {
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            status = UI_Status_Focus;
+        } else {
+            status = UI_Status_Click;
+        }
+    }
+    
+    DrawButton(button, padding, border, status, fontSize);
 }
 
 #define CHARACTERS              4
@@ -61,6 +84,9 @@ int main(void) {
     const int screenHeight = 600;
     InitWindow(screenWidth, screenHeight, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
     SetTargetFPS(60);
+
+    // Create render texture for the UI
+    RenderTexture2D buffer = LoadRenderTexture(screenWidth, screenHeight);
 
     int current_character = 0;
 
@@ -101,26 +127,36 @@ int main(void) {
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 
         static float ui_zoom = 1.0f;
-        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) ui_zoom += 0.25;
-        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) ui_zoom -= 0.25;
+        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) ui_zoom += 0.5;
+        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) ui_zoom -= 0.5;
 
+        static float ui_opacity = 250.0;
 
         // 
-        // DRAW
+        // RENDER
         //
+
+        // UI Buffer
+        BeginTextureMode(buffer);
+            ClearBackground(BLANK);
+            UpdateAndDrawButton((Vector2){ 50, 50 }, ui_zoom);
+        EndTextureMode();
+
+        // Draw
         BeginDrawing();
             ClearBackground(RAYWHITE);
+
+            // Game world
             BeginMode2D(camera);
-
-            for (int i = 0; i < CHARACTERS; ++i ) {
-                Character *c = &characters[i];
-                DrawRectangleRec(c->Shape, c->Color);
-            }
-            
+                for (int i = 0; i < CHARACTERS; ++i ) {
+                    Character *c = &characters[i];
+                    DrawRectangleRec(c->Shape, c->Color);
+                }            
             EndMode2D();
-
-            DrawButton(IsMouseButtonDown(MOUSE_LEFT_BUTTON), ui_zoom);
-
+            
+            // Draw UI Buffer
+            Rectangle sourceRec = { 0, 0, (float)buffer.texture.width, -(float)buffer.texture.height };
+            DrawTextureRec(buffer.texture, sourceRec, (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
         EndDrawing();
     }
 
