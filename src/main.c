@@ -2,7 +2,7 @@
 
 struct {
     Texture2D New;
-    Texture2D Load;
+    Texture2D Open;
     Texture2D Save;
 } typedef GUI_Icons;
 
@@ -10,7 +10,7 @@ GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
         LoadTexture("ico/new.png"),
-        LoadTexture("ico/load.png"),
+        LoadTexture("ico/open.png"),
         LoadTexture("ico/save.png")
     };
     return icons;
@@ -74,18 +74,20 @@ float GUI_CalcDefaultIconSize(float font_size, float scale)
 struct {
     GUI_Theme theme;
     GUI_Icons icons;
+    float scale;
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
 {
     GUI_State state = {
         GUI_MakeDefaultTheme(255),
-        GUI_LoadIcons()
+        GUI_LoadIcons(),
+        1.0f
     };
     return state;
 }
 
-void DrawButton(Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, float scale, bool hasIcon) 
+void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, float scale, bool hasIcon) 
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
     Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
@@ -110,21 +112,22 @@ void DrawButton(Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, flo
 
     // Calc text padding
     float icon_size = hasIcon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;    
-    DrawText("Hello raylib 2", shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
+    DrawText(text, shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
     DrawPixel(0, 0, RED);
 }
 
-bool GUI_Button(Vector2 position, GUI_Theme theme, float scale, bool hasIcon)
+void GUI_Icon(Texture2D* texture2d, Vector2 position, float font_size, float scale, Color tint)
 {
-    float height = GUI_CalcDefaultHeight(theme.font_size);
+    float height = GUI_CalcDefaultHeight(font_size);
+    scale *= height / texture2d->height;
+    DrawTextureEx(*texture2d, position, 0, scale, tint);
+}
 
-    Rectangle button = { 
-        position.x, position.y, scale * 250, scale * height + theme.padding.y * 2
-    };
-
+bool GUI_Button(char* text, Rectangle shape, GUI_Theme theme, float scale, Texture2D* icon)
+{
     Vector2 mouse = GetMousePosition();
     GUI_ElementStatus status = GUI_Status_Default;
-    if (CheckCollisionPointRec(mouse, button)) {
+    if (CheckCollisionPointRec(mouse, shape)) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = GUI_Status_Focus;
         } else {
@@ -132,22 +135,26 @@ bool GUI_Button(Vector2 position, GUI_Theme theme, float scale, bool hasIcon)
         }
     }
     
-    DrawButton(button, status, theme, scale, hasIcon);
+    bool hasIcon = icon != 0;
+    GUI_DrawButton(text, shape, status, theme, scale, hasIcon);
+
+    GUI_Icon(icon, (Vector2) { shape.x + theme.padding.x, shape.y + theme.padding.y }, theme.font_size, scale, WHITE);
 
     return IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
-void GUI_Icon(Texture2D texture2d, Vector2 position, float font_size, float scale, Color tint)
+void GUI_TopBar(GUI_State gui)
 {
-    float height = GUI_CalcDefaultHeight(font_size);
-    scale *= height / texture2d.height;
-    DrawText(TextFormat("%f %f", height, texture2d.width * scale), 0, 0, 20, RED);
-    DrawTextureEx(texture2d, position, 0, scale, tint);
-}
+    int buttons = 3;
+    float screen_w = GetScreenWidth();
+    float button_w = screen_w / buttons;
 
-void GUI_TopBar()
-{
+    float button_h = GUI_CalcDefaultHeight(gui.theme.font_size) * gui.scale + gui.theme.padding.y * 2;
 
+
+    GUI_Button("New", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui.theme, gui.scale, &gui.icons.New);
+    GUI_Button("Load", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui.theme, gui.scale, &gui.icons.Open);
+    GUI_Button("Save", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui.theme, gui.scale, &gui.icons.Save);
 }
 
 #define CHARACTERS              4
@@ -206,9 +213,8 @@ int main(void) {
         if (camera.zoom > 3.0f) camera.zoom = 3.0f;
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 
-        static float ui_zoom = 1.0f;
-        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) ui_zoom += 0.5;
-        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) ui_zoom -= 0.5;
+        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) gui.scale += 0.5;
+        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 0.5;
 
         static float ui_opacity = 250.0;
 
@@ -219,8 +225,7 @@ int main(void) {
         // UI Buffer
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
-            GUI_Button((Vector2) { 50, 50 }, gui.theme, ui_zoom, true);
-            GUI_Icon(gui.icons.New, (Vector2) { 50 + gui.theme.padding.x, 50 + gui.theme.padding.y }, gui.theme.font_size, ui_zoom, WHITE);
+            GUI_TopBar(gui);
         EndTextureMode();
 
         // Draw
