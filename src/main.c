@@ -35,6 +35,7 @@ struct {
     float border;
     float font_size;
     float font_spacing;
+    bool font_custom;
 } typedef GUI_Theme;
 
 GUI_Theme GUI_MakeDefaultTheme(int opacity)
@@ -54,7 +55,8 @@ GUI_Theme GUI_MakeDefaultTheme(int opacity)
         (Vector2){ 8, 8 },
         2.0f,
         20.0f,
-        1.0f
+        1.0f,
+        0
     };
 
     return theme;
@@ -71,6 +73,23 @@ float GUI_CalcDefaultIconSize(float font_size, float scale)
     return GUI_CalcDefaultHeight(font_size) * scale;
 }
 
+
+struct {
+    bool reset_characters;
+    bool add_character;
+    bool toggle_character;
+    bool move_up;
+    bool move_down;
+    bool move_left;
+    bool move_right;
+} typedef PLAYER_Actions;
+
+PLAYER_Actions PLAYER_MakeActions()
+{
+    PLAYER_Actions actions = { 0 };
+    return actions;
+}
+
 struct {
     GUI_Theme theme;
     GUI_Icons icons;
@@ -84,14 +103,15 @@ GUI_State GUI_MakeDefaultState(float opacity)
         GUI_MakeDefaultTheme(255),
         GUI_LoadIcons(),
         1.0f,
-        LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0)
+        LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0),
+        
     };
 
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
 
-void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font, float scale, bool hasIcon) 
+void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon) 
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
     Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
@@ -115,12 +135,12 @@ void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_
     DrawRectangle(shape.x + shape.width - theme.border, shape.y, theme.border, shape.height, b_light);
 
     // Calc text padding
-    float icon_size = hasIcon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;    
-    //DrawText(text, shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
+    float icon_size = icon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;
+
+    Font font = theme.font_custom ? font_custom : GetFontDefault();
     DrawTextEx(font, text, 
         (Vector2){shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y}, 
         theme.font_size * scale, theme.font_spacing, tx_color);
-    DrawPixel(0, 0, RED);
 }
 
 void GUI_Icon(Texture2D* texture2d, Vector2 position, float font_size, float scale, Color tint)
@@ -135,7 +155,9 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     GUI_Theme theme = gui->theme;
     Vector2 mouse = GetMousePosition();
     GUI_ElementStatus status = GUI_Status_Default;
-    if (CheckCollisionPointRec(mouse, shape)) {
+
+    bool collide = CheckCollisionPointRec(mouse, shape);
+    if (collide) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = GUI_Status_Focus;
         } else {
@@ -148,10 +170,10 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
 
     GUI_Icon(icon, (Vector2) { shape.x + theme.padding.x, shape.y + theme.padding.y }, theme.font_size, gui->scale, WHITE);
 
-    return IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+    return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
-void GUI_TopBar(GUI_State* gui)
+void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions)
 {
     int buttons = 3;
     float screen_w = GetScreenWidth();
@@ -159,19 +181,53 @@ void GUI_TopBar(GUI_State* gui)
 
     float button_h = GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2;
 
-
-    GUI_Button("New game", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New);
-    GUI_Button("Load", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open);
-    GUI_Button("Save", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui, &gui->icons.Save);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui, &gui->icons.Save);
 }
 
 #define CHARACTERS              4
-#define CHARACTER_MAX_SPEED     4
+#define CHARACTER_MAX_SPEED     6
 
 struct  {
     Rectangle Shape;
     Color Color;
-} typedef Character;
+} typedef Game_Character;
+
+struct {
+    int current_character;
+    int alive_characters;
+    Game_Character characters[CHARACTERS];
+} typedef Game_State;
+
+Game_State Game_MakeState()
+{
+    Game_State state = {
+        0,
+        2,
+        (Game_Character){ 0, 0, 10, 20, RED},
+        (Game_Character){ 10, 30, 10, 20, BLUE},
+        (Game_Character){ 50, 60, 10, 20, GREEN},
+        (Game_Character){ 80, 60, 10, 20, ORANGE},
+    };
+    return state;
+}
+
+void Game_UpdateNextCharacter(Game_State* state)
+{
+    state->current_character = (state->current_character + 1) % state->alive_characters;
+}
+
+void Game_AddCharacter(Game_State* state)
+{
+    state->alive_characters++;
+    if (state->alive_characters > CHARACTERS) state->alive_characters = CHARACTERS;
+}
+
+Game_Character* Game_GetCurrentCharacter(Game_State* state)
+{
+    return &state->characters[state->current_character];
+}
 
 int main(void) {
     const int screenWidth = 800;
@@ -183,14 +239,8 @@ int main(void) {
     RenderTexture2D buffer = LoadRenderTexture(screenWidth, screenHeight);
     GUI_State gui = GUI_MakeDefaultState(255);
 
-    int current_character = 0;
-
-    Character characters[CHARACTERS] = {
-        { 0, 0, 10, 20, RED},
-        { 10, 30, 10, 20, BLUE},
-        { 50, 60, 10, 20, GREEN},
-        { 80, 60, 10, 20, ORANGE}
-    };
+    Game_State game_state = Game_MakeState();
+    PLAYER_Actions player_actions = PLAYER_MakeActions();
 
     Camera2D camera = { 0 };
     camera.target = (Vector2){ 0, 0 };
@@ -204,20 +254,35 @@ int main(void) {
         //
         // UPDATE
         //
-        
-        // Toggle player
-        if (IsKeyPressed(KEY_TAB)) current_character = (current_character + 1) % CHARACTERS;
+
+        // UI
+        BeginTextureMode(buffer);
+            ClearBackground(BLANK);
+            GUI_TopBar(&gui, &player_actions);
+        EndTextureMode();
+
+        // Keyboard
+        player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
+        player_actions.move_down             = IsKeyDown(KEY_DOWN);
+        player_actions.move_up               = IsKeyDown(KEY_UP);
+        player_actions.move_left             = IsKeyDown(KEY_LEFT);
+        player_actions.move_right            = IsKeyDown(KEY_RIGHT);
+
+        // Actions
+        if (player_actions.reset_characters) game_state = Game_MakeState();
+        if (player_actions.add_character)    Game_AddCharacter(&game_state);  
+        if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
 
         // Update character
-        Character *player = &characters[current_character];
-        if (IsKeyDown(KEY_LEFT))    player->Shape.x -= CHARACTER_MAX_SPEED;
-        if (IsKeyDown(KEY_RIGHT))   player->Shape.x += CHARACTER_MAX_SPEED;
-        if (IsKeyDown(KEY_UP))      player->Shape.y -= CHARACTER_MAX_SPEED;
-        if (IsKeyDown(KEY_DOWN))    player->Shape.y += CHARACTER_MAX_SPEED;
-        
+        Game_Character *player = Game_GetCurrentCharacter(&game_state);
+        if (player_actions.move_down)    player->Shape.y += CHARACTER_MAX_SPEED;
+        if (player_actions.move_up)      player->Shape.y -= CHARACTER_MAX_SPEED;
+        if (player_actions.move_left)    player->Shape.x -= CHARACTER_MAX_SPEED;
+        if (player_actions.move_right)   player->Shape.x += CHARACTER_MAX_SPEED;
+
         // Update camera
         camera.target = (Vector2){ player->Shape.x, player->Shape.y };
-        camera.zoom += ((float)GetMouseWheelMove()*0.1f);
+        camera.zoom += ((float)GetMouseWheelMove() * 0.1f);
         if (camera.zoom > 3.0f) camera.zoom = 3.0f;
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 
@@ -230,26 +295,20 @@ int main(void) {
         // RENDER
         //
 
-        // UI Buffer
-        BeginTextureMode(buffer);
-            ClearBackground(BLANK);
-            GUI_TopBar(&gui);
-        EndTextureMode();
-
         // Draw
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
             // Game world
             BeginMode2D(camera);
-                for (int i = 0; i < CHARACTERS; ++i ) {
-                    Character *c = &characters[i];
+                for (int i = 0; i < game_state.alive_characters; ++i ) {
+                    Game_Character* c = &game_state.characters[i];
                     DrawRectangleRec(c->Shape, c->Color);
                 }            
             EndMode2D();
             
             // Draw UI Buffer
-            Rectangle sourceRec = { 0, 0, (float)buffer.texture.width, -(float)buffer.texture.height };
+            Rectangle sourceRec = { 0, 0, (float)buffer.texture.width, - (float)buffer.texture.height };
             DrawTextureRec(buffer.texture, sourceRec, (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
         EndDrawing();
     }
