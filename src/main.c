@@ -51,7 +51,7 @@ GUI_Theme GUI_MakeDefaultTheme(int opacity)
         (Color) { 33, 33, 33, 255 },
         (Color) { 118, 118, 118, 255 },
 
-        (Vector2){ 24, 8 },
+        (Vector2){ 8, 8 },
         2.0f,
         20.0f,
         1.0f
@@ -64,6 +64,11 @@ float GUI_CalcDefaultHeight(float font_size)
 {
     Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font_size, 1.0);
     return textShape.y;
+}
+
+float GUI_CalcDefaultIconSize(float font_size, float scale)
+{
+    return GUI_CalcDefaultHeight(font_size) * scale;
 }
 
 struct {
@@ -80,7 +85,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
     return state;
 }
 
-void DrawButton(Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, float scale) 
+void DrawButton(Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, float scale, bool hasIcon) 
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
     Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
@@ -103,11 +108,13 @@ void DrawButton(Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, flo
     // Draw right border (vertical line)
     DrawRectangle(shape.x + shape.width - theme.border, shape.y, theme.border, shape.height, b_light);
 
-    DrawText("Hello raylib 2", shape.x + theme.padding.x * scale, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
+    // Calc text padding
+    float icon_size = hasIcon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;    
+    DrawText("Hello raylib 2", shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
     DrawPixel(0, 0, RED);
 }
 
-void GUI_Button(Vector2 position, GUI_Theme theme, float scale)
+bool GUI_Button(Vector2 position, GUI_Theme theme, float scale, bool hasIcon)
 {
     float height = GUI_CalcDefaultHeight(theme.font_size);
 
@@ -125,13 +132,16 @@ void GUI_Button(Vector2 position, GUI_Theme theme, float scale)
         }
     }
     
-    DrawButton(button, status, theme, scale);
+    DrawButton(button, status, theme, scale, hasIcon);
+
+    return IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
 void GUI_Icon(Texture2D texture2d, Vector2 position, float font_size, float scale, Color tint)
 {
     float height = GUI_CalcDefaultHeight(font_size);
     scale *= height / texture2d.height;
+    DrawText(TextFormat("%f %f", height, texture2d.width * scale), 0, 0, 20, RED);
     DrawTextureEx(texture2d, position, 0, scale, tint);
 }
 
@@ -209,8 +219,8 @@ int main(void) {
         // UI Buffer
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
-            GUI_Button((Vector2) { 50, 50 }, gui.theme, ui_zoom);
-            GUI_Icon(gui.icons.New, (Vector2) { 50, 50 + gui.theme.padding.y }, gui.theme.font_size, ui_zoom, WHITE);
+            GUI_Button((Vector2) { 50, 50 }, gui.theme, ui_zoom, true);
+            GUI_Icon(gui.icons.New, (Vector2) { 50 + gui.theme.padding.x, 50 + gui.theme.padding.y }, gui.theme.font_size, ui_zoom, WHITE);
         EndTextureMode();
 
         // Draw
