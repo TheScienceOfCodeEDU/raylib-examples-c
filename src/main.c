@@ -1,74 +1,143 @@
 #include "raylib.h"
 
-enum {
-    UI_Status_Default,
-    UI_Status_Focus,
-    UI_Status_Click
-} typedef UI_ElementStatus;
+struct {
+    Texture2D New;
+    Texture2D Load;
+    Texture2D Save;
+} typedef GUI_Icons;
 
-
-float GetButtonHeightDefault(float fontSize)
+GUI_Icons GUI_LoadIcons()
 {
-    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", fontSize, 1.0);
+    GUI_Icons icons = {
+        LoadTexture("ico/new.png"),
+        LoadTexture("ico/load.png"),
+        LoadTexture("ico/save.png")
+    };
+    return icons;
+}
+
+enum {
+    GUI_Status_Default,
+    GUI_Status_Focus,
+    GUI_Status_Click
+} typedef GUI_ElementStatus;
+
+struct {
+    Color bg_color_0;
+    Color bg_color_1;
+    Color bg_color_2;
+    Color color_0;
+    Color color_1;
+    Color color_2;
+    Color b_color_0;
+    Color b_color_1;
+    Vector2 padding;
+    float border;
+    float font_size;
+    float font_spacing;
+} typedef GUI_Theme;
+
+GUI_Theme GUI_MakeDefaultTheme(int opacity)
+{
+    GUI_Theme theme = {        
+        (Color) { 80, 67, 48, opacity },
+        (Color) { 116, 100, 67, opacity },
+        (Color) { 58, 49, 35, opacity },
+
+        (Color) { 171, 158, 127, 255 },
+        (Color) { 238, 208, 147, 255 },
+        (Color) { 253, 250, 85, 255 },
+
+        (Color) { 33, 33, 33, 255 },
+        (Color) { 118, 118, 118, 255 },
+
+        (Vector2){ 24, 8 },
+        2.0f,
+        20.0f,
+        1.0f
+    };
+
+    return theme;
+}
+
+float GUI_CalcDefaultHeight(float font_size)
+{
+    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font_size, 1.0);
     return textShape.y;
 }
 
-void DrawButton(Rectangle shape, Vector2 padding, float border, UI_ElementStatus status, float fontSize) 
-{
-    Color bg_color = status == UI_Status_Default ? (Color) { 116, 100, 67, 255 } : (Color) { 80, 67, 48, 255 };
-    Color tx_color = status == UI_Status_Click ? (Color) { 171, 158, 127, 255 } : (Color) { 238, 208, 147, 255 };
+struct {
+    GUI_Theme theme;
+    GUI_Icons icons;
+} typedef GUI_State;
 
-    Color lightBorder = status == UI_Status_Click ? (Color) { 118, 118, 118, 255 } : (Color) { 33, 33, 33, 255 };
-    Color darkBorder = status == UI_Status_Click ? (Color) { 33, 33, 33, 255 } : (Color) { 118, 118, 118, 255 };      
+GUI_State GUI_MakeDefaultState(float opacity)
+{
+    GUI_State state = {
+        GUI_MakeDefaultTheme(255),
+        GUI_LoadIcons()
+    };
+    return state;
+}
+
+void DrawButton(Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, float scale) 
+{
+    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
+    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
+
+    Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
+    Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
 
     // Draw the button background
     DrawRectangleRec(shape, bg_color);
 
     // Draw top border (horizontal line)    
-    DrawRectangle(shape.x, shape.y, shape.width, border, darkBorder);
+    DrawRectangle(shape.x, shape.y, shape.width, theme.border, b_dark);
 
     // Draw left border (vertical line)
-    DrawRectangle(shape.x, shape.y, border, shape.height, darkBorder);
+    DrawRectangle(shape.x, shape.y, theme.border, shape.height, b_dark);
 
     // Draw bottom border (horizontal line)
-    DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, lightBorder);
+    DrawRectangle(shape.x, shape.y + shape.height - theme.border, shape.width, theme.border, b_light);
 
     // Draw right border (vertical line)
-    DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, lightBorder);
+    DrawRectangle(shape.x + shape.width - theme.border, shape.y, theme.border, shape.height, b_light);
 
-    DrawText("Hello raylib 2", shape.x + padding.x, shape.y + padding.y, fontSize, tx_color);
+    DrawText("Hello raylib 2", shape.x + theme.padding.x * scale, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
     DrawPixel(0, 0, RED);
 }
 
-void UpdateAndDrawButton(Vector2 position, float scale)
+void GUI_Button(Vector2 position, GUI_Theme theme, float scale)
 {
-    Vector2 padding = { 12, 8 };
-    int fontSize = 20 ;
+    float height = GUI_CalcDefaultHeight(theme.font_size);
 
-    float height = GetButtonHeightDefault(fontSize);
-
-    float border = 2 * scale;
     Rectangle button = { 
-        position.x, position.y, 250, height + padding.y * 2
+        position.x, position.y, scale * 250, scale * height + theme.padding.y * 2
     };
-    button.width *= scale;
-    button.height *= scale;
-
-    fontSize *= scale;
-    padding.y *= scale;
-    padding.x *= scale;
 
     Vector2 mouse = GetMousePosition();
-    UI_ElementStatus status = UI_Status_Default;
+    GUI_ElementStatus status = GUI_Status_Default;
     if (CheckCollisionPointRec(mouse, button)) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            status = UI_Status_Focus;
+            status = GUI_Status_Focus;
         } else {
-            status = UI_Status_Click;
+            status = GUI_Status_Click;
         }
     }
     
-    DrawButton(button, padding, border, status, fontSize);
+    DrawButton(button, status, theme, scale);
+}
+
+void GUI_Icon(Texture2D texture2d, Vector2 position, float font_size, float scale, Color tint)
+{
+    float height = GUI_CalcDefaultHeight(font_size);
+    scale *= height / texture2d.height;
+    DrawTextureEx(texture2d, position, 0, scale, tint);
+}
+
+void GUI_TopBar()
+{
+
 }
 
 #define CHARACTERS              4
@@ -87,6 +156,7 @@ int main(void) {
 
     // Create render texture for the UI
     RenderTexture2D buffer = LoadRenderTexture(screenWidth, screenHeight);
+    GUI_State gui = GUI_MakeDefaultState(255);
 
     int current_character = 0;
 
@@ -139,7 +209,8 @@ int main(void) {
         // UI Buffer
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
-            UpdateAndDrawButton((Vector2){ 50, 50 }, ui_zoom);
+            GUI_Button((Vector2) { 50, 50 }, gui.theme, ui_zoom);
+            GUI_Icon(gui.icons.New, (Vector2) { 50, 50 + gui.theme.padding.y }, gui.theme.font_size, ui_zoom, WHITE);
         EndTextureMode();
 
         // Draw
