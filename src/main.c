@@ -75,6 +75,7 @@ struct {
     GUI_Theme theme;
     GUI_Icons icons;
     float scale;
+    Font font;
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
@@ -82,12 +83,15 @@ GUI_State GUI_MakeDefaultState(float opacity)
     GUI_State state = {
         GUI_MakeDefaultTheme(255),
         GUI_LoadIcons(),
-        1.0f
+        1.0f,
+        LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0)
     };
+
+    SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
 
-void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, float scale, bool hasIcon) 
+void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font, float scale, bool hasIcon) 
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
     Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
@@ -112,7 +116,10 @@ void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_
 
     // Calc text padding
     float icon_size = hasIcon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;    
-    DrawText(text, shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
+    //DrawText(text, shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y, theme.font_size * scale, tx_color);
+    DrawTextEx(font, text, 
+        (Vector2){shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y}, 
+        theme.font_size * scale, theme.font_spacing, tx_color);
     DrawPixel(0, 0, RED);
 }
 
@@ -123,8 +130,9 @@ void GUI_Icon(Texture2D* texture2d, Vector2 position, float font_size, float sca
     DrawTextureEx(*texture2d, position, 0, scale, tint);
 }
 
-bool GUI_Button(char* text, Rectangle shape, GUI_Theme theme, float scale, Texture2D* icon)
+bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
 {
+    GUI_Theme theme = gui->theme;
     Vector2 mouse = GetMousePosition();
     GUI_ElementStatus status = GUI_Status_Default;
     if (CheckCollisionPointRec(mouse, shape)) {
@@ -136,25 +144,25 @@ bool GUI_Button(char* text, Rectangle shape, GUI_Theme theme, float scale, Textu
     }
     
     bool hasIcon = icon != 0;
-    GUI_DrawButton(text, shape, status, theme, scale, hasIcon);
+    GUI_DrawButton(text, shape, status, theme, gui->font, gui->scale, hasIcon);
 
-    GUI_Icon(icon, (Vector2) { shape.x + theme.padding.x, shape.y + theme.padding.y }, theme.font_size, scale, WHITE);
+    GUI_Icon(icon, (Vector2) { shape.x + theme.padding.x, shape.y + theme.padding.y }, theme.font_size, gui->scale, WHITE);
 
     return IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
-void GUI_TopBar(GUI_State gui)
+void GUI_TopBar(GUI_State* gui)
 {
     int buttons = 3;
     float screen_w = GetScreenWidth();
     float button_w = screen_w / buttons;
 
-    float button_h = GUI_CalcDefaultHeight(gui.theme.font_size) * gui.scale + gui.theme.padding.y * 2;
+    float button_h = GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2;
 
 
-    GUI_Button("New", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui.theme, gui.scale, &gui.icons.New);
-    GUI_Button("Load", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui.theme, gui.scale, &gui.icons.Open);
-    GUI_Button("Save", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui.theme, gui.scale, &gui.icons.Save);
+    GUI_Button("New game", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New);
+    GUI_Button("Load", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open);
+    GUI_Button("Save", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui, &gui->icons.Save);
 }
 
 #define CHARACTERS              4
@@ -225,7 +233,7 @@ int main(void) {
         // UI Buffer
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
-            GUI_TopBar(gui);
+            GUI_TopBar(&gui);
         EndTextureMode();
 
         // Draw
