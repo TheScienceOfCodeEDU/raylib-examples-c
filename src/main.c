@@ -1,4 +1,6 @@
+#define UNITY_BUILD 1
 #include "raylib.h"
+
 
 struct {
     Texture2D New;
@@ -73,28 +75,12 @@ float GUI_CalcDefaultIconSize(float font_size, float scale)
     return GUI_CalcDefaultHeight(font_size) * scale;
 }
 
-
-struct {
-    bool reset_characters;
-    bool add_character;
-    bool toggle_character;
-    bool move_up;
-    bool move_down;
-    bool move_left;
-    bool move_right;
-} typedef PLAYER_Actions;
-
-PLAYER_Actions PLAYER_MakeActions()
-{
-    PLAYER_Actions actions = { 0 };
-    return actions;
-}
-
 struct {
     GUI_Theme theme;
     GUI_Icons icons;
     float scale;
     Font font;
+    int focus_id;
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
@@ -106,7 +92,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
         LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0),
         
     };
-
+    
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
@@ -171,6 +157,47 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     GUI_Icon(icon, (Vector2) { shape.x + theme.padding.x, shape.y + theme.padding.y }, theme.font_size, gui->scale, WHITE);
 
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+}
+
+void GUI_DrawWindow(char* title, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon)
+{
+    Color bg_color = status == GUI_Status_Default ? theme.bg_color_2 : theme.bg_color_1;
+    Color tx_color = theme.color_0;
+    
+    DrawRectangleRec(shape, bg_color);
+    DrawTextEx(font_custom, title,
+        (Vector2){shape.x + theme.padding.x, shape.y + theme.padding.y}, 
+        theme.font_size * scale, theme.font_spacing, tx_color);
+}
+
+void GUI_Window(int id, char* title, Rectangle shape, GUI_State* gui)
+{
+    GUI_Theme theme = gui->theme;
+    Vector2 mouse = GetMousePosition();
+    
+    bool collide = CheckCollisionPointRec(mouse, shape);
+    if (collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        gui->focus_id = id;
+    }
+
+    GUI_ElementStatus status = gui->focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+    GUI_DrawWindow(title, shape, status, theme, gui->font, gui->scale, false);
+}
+
+struct {
+    bool reset_characters;
+    bool add_character;
+    bool toggle_character;
+    bool move_up;
+    bool move_down;
+    bool move_left;
+    bool move_right;
+} typedef PLAYER_Actions;
+
+PLAYER_Actions PLAYER_MakeActions()
+{
+    PLAYER_Actions actions = { 0 };
+    return actions;
 }
 
 void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions)
@@ -256,9 +283,13 @@ int main(void) {
         //
 
         // UI
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) gui.focus_id = 0;
+
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
             GUI_TopBar(&gui, &player_actions);
+
+            GUI_Window(1, "Window title", (Rectangle) { 20, 20, 250, 200 }, &gui);
         EndTextureMode();
 
         // Keyboard
