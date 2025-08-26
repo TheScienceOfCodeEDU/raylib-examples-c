@@ -119,7 +119,7 @@ float GUI_CalcDefaultHeight(float font_size)
 
 float GUI_CalcDefaultScaledHeight(GUI_State* gui)
 {
-    return GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2;
+    return (GUI_CalcDefaultHeight(gui->theme.font_size) + gui->theme.border) * gui->scale + gui->theme.padding.y * 2;
 }
 
 float GUI_CalcDefaultIconSize(float font_size, float scale)
@@ -127,19 +127,19 @@ float GUI_CalcDefaultIconSize(float font_size, float scale)
     return GUI_CalcDefaultHeight(font_size) * scale;
 }
 
-void GUI_DrawBorders(Rectangle shape, GUI_Theme theme, Color dark, Color light)
+void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border)
 {
     // Draw top border (horizontal line)    
-    DrawRectangle(shape.x, shape.y, shape.width, theme.border, dark);
+    DrawRectangle(shape.x, shape.y, shape.width, border, dark);
 
     // Draw left border (vertical line)
-    DrawRectangle(shape.x, shape.y, theme.border, shape.height, dark);
+    DrawRectangle(shape.x, shape.y, border, shape.height, dark);
 
     // Draw bottom border (horizontal line)
-    DrawRectangle(shape.x, shape.y + shape.height - theme.border, shape.width, theme.border, light);
+    DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
 
     // Draw right border (vertical line)
-    DrawRectangle(shape.x + shape.width - theme.border, shape.y, theme.border, shape.height, light);
+    DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
 
 }
 
@@ -152,7 +152,7 @@ void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_
     Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
 
     DrawRectangleRec(shape, bg_color);
-    GUI_DrawBorders(shape, theme, b_dark, b_light);
+    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
     
     // Calc text padding
     float icon_size = icon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;
@@ -177,7 +177,7 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     GUI_ElementStatus status = GUI_Status_Default;
 
     bool collide = CheckCollisionPointRec(mouse, shape) 
-                    && gui->window_focus_id <= 0;
+                    && gui->window_focus_moving == 0;
     if (collide) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = GUI_Status_Focus;
@@ -203,13 +203,13 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
     
     DrawRectangleRec(shape, bg_color);
 
-    GUI_DrawBorders(shape, theme, b_dark, b_light);
+    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
 
     DrawTextEx(font_custom, title,
         (Vector2){shape.x + theme.padding.x, shape.y + theme.padding.y}, 
         theme.font_size * scale, theme.font_spacing, tx_color);
 
-    GUI_DrawBorders(shapeTitle, theme, b_light, b_dark);
+    GUI_DrawBorders(shapeTitle, b_light, b_dark, theme.border * scale);
 }
 
 Rectangle GUI_LimitRect(Rectangle shape, Rectangle limits) {
@@ -279,6 +279,8 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
 
         shapeTitle.x += displacement.x;
         shapeTitle.y += displacement.y;
+    } else {
+        gui->window_focus_moving = false;
     }
 
     *shape      = GUI_LimitRect(*shape, limits);
