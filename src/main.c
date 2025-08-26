@@ -213,13 +213,14 @@ PLAYER_Actions PLAYER_MakeActions()
     return actions;
 }
 
-void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions)
+void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions, Rectangle target)
 {
     int buttons = 3;
-    float screen_w = GetScreenWidth();
-    float button_w = screen_w / buttons;
+    float screen_w = target.width;
+    float button_w = target.width / buttons;
 
-    float button_h = GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2;
+    float button_h = target.height == 0 ? GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2
+                                        : target.height;
 
     actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New);
     actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open);
@@ -270,13 +271,11 @@ Game_Character* Game_GetCurrentCharacter(Game_State* state)
 }
 
 int main(void) {
-    const int screenWidth = 800;
-    const int screenHeight = 600;
-    InitWindow(screenWidth, screenHeight, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
+    InitWindow(800, 600, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
     SetTargetFPS(60);
 
     // Create render texture for the UI
-    RenderTexture2D buffer = LoadRenderTexture(screenWidth, screenHeight);
+    RenderTexture2D buffer = LoadRenderTexture(GetRenderWidth(), GetRenderHeight());
     GUI_State gui = GUI_MakeDefaultState(255);
 
     Game_State game_state = Game_MakeState();
@@ -284,14 +283,14 @@ int main(void) {
 
     Camera2D camera = { 0 };
     camera.target = (Vector2){ 0, 0 };
-    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    camera.offset = (Vector2){ GetRenderWidth() / 2.0f, GetRenderHeight() / 2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
     SetTargetFPS(60);
 
     Rectangle window = (Rectangle) { 20, 20, 250, 200 };
-
+    
     while (!WindowShouldClose()) {
         //
         // UPDATE
@@ -311,9 +310,9 @@ int main(void) {
 
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
-            GUI_TopBar(&gui, &player_actions);
-
+            GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), GetScreenHeight() });
             GUI_Window(1, "Window title", &window, &gui);
+
         EndTextureMode();
 
         gui.mouse_last              = gui.mouse_current;
