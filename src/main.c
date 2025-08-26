@@ -1,5 +1,6 @@
 #define UNITY_BUILD 1
 #include "raylib.h"
+#include "raymath.h"
 
 
 struct {
@@ -81,6 +82,8 @@ struct {
     float scale;
     Font font;
     int focus_id;
+    Vector2 mouse_last;
+    Vector2 mouse_current;
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
@@ -90,7 +93,9 @@ GUI_State GUI_MakeDefaultState(float opacity)
         GUI_LoadIcons(),
         1.0f,
         LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0),
-        
+        0,
+        (Vector2){ 0.0, 0.0},
+        (Vector2){ 0.0, 0.0},
     };
     
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
@@ -170,18 +175,26 @@ void GUI_DrawWindow(char* title, Rectangle shape,  GUI_ElementStatus status, GUI
         theme.font_size * scale, theme.font_spacing, tx_color);
 }
 
-void GUI_Window(int id, char* title, Rectangle shape, GUI_State* gui)
+void GUI_Window(int id, char* title, Rectangle *shape, GUI_State* gui)
 {
-    GUI_Theme theme = gui->theme;
-    Vector2 mouse = GetMousePosition();
-    
-    bool collide = CheckCollisionPointRec(mouse, shape);
-    if (collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        gui->focus_id = id;
+    bool collide = CheckCollisionPointRec(gui->mouse_current, *shape);
+    if (collide) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && gui->focus_id == 0) {
+            gui->focus_id = id;
+        }
+
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && gui->focus_id == id) {
+            Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);
+            DrawText(TextFormat("%f %f", displacement.x, displacement.y), 100,400, 20, RED);
+            if (Vector2Length(displacement) > 1.5f) {
+                shape->x += displacement.x;
+                shape->y += displacement.y;
+            }
+        }
     }
 
     GUI_ElementStatus status = gui->focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
-    GUI_DrawWindow(title, shape, status, theme, gui->font, gui->scale, false);
+    GUI_DrawWindow(title, *shape, status, gui->theme, gui->font, gui->scale, false);
 }
 
 struct {
@@ -275,7 +288,9 @@ int main(void) {
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
-    SetTargetFPS(60); 
+    SetTargetFPS(60);
+
+    Rectangle window = (Rectangle) { 20, 20, 250, 200 };
 
     while (!WindowShouldClose()) {
         //
@@ -283,15 +298,26 @@ int main(void) {
         //
 
         // UI
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) gui.focus_id = 0;
+        gui.mouse_current = GetMousePosition();
+        
+        if (gui.focus_id == 0){
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                gui.focus_id = -1;
+        } else {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                gui.focus_id = 0;
+        }
+        
 
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
             GUI_TopBar(&gui, &player_actions);
 
-            GUI_Window(1, "Window title", (Rectangle) { 20, 20, 250, 200 }, &gui);
+            GUI_Window(1, "Window title", &window, &gui);
         EndTextureMode();
 
+        gui.mouse_last              = gui.mouse_current;
+        
         // Keyboard
         player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
         player_actions.move_down             = IsKeyDown(KEY_DOWN);
