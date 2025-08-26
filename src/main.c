@@ -82,8 +82,6 @@ struct {
     int focus_id;
     Vector2 mouse_last;
     Vector2 mouse_current;
-
-    float window_innerMargin; // Interaction margin applied to windows (usefull on video mode WINDOWED, when mouse comes back and forth)
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
@@ -95,9 +93,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
         LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0),
         0,
         (Vector2){ 0.0, 0.0},
-        (Vector2){ 0.0, 0.0},
-
-        25
+        (Vector2){ 0.0, 0.0}
     };
     
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
@@ -245,11 +241,11 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     bool moving = IsMouseButtonDown(MOUSE_BUTTON_LEFT) 
                 && gui->focus_id == id;
     if (moving) {
-        Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);
-        if (Vector2Length(displacement) > 1.5f) {
-            shape->x += displacement.x;
-            shape->y += displacement.y;
-        }
+        Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);        
+        shape->x += displacement.x;
+        shape->y += displacement.y;
+        
+        DrawText(TextFormat("%f", Vector2Length(displacement)), 40,40, 20, GREEN);
     }
     
     *shape = GUI_LimitRect(*shape, limits);
@@ -376,10 +372,6 @@ int main(void) {
 
         // UI
         float topbar_h = GUI_CalcDefaultScaledHeight(&gui);
-        Vector2 mouse_shape = (Vector2){
-            gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
-            gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
-        };
         Rectangle mouse_limits = (Rectangle) {
             0,
             0,
@@ -387,15 +379,12 @@ int main(void) {
             GetScreenHeight()
         };
 
-        bool limitMovement = gui.focus_id > 0 && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-        if (limitMovement) {
-            mouse_limits.y = topbar_h;
-        }
-
         gui.mouse_current = GUI_LimitVector2(GetMousePosition(), mouse_limits);
-        if (limitMovement) {
-            SetMousePosition(gui.mouse_current.x, gui.mouse_current.y);
-        }
+
+        Vector2 mouse_shape = (Vector2){
+            gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
+            gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
+        };
 
         if (gui.focus_id == 0){
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -422,7 +411,7 @@ int main(void) {
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            
         EndTextureMode();
 
-        gui.mouse_last              = gui.mouse_current;
+        gui.mouse_last = gui.mouse_current;
         
         // Keyboard
         player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
