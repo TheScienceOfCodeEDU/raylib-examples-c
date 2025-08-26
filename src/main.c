@@ -2,6 +2,12 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#ifndef ENV_SETTINGS
+#define DEV_WINDOW_W            1040
+#define DEV_WINDOW_H            720
+#define DEV_TARGET_MONITOR      1
+
+#endif
 
 struct {
     Texture2D New;
@@ -84,6 +90,8 @@ struct {
     int focus_id;
     Vector2 mouse_last;
     Vector2 mouse_current;
+
+    float window_innerMargin; // Interaction margin applied to windows (usefull on video mode WINDOWED, when mouse comes back and forth)
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
@@ -96,6 +104,8 @@ GUI_State GUI_MakeDefaultState(float opacity)
         0,
         (Vector2){ 0.0, 0.0},
         (Vector2){ 0.0, 0.0},
+
+        25
     };
     
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
@@ -147,7 +157,8 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     Vector2 mouse = GetMousePosition();
     GUI_ElementStatus status = GUI_Status_Default;
 
-    bool collide = CheckCollisionPointRec(mouse, shape);
+    bool collide = CheckCollisionPointRec(mouse, shape) 
+                    && gui->focus_id <= 0;
     if (collide) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = GUI_Status_Focus;
@@ -175,23 +186,53 @@ void GUI_DrawWindow(char* title, Rectangle shape,  GUI_ElementStatus status, GUI
         theme.font_size * scale, theme.font_spacing, tx_color);
 }
 
-void GUI_Window(int id, char* title, Rectangle *shape, GUI_State* gui)
+void GUI_Limit(Rectangle *shape, Rectangle limits) {
+    // Restrict size to not exceed limits
+    shape->width = fminf(shape->width, limits.width);
+    shape->height = fminf(shape->height, limits.height);
+
+    // Restrict position to not go outside left/top boundaries
+    shape->x = fmaxf(shape->x, limits.x);
+    shape->y = fmaxf(shape->y, limits.y);
+
+    // Restrict position to not go outside right/bottom boundaries
+    shape->x = fminf(shape->x, limits.x + limits.width - shape->width);
+    shape->y = fminf(shape->y, limits.y + limits.height - shape->height);
+}
+
+bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
+    Rectangle inner = {
+        rect.x + margin,
+        rect.y + margin, 
+        rect.width - 2 * margin,
+        rect.height - 2 * margin
+    };
+
+    return CheckCollisionPointRec(point, inner);
+}
+
+void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits)
 {
     bool collide = CheckCollisionPointRec(gui->mouse_current, *shape);
-    if (collide) {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && gui->focus_id == 0) {
-            gui->focus_id = id;
-        }
+    bool interacting = IsMouseButtonDown(MOUSE_BUTTON_LEFT) && collide;
 
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && gui->focus_id == id) {
-            Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);
-            DrawText(TextFormat("%f %f", displacement.x, displacement.y), 100,400, 20, RED);
-            if (Vector2Length(displacement) > 1.5f) {
-                shape->x += displacement.x;
-                shape->y += displacement.y;
-            }
+    bool checkFocus = interacting && gui->focus_id == 0;
+    if (checkFocus) {
+        gui->focus_id = id;
+    }
+
+    bool moving = IsMouseButtonDown(MOUSE_BUTTON_LEFT) 
+                && gui->focus_id == id;
+    if (moving) {
+        Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);
+        if (Vector2Length(displacement) > 1.5f) {
+            shape->x += displacement.x;
+            shape->y += displacement.y;
         }
     }
+    
+    GUI_Limit(shape, limits);
+
 
     GUI_ElementStatus status = gui->focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
     GUI_DrawWindow(title, *shape, status, gui->theme, gui->font, gui->scale, false);
@@ -271,12 +312,17 @@ Game_Character* Game_GetCurrentCharacter(Game_State* state)
 }
 
 int main(void) {
-    InitWindow(800, 600, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
+
+    InitWindow(DEV_WINDOW_W, DEV_WINDOW_H, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
     SetTargetFPS(60);
+
+    while (GetCurrentMonitor() != DEV_TARGET_MONITOR && DEV_TARGET_MONITOR < GetMonitorCount())
+        SetWindowMonitor(DEV_TARGET_MONITOR);
 
     // Create render texture for the UI
     RenderTexture2D buffer = LoadRenderTexture(GetRenderWidth(), GetRenderHeight());
     GUI_State gui = GUI_MakeDefaultState(255);
+    Texture2D mouse_texture = LoadTexture("ico/cursor.png");
 
     Game_State game_state = Game_MakeState();
     PLAYER_Actions player_actions = PLAYER_MakeActions();
@@ -306,13 +352,32 @@ int main(void) {
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 gui.focus_id = 0;
         }
-        
 
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
-            GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), GetScreenHeight() });
-            GUI_Window(1, "Window title", &window, &gui);
+            
+            GUI_TopBar(&gui, &player_actions, 
+                (Rectangle){ 0, 0, GetScreenWidth(), 0 });
 
+            GUI_Window(1, "Window title", &gui, &window,
+                (Rectangle){ 0, GUI_CalcDefaultHeight(gui.theme.font_size), GetScreenWidth(), GetScreenHeight() });
+            
+            // Draw mouse
+            Rectangle mouse_shape = (Rectangle){
+                gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
+                gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
+                mouse_texture.width * gui.scale,
+                mouse_texture.height * gui.scale
+            };
+            Rectangle mouse_limits = (Rectangle) {
+                gui.window_innerMargin,
+                gui.window_innerMargin,
+                GetScreenWidth() - gui.window_innerMargin,
+                GetScreenHeight() - gui.window_innerMargin
+            };
+            GUI_Limit(&mouse_shape, mouse_limits);
+
+            DrawTextureEx(mouse_texture, (Vector2) { mouse_shape.x, mouse_shape.y }, 0, gui.scale, WHITE);            
         EndTextureMode();
 
         gui.mouse_last              = gui.mouse_current;
@@ -360,7 +425,7 @@ int main(void) {
                 for (int i = 0; i < game_state.alive_characters; ++i ) {
                     Game_Character* c = &game_state.characters[i];
                     DrawRectangleRec(c->Shape, c->Color);
-                }            
+                }
             EndMode2D();
             
             // Draw UI Buffer
