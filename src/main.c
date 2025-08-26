@@ -5,7 +5,10 @@
 #ifndef ENV_SETTINGS
 #define DEV_WINDOW_W            1040
 #define DEV_WINDOW_H            720
+#define DEV_FULLSCREEN          0
 #define DEV_TARGET_MONITOR      1
+#define DEV_HIDE_CURSOR         1
+#define DEV_MAXIMIZE            1
 
 #endif
 
@@ -71,17 +74,6 @@ GUI_Theme GUI_MakeDefaultTheme(int opacity)
     return theme;
 }
 
-float GUI_CalcDefaultHeight(float font_size)
-{
-    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font_size, 1.0);
-    return textShape.y;
-}
-
-float GUI_CalcDefaultIconSize(float font_size, float scale)
-{
-    return GUI_CalcDefaultHeight(font_size) * scale;
-}
-
 struct {
     GUI_Theme theme;
     GUI_Icons icons;
@@ -110,6 +102,22 @@ GUI_State GUI_MakeDefaultState(float opacity)
     
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
+}
+
+float GUI_CalcDefaultHeight(float font_size)
+{
+    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font_size, 1.0);
+    return textShape.y;
+}
+
+float GUI_CalcDefaultScaledHeight(GUI_State* gui)
+{
+    return GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2;
+}
+
+float GUI_CalcDefaultIconSize(float font_size, float scale)
+{
+    return GUI_CalcDefaultHeight(font_size) * scale;
 }
 
 void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon) 
@@ -169,7 +177,6 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     
     bool hasIcon = icon != 0;
     GUI_DrawButton(text, shape, status, theme, gui->font, gui->scale, hasIcon);
-
     GUI_Icon(icon, (Vector2) { shape.x + theme.padding.x, shape.y + theme.padding.y }, theme.font_size, gui->scale, WHITE);
 
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
@@ -186,18 +193,32 @@ void GUI_DrawWindow(char* title, Rectangle shape,  GUI_ElementStatus status, GUI
         theme.font_size * scale, theme.font_spacing, tx_color);
 }
 
-void GUI_Limit(Rectangle *shape, Rectangle limits) {
+Rectangle GUI_LimitRect(Rectangle shape, Rectangle limits) {
     // Restrict size to not exceed limits
-    shape->width = fminf(shape->width, limits.width);
-    shape->height = fminf(shape->height, limits.height);
+    shape.width = fminf(shape.width, limits.width);
+    shape.height = fminf(shape.height, limits.height);
 
     // Restrict position to not go outside left/top boundaries
-    shape->x = fmaxf(shape->x, limits.x);
-    shape->y = fmaxf(shape->y, limits.y);
+    shape.x = fmaxf(shape.x, limits.x);
+    shape.y = fmaxf(shape.y, limits.y);
 
     // Restrict position to not go outside right/bottom boundaries
-    shape->x = fminf(shape->x, limits.x + limits.width - shape->width);
-    shape->y = fminf(shape->y, limits.y + limits.height - shape->height);
+    shape.x = fminf(shape.x, limits.x + limits.width - shape.width);
+    shape.y = fminf(shape.y, limits.y + limits.height - shape.height);
+
+    return shape;
+}
+
+Vector2 GUI_LimitVector2(Vector2 point, Rectangle limits) {
+    // Restrict position to not go outside left/top boundaries
+    point.x = fmaxf(point.x, limits.x);
+    point.y = fmaxf(point.y, limits.y);
+
+    // Restrict position to not go outside right/bottom boundaries
+    point.x = fminf(point.x, limits.x + limits.width);
+    point.y = fminf(point.y, limits.y + limits.height);
+
+    return point;
 }
 
 bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
@@ -231,7 +252,7 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
         }
     }
     
-    GUI_Limit(shape, limits);
+    *shape = GUI_LimitRect(*shape, limits);
 
 
     GUI_ElementStatus status = gui->focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
@@ -259,9 +280,7 @@ void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions, Rectangle target)
     int buttons = 3;
     float screen_w = target.width;
     float button_w = target.width / buttons;
-
-    float button_h = target.height == 0 ? GUI_CalcDefaultHeight(gui->theme.font_size) * gui->scale + gui->theme.padding.y * 2
-                                        : target.height;
+    float button_h = target.height;
 
     actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New);
     actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open);
@@ -312,6 +331,7 @@ Game_Character* Game_GetCurrentCharacter(Game_State* state)
 }
 
 int main(void) {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
     InitWindow(DEV_WINDOW_W, DEV_WINDOW_H, TextFormat("Raylib Movement - %s", GetWorkingDirectory()));
     SetTargetFPS(60);
@@ -319,8 +339,20 @@ int main(void) {
     while (GetCurrentMonitor() != DEV_TARGET_MONITOR && DEV_TARGET_MONITOR < GetMonitorCount())
         SetWindowMonitor(DEV_TARGET_MONITOR);
 
+    Vector2 screen_max = (Vector2) { GetMonitorWidth(DEV_TARGET_MONITOR),  GetMonitorHeight(DEV_TARGET_MONITOR) };
+    SetWindowMaxSize(screen_max.x, screen_max.y);
+
+    if (DEV_FULLSCREEN)
+        ToggleFullscreen();
+
+    if (DEV_MAXIMIZE)
+        MaximizeWindow();
+
+    if (DEV_HIDE_CURSOR)
+        HideCursor();
+
     // Create render texture for the UI
-    RenderTexture2D buffer = LoadRenderTexture(GetRenderWidth(), GetRenderHeight());
+    RenderTexture2D buffer = LoadRenderTexture(screen_max.x, screen_max.y);
     GUI_State gui = GUI_MakeDefaultState(255);
     Texture2D mouse_texture = LoadTexture("ico/cursor.png");
 
@@ -329,7 +361,7 @@ int main(void) {
 
     Camera2D camera = { 0 };
     camera.target = (Vector2){ 0, 0 };
-    camera.offset = (Vector2){ GetRenderWidth() / 2.0f, GetRenderHeight() / 2.0f };
+    camera.offset = (Vector2){ screen_max.x / 2.0f, screen_max.y / 2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
@@ -343,8 +375,28 @@ int main(void) {
         //
 
         // UI
-        gui.mouse_current = GetMousePosition();
-        
+        float topbar_h = GUI_CalcDefaultScaledHeight(&gui);
+        Vector2 mouse_shape = (Vector2){
+            gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
+            gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
+        };
+        Rectangle mouse_limits = (Rectangle) {
+            0,
+            0,
+            GetScreenWidth(),
+            GetScreenHeight()
+        };
+
+        bool limitMovement = gui.focus_id > 0 && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+        if (limitMovement) {
+            mouse_limits.y = topbar_h;
+        }
+
+        gui.mouse_current = GUI_LimitVector2(GetMousePosition(), mouse_limits);
+        if (limitMovement) {
+            SetMousePosition(gui.mouse_current.x, gui.mouse_current.y);
+        }
+
         if (gui.focus_id == 0){
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
                 gui.focus_id = -1;
@@ -353,31 +405,21 @@ int main(void) {
                 gui.focus_id = 0;
         }
 
+        Rectangle window_limits = (Rectangle){ 
+            0,
+            topbar_h,
+            GetScreenWidth(),
+            GetScreenHeight() 
+        };
+
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
             
-            GUI_TopBar(&gui, &player_actions, 
-                (Rectangle){ 0, 0, GetScreenWidth(), 0 });
+            GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_h });
 
-            GUI_Window(1, "Window title", &gui, &window,
-                (Rectangle){ 0, GUI_CalcDefaultHeight(gui.theme.font_size), GetScreenWidth(), GetScreenHeight() });
+            GUI_Window(1, "Window title", &gui, &window, window_limits);
             
-            // Draw mouse
-            Rectangle mouse_shape = (Rectangle){
-                gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
-                gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
-                mouse_texture.width * gui.scale,
-                mouse_texture.height * gui.scale
-            };
-            Rectangle mouse_limits = (Rectangle) {
-                gui.window_innerMargin,
-                gui.window_innerMargin,
-                GetScreenWidth() - gui.window_innerMargin,
-                GetScreenHeight() - gui.window_innerMargin
-            };
-            GUI_Limit(&mouse_shape, mouse_limits);
-
-            DrawTextureEx(mouse_texture, (Vector2) { mouse_shape.x, mouse_shape.y }, 0, gui.scale, WHITE);            
+            DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            
         EndTextureMode();
 
         gui.mouse_last              = gui.mouse_current;
