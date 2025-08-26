@@ -52,17 +52,20 @@ struct {
 
 GUI_Theme GUI_MakeDefaultTheme(int opacity)
 {
-    GUI_Theme theme = {        
+    GUI_Theme theme = {
+        // bg color
         (Color) { 80, 67, 48, opacity },
         (Color) { 116, 100, 67, opacity },
         (Color) { 58, 49, 35, opacity },
 
+        // color
         (Color) { 171, 158, 127, 255 },
         (Color) { 238, 208, 147, 255 },
         (Color) { 253, 250, 85, 255 },
 
-        (Color) { 33, 33, 33, 255 },
-        (Color) { 118, 118, 118, 255 },
+        // border color
+        (Color) { 33, 33, 33, 200 },
+        (Color) { 118, 118, 118, 200 },
 
         (Vector2){ 8, 8 },
         2.0f,
@@ -79,9 +82,13 @@ struct {
     GUI_Icons icons;
     float scale;
     Font font;
-    int focus_id;
+
+    int window_focus_id;
+    bool window_focus_moving;
     Vector2 mouse_last;
     Vector2 mouse_current;
+
+    float default_height;
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState(float opacity)
@@ -91,9 +98,13 @@ GUI_State GUI_MakeDefaultState(float opacity)
         GUI_LoadIcons(),
         1.0f,
         LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0),
+
+        0,
         0,
         (Vector2){ 0.0, 0.0},
-        (Vector2){ 0.0, 0.0}
+        (Vector2){ 0.0, 0.0},
+
+        0
     };
     
     SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
@@ -116,6 +127,22 @@ float GUI_CalcDefaultIconSize(float font_size, float scale)
     return GUI_CalcDefaultHeight(font_size) * scale;
 }
 
+void GUI_DrawBorders(Rectangle shape, GUI_Theme theme, Color dark, Color light)
+{
+    // Draw top border (horizontal line)    
+    DrawRectangle(shape.x, shape.y, shape.width, theme.border, dark);
+
+    // Draw left border (vertical line)
+    DrawRectangle(shape.x, shape.y, theme.border, shape.height, dark);
+
+    // Draw bottom border (horizontal line)
+    DrawRectangle(shape.x, shape.y + shape.height - theme.border, shape.width, theme.border, light);
+
+    // Draw right border (vertical line)
+    DrawRectangle(shape.x + shape.width - theme.border, shape.y, theme.border, shape.height, light);
+
+}
+
 void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon) 
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
@@ -124,27 +151,15 @@ void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_
     Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
     Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
 
-    // Draw the button background
     DrawRectangleRec(shape, bg_color);
-
-    // Draw top border (horizontal line)    
-    DrawRectangle(shape.x, shape.y, shape.width, theme.border, b_dark);
-
-    // Draw left border (vertical line)
-    DrawRectangle(shape.x, shape.y, theme.border, shape.height, b_dark);
-
-    // Draw bottom border (horizontal line)
-    DrawRectangle(shape.x, shape.y + shape.height - theme.border, shape.width, theme.border, b_light);
-
-    // Draw right border (vertical line)
-    DrawRectangle(shape.x + shape.width - theme.border, shape.y, theme.border, shape.height, b_light);
-
+    GUI_DrawBorders(shape, theme, b_dark, b_light);
+    
     // Calc text padding
     float icon_size = icon ? GUI_CalcDefaultIconSize(theme.font_size, scale) : 0;
 
     Font font = theme.font_custom ? font_custom : GetFontDefault();
     DrawTextEx(font, text, 
-        (Vector2){shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y}, 
+        (Vector2){ shape.x + icon_size + theme.padding.x * 2, shape.y + theme.padding.y}, 
         theme.font_size * scale, theme.font_spacing, tx_color);
 }
 
@@ -162,7 +177,7 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     GUI_ElementStatus status = GUI_Status_Default;
 
     bool collide = CheckCollisionPointRec(mouse, shape) 
-                    && gui->focus_id <= 0;
+                    && gui->window_focus_id <= 0;
     if (collide) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = GUI_Status_Focus;
@@ -178,15 +193,23 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
-void GUI_DrawWindow(char* title, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon)
+void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon)
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_2 : theme.bg_color_1;
     Color tx_color = theme.color_0;
+
+    Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
+    Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
     
     DrawRectangleRec(shape, bg_color);
+
+    GUI_DrawBorders(shape, theme, b_dark, b_light);
+
     DrawTextEx(font_custom, title,
         (Vector2){shape.x + theme.padding.x, shape.y + theme.padding.y}, 
         theme.font_size * scale, theme.font_spacing, tx_color);
+
+    GUI_DrawBorders(shapeTitle, theme, b_light, b_dark);
 }
 
 Rectangle GUI_LimitRect(Rectangle shape, Rectangle limits) {
@@ -230,29 +253,40 @@ bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float m
 
 void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits)
 {
-    bool collide = CheckCollisionPointRec(gui->mouse_current, *shape);
-    bool interacting = IsMouseButtonDown(MOUSE_BUTTON_LEFT) && collide;
+    Rectangle shapeTitle = {
+        shape->x,
+        shape->y,
+        shape->width,
+        gui->default_height
+    };
 
-    bool checkFocus = interacting && gui->focus_id == 0;
+    bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape);
+    bool collideTitle   = CheckCollisionPointRec(gui->mouse_current, shapeTitle);
+    bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+
+    bool checkFocus = collide && gui->window_focus_id == 0;
     if (checkFocus) {
-        gui->focus_id = id;
+        gui->window_focus_id = id;
+        gui->window_focus_moving = collideTitle;
     }
 
     bool moving = IsMouseButtonDown(MOUSE_BUTTON_LEFT) 
-                && gui->focus_id == id;
+                && gui->window_focus_moving;
     if (moving) {
         Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);        
         shape->x += displacement.x;
         shape->y += displacement.y;
-        
-        DrawText(TextFormat("%f", Vector2Length(displacement)), 40,40, 20, GREEN);
+
+        shapeTitle.x += displacement.x;
+        shapeTitle.y += displacement.y;
     }
+
+    *shape      = GUI_LimitRect(*shape, limits);
+    shapeTitle  = GUI_LimitRect(shapeTitle, limits);
     
-    *shape = GUI_LimitRect(*shape, limits);
 
-
-    GUI_ElementStatus status = gui->focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
-    GUI_DrawWindow(title, *shape, status, gui->theme, gui->font, gui->scale, false);
+    GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+    GUI_DrawWindow(title, *shape, shapeTitle, status, gui->theme, gui->font, gui->scale, false);
 }
 
 struct {
@@ -371,7 +405,7 @@ int main(void) {
         //
 
         // UI
-        float topbar_h = GUI_CalcDefaultScaledHeight(&gui);
+        gui.default_height = GUI_CalcDefaultScaledHeight(&gui);
         Rectangle mouse_limits = (Rectangle) {
             0,
             0,
@@ -386,17 +420,21 @@ int main(void) {
             gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
         };
 
-        if (gui.focus_id == 0){
-            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-                gui.focus_id = -1;
+        if (gui.window_focus_id == 0){
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                gui.window_focus_id = -1;
+                gui.window_focus_moving = 0;
+            }
         } else {
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-                gui.focus_id = 0;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                gui.window_focus_id = 0;
+                gui.window_focus_moving = 0;
+            }
         }
 
         Rectangle window_limits = (Rectangle){ 
             0,
-            topbar_h,
+            gui.default_height,
             GetScreenWidth(),
             GetScreenHeight() 
         };
@@ -404,7 +442,7 @@ int main(void) {
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
             
-            GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_h });
+            GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
             GUI_Window(1, "Window title", &gui, &window, window_limits);
             
