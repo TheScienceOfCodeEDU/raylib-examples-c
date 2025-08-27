@@ -3,16 +3,8 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "rayext.h"
+#include "env.h"
 
-#ifndef ENV_SETTINGS
- #define DEV_WINDOW_W            1040
- #define DEV_WINDOW_H            720
- #define DEV_FULLSCREEN          0
- #define DEV_TARGET_MONITOR      1
- #define DEV_HIDE_CURSOR         1
- #define DEV_MAXIMIZE            1
- #define DEV_DEBUG_GUI           0
-#endif
 
 struct {
     Texture2D New;
@@ -551,13 +543,18 @@ int main(void) {
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
             
+            // Top bar
             GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
+            // Window
             GUI_Window(1, "Window title", &gui, &window, window_limits);
-            GUI_TextBox(1, textbox_contents, 
-                GUI_RelativeToRect(
-                    (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height }, 
-                    GUI_WindowWorkspace(window, &gui)), &gui);
+            {
+                Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
+
+                // Window contents
+                Rectangle textbox = (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height };
+                GUI_TextBox(1, textbox_contents, GUI_RelativeToRect(textbox, window_workspace), &gui);
+            }
             
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            
         EndTextureMode();
