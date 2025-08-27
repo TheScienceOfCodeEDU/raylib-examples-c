@@ -2,16 +2,16 @@
 #define UNITY_BUILD 1
 #include "raylib.h"
 #include "raymath.h"
+#include "rayext.h"
 
 #ifndef ENV_SETTINGS
-#define DEV_WINDOW_W            1040
-#define DEV_WINDOW_H            720
-#define DEV_FULLSCREEN          0
-#define DEV_TARGET_MONITOR      1
-#define DEV_HIDE_CURSOR         1
-#define DEV_MAXIMIZE            1
-#define DEV_DEBUG_GUI           1
-
+ #define DEV_WINDOW_W            1040
+ #define DEV_WINDOW_H            720
+ #define DEV_FULLSCREEN          0
+ #define DEV_TARGET_MONITOR      1
+ #define DEV_HIDE_CURSOR         1
+ #define DEV_MAXIMIZE            1
+ #define DEV_DEBUG_GUI           0
 #endif
 
 struct {
@@ -37,52 +37,45 @@ enum {
 } typedef GUI_ElementStatus;
 
 struct {
-    Color bg_color_0;
-    Color bg_color_1;
-    Color bg_color_2;
-    Color color_0;
-    Color color_1;
-    Color color_2;
-    Color b_color_0;
-    Color b_color_1;
-
-    Vector2 padding;
-    float border;
-
-    float font_size;
-    float font_spacing;
-    bool font_custom;
-
-    Vector2 blink_size;
+    Color bg_color_0;       // Primary background color
+    Color bg_color_1;       // Secondary background color
+    Color bg_color_2;       // Tertiary background color
+    Color color_0;          // Primary color (e.g., for text or elements)
+    Color color_1;          // Secondary color
+    Color color_2;          // Tertiary color
+    Color b_color_0;        // Primary border color
+    Color b_color_1;        // Secondary border color
+    Vector2 padding;        // Internal padding
+    float border;           // Border thickness
+    bool font_custom;       // Indicates if a custom font is used
+    float font_spacing;     // Font spacing
+    Vector2 blink_size;     // Size of the blinking cursor
 } typedef GUI_Theme;
+
 
 GUI_Theme GUI_MakeDefaultTheme(int opacity)
 {
     GUI_Theme theme = {
-        // bg color
-        (Color) { 80, 67, 48, opacity },
-        (Color) { 116, 100, 67, opacity },
-        (Color) { 58, 49, 35, opacity },
+        // Background colors
+        (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
+        (Color) { 116, 100, 67, opacity },  // bg_color_1: Medium brown with variable opacity
+        (Color) { 58, 49, 35, opacity },    // bg_color_2: Very dark brown with variable opacity
 
-        // color
-        (Color) { 171, 158, 127, 255 },
-        (Color) { 238, 208, 147, 255 },
-        (Color) { 253, 250, 85, 255 },
+        // Primary colors
+        (Color) { 171, 158, 127, 255 },    // color_0: Light beige, fully opaque
+        (Color) { 238, 208, 147, 255 },    // color_1: Warm beige, fully opaque
+        (Color) { 253, 250, 85, 255 },     // color_2: Light yellow, fully opaque
 
-        // border color
-        (Color) { 33, 33, 33, 200 },
-        (Color) { 118, 118, 118, 200 },
+        // Border colors
+        (Color) { 33, 33, 33, 200 },       // b_color_0: Very dark gray, semi-opaque
+        (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque
 
-        // padding
-        (Vector2){ 8, 8 },
-        // border
-        2.0f,
-        20.0f,
-        1.0f,
-        0,
-
-        // blink
-        (Vector2) { 2, 10 }
+        // Padding
+        (Vector2) { 8, 8 },                // padding
+        2.0f,                              // border
+        1,                                 // font_custom
+        1.0,                               // font_spacing
+        (Vector2) { 2, 10 }                // blink_size
     };
 
     return theme;
@@ -92,7 +85,7 @@ struct {
     GUI_Theme theme;
     GUI_Icons icons;
     float scale;
-    Font font;
+    Font font_custom;
 
     int window_focus_id;
     bool window_focus_moving;
@@ -108,10 +101,10 @@ GUI_State GUI_MakeDefaultState(float opacity)
     GUI_State state = {
         GUI_MakeDefaultTheme(255),
         GUI_LoadIcons(),
-        1.0f,
-        LoadFontEx("fnt/VT323.ttf", 64.0f, 0, 0),
+        2.0f,
+        LoadFont("fnt/pixelplay.png"),
 
-        0,
+        -1,
         0,
         0,
         (Vector2){ 0.0, 0.0},
@@ -119,8 +112,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
 
         0
     };
-    
-    SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
+    //SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
 
@@ -132,7 +124,8 @@ Font GUI_GetFont(GUI_Theme theme, Font font_custom)
 
 float GUI_CalcDefaultHeight(GUI_State* gui)
 {
-    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", gui->theme.font_size, gui->theme.font_spacing);
+    Font font = GUI_GetFont(gui->theme, gui->font_custom);
+    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font.baseSize, gui->theme.font_spacing);
     return textShape.y;
 }
 
@@ -182,7 +175,7 @@ void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, text, 
         (Vector2){ shape.x + icon_w + theme.padding.x * 2, shape.y + theme.padding.y}, 
-        theme.font_size * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, tx_color);
 }
 
 void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale, Color tint)
@@ -209,7 +202,7 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
     }
     
     float icon_w = GUI_CalcDefaultIconSize(gui);
-    GUI_DrawButton(text, shape, status, theme, gui->font, gui->scale, icon_w);
+    GUI_DrawButton(text, shape, status, theme, gui->font_custom, gui->scale, icon_w);
     GUI_Icon(icon, 
         (Vector2) { shape.x + theme.border * gui->scale, shape.y + theme.border * gui->scale }, 
         icon_w, 1.0f, WHITE);
@@ -239,11 +232,11 @@ void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GU
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, value, 
         (Vector2){ shape.x + theme.padding.x, shape.y + theme.padding.y}, 
-        theme.font_size * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, tx_color);
 
     if (status == GUI_Status_Focus && blink_state) {
-        int text_w = MeasureTextEx(font, value, theme.font_size * scale, theme.font_spacing).x;
-        int text_h = MeasureTextEx(font, value, theme.font_size * scale, theme.font_spacing).y;
+        int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x;
+        int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y;
         DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, tx_color);
     }
     
@@ -287,7 +280,7 @@ bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
         }
     }
 
-    GUI_DrawTextBox(value, shape, status, gui->theme, gui->font, gui->scale);
+    GUI_DrawTextBox(value, shape, status, gui->theme, gui->font_custom, gui->scale);
         
     return false;
 }
@@ -307,37 +300,9 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, title,
         (Vector2){shape.x + theme.padding.x, shape.y + theme.padding.y}, 
-        theme.font_size * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, tx_color);
 
     GUI_DrawBorders(shapeTitle, b_light, b_dark, theme.border * scale);
-}
-
-Rectangle GUI_LimitRect(Rectangle shape, Rectangle limits) {
-    // Restrict size to not exceed limits
-    shape.width = fminf(shape.width, limits.width);
-    shape.height = fminf(shape.height, limits.height);
-
-    // Restrict position to not go outside left/top boundaries
-    shape.x = fmaxf(shape.x, limits.x);
-    shape.y = fmaxf(shape.y, limits.y);
-
-    // Restrict position to not go outside right/bottom boundaries
-    shape.x = fminf(shape.x, limits.x + limits.width - shape.width);
-    shape.y = fminf(shape.y, limits.y + limits.height - shape.height);
-
-    return shape;
-}
-
-Vector2 GUI_LimitVector2(Vector2 point, Rectangle limits) {
-    // Restrict position to not go outside left/top boundaries
-    point.x = fmaxf(point.x, limits.x);
-    point.y = fmaxf(point.y, limits.y);
-
-    // Restrict position to not go outside right/bottom boundaries
-    point.x = fminf(point.x, limits.x + limits.width);
-    point.y = fminf(point.y, limits.y + limits.height);
-
-    return point;
 }
 
 bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
@@ -381,42 +346,39 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
 
 void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits)
 {
-    Rectangle shapeTitle = {
-        shape->x,
-        shape->y,
-        shape->width,
-        gui->default_height
-    };
-
+    Rectangle shape_title = GUI_WindowTitle(*shape, gui);
+    
+    // Conditions
     bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape);
-    bool collideTitle   = CheckCollisionPointRec(gui->mouse_current, shapeTitle);
+    bool collide_title  = CheckCollisionPointRec(gui->mouse_current, shape_title);
     bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-
-    bool checkFocus = collide && gui->window_focus_id == 0;
-    if (checkFocus) {
-        gui->window_focus_id = id;
-        gui->window_focus_moving = collideTitle;
+    
+    // Focus
+    bool focusing = collide && gui->window_focus_id == 0;
+    if (focusing) {
+        gui->window_focus_id        = id;
+        gui->window_focus_moving    = collide_title;
     }
 
-    bool moving = IsMouseButtonDown(MOUSE_BUTTON_LEFT) 
-                && gui->window_focus_moving;
+    // Movement
+    bool moving = interacting && gui->window_focus_moving;
     if (moving) {
-        Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);        
-        shape->x += displacement.x;
-        shape->y += displacement.y;
-
-        shapeTitle.x += displacement.x;
-        shapeTitle.y += displacement.y;
+        Vector2 displacement    = Vector2Subtract(gui->mouse_current, gui->mouse_last);
+        shape->x                += displacement.x;
+        shape->y                += displacement.y;
+        shape_title.x           += displacement.x;
+        shape_title.y           += displacement.y;
     } else {
         gui->window_focus_moving = false;
     }
 
-    *shape      = GUI_LimitRect(*shape, limits);
-    shapeTitle  = GUI_LimitRect(shapeTitle, limits);
-    
+    // Limit
+    *shape          = LimitRect(*shape, limits);
+    shape_title     = LimitRect(shape_title, limits);
 
+    // Draw
     GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
-    GUI_DrawWindow(title, *shape, shapeTitle, status, gui->theme, gui->font, gui->scale, false);
+    GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, gui->scale, false);
 }
 
 struct {
@@ -556,7 +518,7 @@ int main(void) {
             GetScreenHeight()
         };
 
-        gui.mouse_current = GUI_LimitVector2(GetMousePosition(), mouse_limits);
+        gui.mouse_current = LimitVector2(GetMousePosition(), mouse_limits);
 
         Vector2 mouse_shape = (Vector2){
             gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
@@ -627,8 +589,8 @@ int main(void) {
         if (camera.zoom > 3.0f) camera.zoom = 3.0f;
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 
-        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) gui.scale += 0.5;
-        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 0.5;
+        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) gui.scale += 1.0;
+        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 1.0;
 
         static float ui_opacity = 250.0;
 
