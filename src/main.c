@@ -178,11 +178,15 @@ int main(void) {
                 Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
 
                 // Window contents
-                Rectangle textbox = RelativeToRect((Rectangle){ 0, 0, GetScreenWidth(), gui.default_height }, window_workspace);
-                GUI_TextBox(1, textbox_contents, textbox, &gui);
+                float position_y = 0;
+                Rectangle textbox = { 0, position_y, GetScreenWidth(), gui.default_height };
+                Rectangle textbox_relative = RelativeToRect(textbox, window_workspace);
+                GUI_TextBox(1, textbox_contents, textbox_relative, &gui);
 
-                Rectangle textbox2 = RelativeToRect((Rectangle){ 0, gui.default_height, GetScreenWidth(), gui.default_height }, window_workspace);
-                GUI_TextBox(2, textbox2_contents, textbox2, &gui);
+                position_y += gui.default_height;
+                Rectangle textbox2 = { 0, position_y, GetScreenWidth(), gui.default_height };
+                Rectangle textbox2_relative = RelativeToRect(textbox2, window_workspace);
+                GUI_TextBox(2, textbox2_contents, textbox2_relative, &gui);
             }
             
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            
