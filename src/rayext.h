@@ -31,3 +31,15 @@ Vector2 LimitVector2(Vector2 point, Rectangle limits) {
 
     return point;
 }
+
+Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
+{
+    Rectangle result = {
+        rectangle.x + relativeTo.x,
+        rectangle.y + relativeTo.y,
+        rectangle.width > relativeTo.width ? relativeTo.width : rectangle.width,
+        rectangle.height > relativeTo.height ? relativeTo.height : rectangle.height
+    };
+
+    return result;
+}

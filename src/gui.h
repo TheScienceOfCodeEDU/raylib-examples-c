@@ -1,0 +1,375 @@
+#ifndef UNITY_BUILD
+ #include "rayext.h"
+ #include "str.h"
+ #include "env.h"
+#endif
+
+
+struct {
+    Texture2D New;
+    Texture2D Open;
+    Texture2D Save;
+} typedef GUI_Icons;
+
+GUI_Icons GUI_LoadIcons()
+{
+    GUI_Icons icons = {
+        LoadTexture("ico/new.png"),
+        LoadTexture("ico/open.png"),
+        LoadTexture("ico/save.png")
+    };
+    return icons;
+}
+
+enum {
+    GUI_Status_Default,
+    GUI_Status_Focus,
+    GUI_Status_Click
+} typedef GUI_ElementStatus;
+
+struct {
+    Color bg_color_0;       // Primary background color
+    Color bg_color_1;       // Secondary background color
+    Color bg_color_2;       // Tertiary background color
+    Color color_0;          // Primary color (e.g., for text or elements)
+    Color color_1;          // Secondary color
+    Color color_2;          // Tertiary color
+    Color b_color_0;        // Primary border color
+    Color b_color_1;        // Secondary border color
+    Vector2 padding;        // Internal padding
+    float border;           // Border thickness
+    bool font_custom;       // Indicates if a custom font is used
+    float font_spacing;     // Font spacing
+    Vector2 blink_size;     // Size of the blinking cursor
+} typedef GUI_Theme;
+
+
+GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
+{
+    GUI_Theme theme = {
+        // Background colors
+        (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
+        (Color) { 116, 100, 67, opacity },  // bg_color_1: Medium brown with variable opacity
+        (Color) { 58, 49, 35, opacity },    // bg_color_2: Very dark brown with variable opacity
+
+        // Primary colors
+        (Color) { 171, 158, 127, 255 },    // color_0: Light beige, fully opaque
+        (Color) { 238, 208, 147, 255 },    // color_1: Warm beige, fully opaque
+        (Color) { 253, 250, 85, 255 },     // color_2: Light yellow, fully opaque
+
+        // Border colors
+        (Color) { 33, 33, 33, 200 },       // b_color_0: Very dark gray, semi-opaque
+        (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque
+
+        // Padding
+        (Vector2) { 8, 8 },                // padding
+        2.0f,                              // border
+        1,                                 // font_custom
+        1.0,                               // font_spacing
+        (Vector2) { 2, 10 }                // blink_size
+    };
+
+    return theme;
+}
+
+struct {
+    GUI_Theme theme;
+    GUI_Icons icons;
+    float scale;
+    Font font_custom;
+
+    int window_focus_id;
+    bool window_focus_moving;
+    int control_focus_id;
+    Vector2 mouse_last;
+    Vector2 mouse_current;
+
+    float default_height;
+} typedef GUI_State;
+
+GUI_State GUI_MakeDefaultState(float opacity)
+{
+    GUI_State state = {
+        GUI_MakeDefaultTheme(255),
+        GUI_LoadIcons(),
+        2.0f,
+        LoadFont("fnt/pixelplay.png"),
+
+        -1,
+        0,
+        0,
+        (Vector2){ 0.0, 0.0},
+        (Vector2){ 0.0, 0.0},
+
+        0
+    };
+    //SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
+    return state;
+}
+
+Font GUI_GetFont(GUI_Theme theme, Font font_custom)
+{
+    Font font = theme.font_custom ? font_custom : GetFontDefault();
+    return font;
+}
+
+float GUI_CalcDefaultHeight(GUI_State* gui)
+{
+    Font font = GUI_GetFont(gui->theme, gui->font_custom);
+    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font.baseSize, gui->theme.font_spacing);
+    return textShape.y;
+}
+
+float GUI_CalcShapeAvailableHeight(Rectangle shape, GUI_State* gui)
+{
+    return (shape.height - gui->theme.padding.y * 2) * gui->scale;
+}
+
+float GUI_CalcDefaultScaledHeight(GUI_State* gui)
+{
+    return (GUI_CalcDefaultHeight(gui) + gui->theme.border) * gui->scale + gui->theme.padding.y * 2;
+}
+
+float GUI_CalcDefaultIconSize(GUI_State* gui)
+{
+    return (GUI_CalcDefaultHeight(gui) + gui->theme.border) * gui->scale;
+}
+
+
+void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border)
+{
+    // Draw top border (horizontal line)    
+    DrawRectangle(shape.x, shape.y, shape.width, border, dark);
+
+    // Draw left border (vertical line)
+    DrawRectangle(shape.x, shape.y, border, shape.height, dark);
+
+    // Draw bottom border (horizontal line)
+    DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
+
+    // Draw right border (vertical line)
+    DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
+
+}
+
+void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, float icon_w) 
+{
+    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
+    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
+
+    Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
+    Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
+
+    DrawRectangleRec(shape, bg_color);
+    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+
+    Font font = GUI_GetFont(theme, font_custom);
+    DrawTextEx(font, text, 
+        (Vector2){ shape.x + icon_w + theme.padding.x * 2, shape.y + theme.padding.y}, 
+        font.baseSize * scale, theme.font_spacing, tx_color);
+}
+
+void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale, Color tint)
+{
+    scale *= height / texture2d->height;
+    DrawTextureEx(*texture2d, position, 0, scale, tint);
+}
+
+bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
+{
+    GUI_Theme theme = gui->theme;
+    GUI_ElementStatus status = GUI_Status_Default;
+
+    bool collide            = CheckCollisionPointRec(gui->mouse_current, shape);
+    bool moving_window      = gui->window_focus_moving == 0;
+    bool focusable          = collide && moving_window;
+    if (focusable) {
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            status = GUI_Status_Focus;
+        } else {
+            status = GUI_Status_Click;
+        }
+    }
+    
+    float icon_w = GUI_CalcDefaultIconSize(gui);
+    GUI_DrawButton(text, shape, status, theme, gui->font_custom, gui->scale, icon_w);
+    GUI_Icon(icon, 
+        (Vector2) { shape.x + theme.border * gui->scale, shape.y + theme.border * gui->scale }, 
+        icon_w, 1.0f, WHITE);
+
+    return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+}
+
+void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool blink)
+{
+    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
+    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
+
+    Color b_light = status == GUI_Status_Focus ? theme.b_color_1 : theme.b_color_0;
+    Color b_dark = status == GUI_Status_Focus ? theme.b_color_0 : theme.b_color_1;
+
+    DrawRectangleRec(shape, bg_color);
+    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+
+    Font font = GUI_GetFont(theme, font_custom);
+    DrawTextEx(font, value, 
+        (Vector2){ shape.x + theme.padding.x, shape.y + theme.padding.y}, 
+        font.baseSize * scale, theme.font_spacing, tx_color);
+
+    if (status == GUI_Status_Focus && blink) {
+        int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x;
+        int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y;
+        DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, tx_color);
+    }
+}
+
+bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
+{
+    // Data
+    GUI_Theme theme = gui->theme;
+
+    // Blink
+    const float blink_speed     = 0.5f;
+    static float blink_timer    = 0.0f;
+    static bool blink_state     = 0;
+
+    // Conditions
+    bool collide        = CheckCollisionPointRec(gui->mouse_current, shape);
+    bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    // Focus
+    bool focusable      = collide && interacting;
+    if (focusable) {
+        gui->control_focus_id = id;
+        blink_state = 1;
+    }    
+    GUI_ElementStatus status = gui->control_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+
+    // Update focused control
+    if (status == GUI_Status_Focus) {
+        int textLength = StringSize(value);
+        // Handle text input
+        int key = GetCharPressed();
+        while (key > 0) {
+            if (key >= 32 && key <= 126 && textLength < 255) { // Printable ASCII characters
+                value[textLength] = (char)key;
+                textLength++;
+                value[textLength] = '\0'; // Null-terminate string
+            }
+            key = GetCharPressed(); // Get next queued character
+        }
+
+        // Handle backspace
+        if (IsKeyPressed(KEY_BACKSPACE) && textLength > 0) {
+            textLength--;
+            value[textLength] = '\0';
+        }
+
+        // Update cursor blink timer
+        if (blink_state)    blink_timer += GetFrameTime();
+        else                blink_timer -= GetFrameTime();
+
+        if (blink_timer > blink_speed)  blink_state = 0;
+        if (blink_timer < 0)            blink_state = 1;
+    }
+
+    GUI_DrawTextBox(value, shape, status, gui->theme, gui->font_custom, gui->scale, blink_state);
+        
+    return false;
+}
+
+void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon)
+{
+    Color bg_color = status == GUI_Status_Default ? theme.bg_color_2 : theme.bg_color_1;
+    Color tx_color = theme.color_0;
+
+    Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
+    Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
+    
+    DrawRectangleRec(shape, bg_color);
+
+    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+
+    Font font = GUI_GetFont(theme, font_custom);
+    DrawTextEx(font, title,
+        (Vector2){shape.x + theme.padding.x, shape.y + theme.padding.y}, 
+        font.baseSize * scale, theme.font_spacing, tx_color);
+
+    GUI_DrawBorders(shapeTitle, b_light, b_dark, theme.border * scale);
+}
+
+bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
+    Rectangle inner = {
+        rect.x + margin,
+        rect.y + margin, 
+        rect.width - 2 * margin,
+        rect.height - 2 * margin
+    };
+
+    return CheckCollisionPointRec(point, inner);
+}
+
+Rectangle GUI_WindowTitle(Rectangle shape, GUI_State* gui)
+{
+    Rectangle shapeTitle = {
+        shape.x,
+        shape.y,
+        shape.width,
+        gui->default_height
+    };
+    return shapeTitle;
+}
+
+Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
+{
+    Rectangle shape_title = GUI_WindowTitle(shape, gui);
+    Rectangle shape_workspace = {
+        shape.x,
+        shape.y + shape_title.height,
+        shape.width,
+        shape.height - shape_title.height
+    };
+
+    if (DEV_DEBUG_GUI) {
+        DrawRectangleRec(shape_title, ColorAlpha(ORANGE, 0.5));
+        DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
+    }
+    return shape_workspace;
+}
+
+void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits)
+{
+    Rectangle shape_title = GUI_WindowTitle(*shape, gui);
+    
+    // Conditions
+    bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape);
+    bool collide_title  = CheckCollisionPointRec(gui->mouse_current, shape_title);
+    bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    
+    // Focus
+    bool focusing = collide && gui->window_focus_id == 0;
+    if (focusing) {
+        gui->window_focus_id        = id;
+        gui->window_focus_moving    = collide_title;
+    }
+
+    // Movement
+    bool moving = interacting && gui->window_focus_moving;
+    if (moving) {
+        Vector2 displacement    = Vector2Subtract(gui->mouse_current, gui->mouse_last);
+        shape->x                += displacement.x;
+        shape->y                += displacement.y;
+        shape_title.x           += displacement.x;
+        shape_title.y           += displacement.y;
+    } else {
+        gui->window_focus_moving = false;
+    }
+
+    // Limit
+    *shape          = LimitRect(*shape, limits);
+    shape_title     = LimitRect(shape_title, limits);
+
+    // Draw
+    GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+    GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, gui->scale, false);
+}
