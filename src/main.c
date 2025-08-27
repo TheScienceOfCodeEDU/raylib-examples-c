@@ -119,6 +119,7 @@ int main(void) {
 
     Rectangle window = (Rectangle) { 20, 20, 250, 200 };
     char textbox_contents[256] = "hello\0";
+    char textbox2_contents[256] = "world\0";
     
     while (!WindowShouldClose()) {
         //
@@ -171,6 +172,7 @@ int main(void) {
             GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
             // Window
+            window.height = gui.default_height * 3;
             GUI_Window(1, "Window title", &gui, &window, window_limits);
             {
                 Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
@@ -178,6 +180,9 @@ int main(void) {
                 // Window contents
                 Rectangle textbox = RelativeToRect((Rectangle){ 0, 0, GetScreenWidth(), gui.default_height }, window_workspace);
                 GUI_TextBox(1, textbox_contents, textbox, &gui);
+
+                Rectangle textbox2 = RelativeToRect((Rectangle){ 0, gui.default_height, GetScreenWidth(), gui.default_height }, window_workspace);
+                GUI_TextBox(2, textbox2_contents, textbox2, &gui);
             }
             
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            

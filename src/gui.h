@@ -41,6 +41,7 @@ struct {
     bool font_custom;       // Indicates if a custom font is used
     float font_spacing;     // Font spacing
     Vector2 blink_size;     // Size of the blinking cursor
+    Vector2 blink_delta;    // Blink adjustment
 } typedef GUI_Theme;
 
 
@@ -66,7 +67,8 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
         2.0f,                              // border
         1,                                 // font_custom
         1.0,                               // font_spacing
-        (Vector2) { 2, 10 }                // blink_size
+        (Vector2) { 2, 10 },               // blink_size
+        (Vector2) { 1.9, 0 }               // blink_delta
     };
 
     return theme;
@@ -132,7 +134,7 @@ float GUI_CalcDefaultScaledHeight(GUI_State* gui)
 
 float GUI_CalcDefaultIconSize(GUI_State* gui)
 {
-    return (GUI_CalcDefaultHeight(gui) + gui->theme.border) * gui->scale;
+    return gui->default_height - gui->theme.border * 2 * gui->scale;
 }
 
 
@@ -165,13 +167,18 @@ void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, text, 
-        (Vector2){ shape.x + icon_w + theme.padding.x * 2, shape.y + theme.padding.y}, 
+        (Vector2){ shape.x + icon_w + theme.padding.x * 2 + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         font.baseSize * scale, theme.font_spacing, tx_color);
 }
 
 void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale, Color tint)
 {
     scale *= height / texture2d->height;
+
+    if (DEV_DEBUG_GUI) {
+        DrawRectangleRec((Rectangle) { position.x, position.y, height, height }, ORANGE);
+    }
+
     DrawTextureEx(*texture2d, position, 0, scale, tint);
 }
 
@@ -213,13 +220,14 @@ void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GU
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, value, 
-        (Vector2){ shape.x + theme.padding.x, shape.y + theme.padding.y}, 
+        (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         font.baseSize * scale, theme.font_spacing, tx_color);
 
     if (status == GUI_Status_Focus && blink) {
-        int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x;
-        int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y;
-        DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, tx_color);
+        int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
+        int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
+        DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
+            ColorAlpha(tx_color, 0.5));
     }
 }
 
@@ -242,6 +250,7 @@ bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
     if (focusable) {
         gui->control_focus_id = id;
         blink_state = 1;
+        blink_timer = 0;
     }    
     GUI_ElementStatus status = gui->control_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
 
@@ -292,7 +301,7 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, title,
-        (Vector2){shape.x + theme.padding.x, shape.y + theme.padding.y}, 
+        (Vector2){shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         font.baseSize * scale, theme.font_spacing, tx_color);
 
     GUI_DrawBorders(shapeTitle, b_light, b_dark, theme.border * scale);
