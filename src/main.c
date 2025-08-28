@@ -175,18 +175,14 @@ int main(void) {
             window.height = gui.default_height * 3;
             GUI_Window(1, "Window title", &gui, &window, window_limits);
             {
+                // Window contents
                 Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
 
-                // Window contents
-                float position_y = 0;
-                Rectangle textbox = { 0, position_y, GetScreenWidth(), gui.default_height };
-                Rectangle textbox_relative = RelativeToRect(textbox, window_workspace);
-                GUI_TextBox(1, textbox_contents, textbox_relative, &gui);
-
-                position_y += gui.default_height;
-                Rectangle textbox2 = { 0, position_y, GetScreenWidth(), gui.default_height };
-                Rectangle textbox2_relative = RelativeToRect(textbox2, window_workspace);
-                GUI_TextBox(2, textbox2_contents, textbox2_relative, &gui);
+                GUI_BeginVertical(gui.default_height);
+                // 1st Textbox
+                GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
+                // 2nd textbox
+                GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
             }
             
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            

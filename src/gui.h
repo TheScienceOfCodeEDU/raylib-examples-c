@@ -287,6 +287,38 @@ bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
     return false;
 }
 
+int GUI_GetVerticalCount(int value)
+{
+    static int count = 0;
+
+    if (value == -1) {
+        count = 0;
+        return 0;
+    } else {
+        return count++;
+    }
+}
+
+float GUI_GetVerticalSize(float value)
+{
+    static float size = 0;
+    if (value != 0) size = value;
+    return size;
+}
+
+Rectangle GUI_NextVertical()
+{
+    float size = GUI_GetVerticalSize(0.0);
+    Rectangle textbox = { 0, size * GUI_GetVerticalCount(0), (float)GetScreenWidth(), size};
+    return textbox;
+}
+
+void GUI_BeginVertical(float size)
+{
+    GUI_GetVerticalCount(-1);
+    GUI_GetVerticalSize(size);
+}
+
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon)
 {
     Color bg_color = status == GUI_Status_Default ? theme.bg_color_2 : theme.bg_color_1;
