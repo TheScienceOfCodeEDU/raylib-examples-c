@@ -20,7 +20,7 @@ Rectangle LimitRect(Rectangle shape, Rectangle limits) {
     return shape;
 }
 
-Vector2 LimitVector2(Vector2 point, Rectangle limits) {
+Vector2 LimitVector2Rect(Vector2 point, Rectangle limits) {
     // Restrict position to not go outside left/top boundaries
     point.x = fmaxf(point.x, limits.x);
     point.y = fmaxf(point.y, limits.y);

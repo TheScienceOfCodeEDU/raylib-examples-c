@@ -470,8 +470,8 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     // Movement
     bool moving = interacting && gui->window_focus_moving;
     if (moving) {
-        Vector2 mouse_current_valid = LimitVector2(gui->mouse_current, limits);
-        Vector2 mouse_last_valid = LimitVector2(gui->mouse_last, limits);
+        Vector2 mouse_current_valid = LimitVector2Rect(gui->mouse_current, limits);
+        Vector2 mouse_last_valid = LimitVector2Rect(gui->mouse_last, limits);
         Vector2 displacement = Vector2Subtract(mouse_current_valid, mouse_last_valid);
         shape->x += displacement.x;
         shape->y += displacement.y;

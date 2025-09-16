@@ -135,7 +135,7 @@ int main(void) {
             GetScreenHeight()
         };
 
-        gui.mouse_current = LimitVector2(GetMousePosition(), mouse_limits);
+        gui.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);
 
         Vector2 mouse_shape = (Vector2){
             gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
