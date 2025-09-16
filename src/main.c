@@ -172,7 +172,7 @@ int main(void) {
             GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
             // Window
-            window.height = gui.default_height * 3;
+            window.height = gui.default_height * 3 + gui.theme.border * gui.scale * 3;
             GUI_Window(1, "Window title", &gui, &window, window_limits);
             {
                 // Window contents

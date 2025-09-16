@@ -441,7 +441,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
         shape_title.x,
         shape_title.y + shape_title.height + (shape_title.y - shape.y),
         shape.width - (shape_title.x - shape.x ) * 2,
-        shape.height - shape_title.height - (shape_title.y - shape.y)
+        shape.height - shape_title.height - (shape_title.y - shape.y) - gui->theme.border * gui->scale * 2
     };
 
     if (DEV_DEBUG_GUI) {
