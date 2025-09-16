@@ -470,12 +470,11 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     // Movement
     bool moving = interacting && gui->window_focus_moving;
     if (moving) {
-        Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);
-        bool insideX = gui->mouse_current.x >= limits.x && gui->mouse_current.x <= limits.x + limits.width;
-        bool insideY = gui->mouse_current.y >= limits.y && gui->mouse_current.y <= limits.y + limits.height;
-        
-        if (insideX) shape->x += displacement.x;
-        if (insideY) shape->y += displacement.y;
+        Vector2 mouse_current_valid = LimitVector2(gui->mouse_current, limits);
+        Vector2 mouse_last_valid = LimitVector2(gui->mouse_last, limits);
+        Vector2 displacement = Vector2Subtract(mouse_current_valid, mouse_last_valid);
+        shape->x += displacement.x;
+        shape->y += displacement.y;
     } else {
         gui->window_focus_moving = false;
     }
