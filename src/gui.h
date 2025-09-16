@@ -4,6 +4,53 @@
  #include "env.h"
 #endif
 
+// Generates a color with a specified hue and interpolated saturation and value.
+// Parameters:
+//   hue: Hue value in degrees (e.g., 180.0f for cyan).
+//   t: Interpolation factor [0.0, 1.0] controlling saturation (0.13 to 0.24) and value (0.89 to 0.33).
+// Returns:
+//   A Raylib Color struct with RGB values (0-255) and full alpha (255).
+Color GetThemeColorFromHue(float hue, float t) {
+    // Clamp t to [0, 1]
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+
+    // Interpolate saturation (S) and value (V)
+    // S ranges from 0.13 (light) to 0.24 (dark)
+    // V ranges from 0.89 (light) to 0.33 (dark)
+    float s = 0.13f + t * (0.24f - 0.13f);
+    float v = 0.89f - t * (0.89f - 0.33f);
+    s = s > 1.0f ? 1.0f : s;
+    v = v > 1.0f ? 1.0f : v;
+
+    // Convert HSV to RGB
+    float c = v * s;            // Chroma
+    float h_prime = hue / 60.0f; // Hue sector
+    float x = c * (1.0f - fabsf(fmodf(h_prime, 2.0f) - 1.0f));
+    float m = v - c;
+
+    float r_prime, g_prime, b_prime;
+    int sector = (int)h_prime;
+
+    // Assign RGB based on hue sector
+    switch (sector) {
+        case 0: r_prime = c; g_prime = x; b_prime = 0; break;
+        case 1: r_prime = x; g_prime = c; b_prime = 0; break;
+        case 2: r_prime = 0; g_prime = c; b_prime = x; break;
+        case 3: r_prime = 0; g_prime = x; b_prime = c; break;
+        case 4: r_prime = x; g_prime = 0; b_prime = c; break;
+        case 5: r_prime = c; g_prime = 0; b_prime = x; break;
+        default: r_prime = 0; g_prime = 0; b_prime = 0; break;
+    }
+
+    // Scale to RGB (0-255) and create Raylib Color
+    unsigned char r = (unsigned char)((r_prime + m) * 255.0f);
+    unsigned char g = (unsigned char)((g_prime + m) * 255.0f);
+    unsigned char b = (unsigned char)((b_prime + m) * 255.0f);
+
+    return (Color){r, g, b, 255}; // Full alpha
+}
+
 
 struct {
     Texture2D New;
@@ -28,6 +75,26 @@ enum {
 } typedef GUI_ElementStatus;
 
 struct {
+    Color tx_color;
+    Color bg_color_0;
+    Color bg_color_1;
+    Color bg_color_2;
+    Color bg_color_3;
+} typedef GUI_ThemeColors;
+
+GUI_ThemeColors Make_ThemeColorsGray()
+{
+    GUI_ThemeColors colors = {
+        GetThemeColorFromHue(180.0f, 0.0f),
+        GetThemeColorFromHue(180.0f, 0.25f),
+        GetThemeColorFromHue(180.0f, 0.5f),
+        GetThemeColorFromHue(180.0f, 0.75f),
+        GetThemeColorFromHue(180.0f, 1.0f)
+    };
+    return colors;
+}
+
+struct {
     Color bg_color_0;       // Primary background color
     Color bg_color_1;       // Secondary background color
     Color bg_color_2;       // Tertiary background color
@@ -42,6 +109,8 @@ struct {
     float font_spacing;     // Font spacing
     Vector2 blink_size;     // Size of the blinking cursor
     Vector2 blink_delta;    // Blink adjustment
+
+    GUI_ThemeColors gray;
 } typedef GUI_Theme;
 
 
@@ -62,13 +131,16 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
         (Color) { 33, 33, 33, 200 },       // b_color_0: Very dark gray, semi-opaque
         (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque
 
-        // Padding
+        // Misc
         (Vector2) { 8, 8 },                // padding
         2.0f,                              // border
         1,                                 // font_custom
         1.0,                               // font_spacing
         (Vector2) { 2, 10 },               // blink_size
-        (Vector2) { 1.9, 0 }               // blink_delta
+        (Vector2) { 1.9, 0 },              // blink_delta
+
+        // Theme colors
+        Make_ThemeColorsGray()
     };
 
     return theme;
@@ -151,7 +223,6 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border)
 
     // Draw right border (vertical line)
     DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
-
 }
 
 void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, float icon_w) 
@@ -327,16 +398,18 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
     Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
     Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
     
-    DrawRectangleRec(shape, bg_color);
+    // Background
+    DrawRectangleRec(shape, theme.gray.bg_color_1);
+    GUI_DrawBorders(shape, theme.gray.bg_color_0, theme.gray.bg_color_2, theme.border * scale);
 
-    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+    // Title
+    DrawRectangleRec(shapeTitle, theme.gray.bg_color_3);
+    GUI_DrawBorders(shapeTitle, theme.gray.bg_color_2, theme.gray.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, title,
-        (Vector2){shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
+        (Vector2) { shapeTitle.x + theme.padding.x + theme.border * scale, shapeTitle.y + theme.padding.y + theme.border * scale }, 
         font.baseSize * scale, theme.font_spacing, tx_color);
-
-    GUI_DrawBorders(shapeTitle, b_light, b_dark, theme.border * scale);
 }
 
 bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
@@ -353,9 +426,9 @@ bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float m
 Rectangle GUI_WindowTitle(Rectangle shape, GUI_State* gui)
 {
     Rectangle shapeTitle = {
-        shape.x,
-        shape.y,
-        shape.width,
+        shape.x + gui->theme.border * gui->scale,
+        shape.y + gui->theme.border * gui->scale,
+        shape.width - 50,
         gui->default_height
     };
     return shapeTitle;
@@ -365,10 +438,10 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
 {
     Rectangle shape_title = GUI_WindowTitle(shape, gui);
     Rectangle shape_workspace = {
-        shape.x,
-        shape.y + shape_title.height,
-        shape.width,
-        shape.height - shape_title.height
+        shape_title.x,
+        shape_title.y + shape_title.height + (shape_title.y - shape.y),
+        shape.width - (shape_title.x - shape.x ) * 2,
+        shape.height - shape_title.height - (shape_title.y - shape.y)
     };
 
     if (DEV_DEBUG_GUI) {
@@ -381,7 +454,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
 void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits)
 {
     Rectangle shape_title = GUI_WindowTitle(*shape, gui);
-    
+
     // Conditions
     bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape);
     bool collide_title  = CheckCollisionPointRec(gui->mouse_current, shape_title);
@@ -397,18 +470,19 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     // Movement
     bool moving = interacting && gui->window_focus_moving;
     if (moving) {
-        Vector2 displacement    = Vector2Subtract(gui->mouse_current, gui->mouse_last);
-        shape->x                += displacement.x;
-        shape->y                += displacement.y;
-        shape_title.x           += displacement.x;
-        shape_title.y           += displacement.y;
+        Vector2 displacement = Vector2Subtract(gui->mouse_current, gui->mouse_last);
+        bool insideX = gui->mouse_current.x >= limits.x && gui->mouse_current.x <= limits.x + limits.width;
+        bool insideY = gui->mouse_current.y >= limits.y && gui->mouse_current.y <= limits.y + limits.height;
+        
+        if (insideX) shape->x += displacement.x;
+        if (insideY) shape->y += displacement.y;
     } else {
         gui->window_focus_moving = false;
     }
 
     // Limit
     *shape          = LimitRect(*shape, limits);
-    shape_title     = LimitRect(shape_title, limits);
+    shape_title     = GUI_WindowTitle(*shape, gui);
 
     // Draw
     GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
