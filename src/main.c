@@ -175,7 +175,7 @@ int main(void) {
 
             // Window
             const int ELEMENTS = 4;
-            window.height =(gui.default_height + gui.theme.border * gui.scale) * ELEMENTS;
+            window.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
             GUI_Window(1, "Window title", &gui, &window, window_limits);
             {
                 // Window contents

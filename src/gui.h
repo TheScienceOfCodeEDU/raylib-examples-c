@@ -82,30 +82,19 @@ struct {
     Color bg_color_3;
 } typedef GUI_ThemeColors;
 
-GUI_ThemeColors Make_ThemeColorsGray()
+GUI_ThemeColors Make_ThemeColors(float hue)
 {
     GUI_ThemeColors colors = {
-        GetThemeColorFromHue(180.0f, 0.0f),
-        GetThemeColorFromHue(180.0f, 0.25f),
-        GetThemeColorFromHue(180.0f, 0.5f),
-        GetThemeColorFromHue(180.0f, 0.75f),
-        GetThemeColorFromHue(180.0f, 1.0f)
+        GetThemeColorFromHue(hue, 0.0f),
+        GetThemeColorFromHue(hue, 0.25f),
+        GetThemeColorFromHue(hue, 0.5f),
+        GetThemeColorFromHue(hue, 0.75f),
+        GetThemeColorFromHue(hue, 1.0f)
     };
     return colors;
 }
 
 struct {
-    // TODO@dc: Remove
-    Color bg_color_0;       // Primary background color
-    Color bg_color_1;       // Secondary background color
-    Color bg_color_2;       // Tertiary background color
-    Color color_0;          // Primary color (e.g., for text or elements)
-    Color color_1;          // Secondary color
-    Color color_2;          // Tertiary color
-    Color b_color_0;        // Primary border color
-    Color b_color_1;        // Secondary border color
-    // Remove
-
     Vector2 padding;        // Internal padding
     float border;           // Border thickness
     bool font_custom;       // Indicates if a custom font is used
@@ -114,13 +103,14 @@ struct {
     Vector2 blink_delta;    // Blink adjustment
 
     GUI_ThemeColors gray;
+    GUI_ThemeColors red;
 } typedef GUI_Theme;
 
 
 GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
 {
     GUI_Theme theme = {
-        // Background colors
+        /*// Background colors for another theme...
         (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
         (Color) { 116, 100, 67, opacity },  // bg_color_1: Medium brown with variable opacity
         (Color) { 58, 49, 35, opacity },    // bg_color_2: Very dark brown with variable opacity
@@ -132,7 +122,7 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
 
         // Border colors
         (Color) { 33, 33, 33, 200 },       // b_color_0: Very dark gray, semi-opaque
-        (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque
+        (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque*/
 
         // Misc
         (Vector2) { 8, 8 },                // padding
@@ -143,7 +133,8 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
         (Vector2) { 1.9, 0 },              // blink_delta
 
         // Theme colors
-        Make_ThemeColorsGray()
+        Make_ThemeColors(180.0f),
+        Make_ThemeColors(3.0f)
     };
 
     return theme;
@@ -232,19 +223,13 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border)
 
 void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, float icon_w) 
 {
-    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
-    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
-
-    Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
-    Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
-
-    DrawRectangleRec(shape, bg_color);
-    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+    DrawRectangleRec(shape, theme.gray.bg_color_3);
+    GUI_DrawBorders(shape, theme.gray.bg_color_2, theme.gray.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, text, 
         (Vector2){ shape.x + icon_w + theme.padding.x * 2 + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        font.baseSize * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, theme.gray.tx_color);
 }
 
 void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale, Color tint)
@@ -285,25 +270,19 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon)
 
 void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool blink)
 {
-    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
-    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
-
-    Color b_light = status == GUI_Status_Focus ? theme.b_color_1 : theme.b_color_0;
-    Color b_dark = status == GUI_Status_Focus ? theme.b_color_0 : theme.b_color_1;
-
-    DrawRectangleRec(shape, bg_color);
-    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+    DrawRectangleRec(shape, theme.gray.bg_color_3);
+    GUI_DrawBorders(shape, theme.gray.bg_color_2, theme.gray.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, value, 
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        font.baseSize * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, theme.gray.tx_color);
 
     if (status == GUI_Status_Focus && blink) {
         int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
         int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
         DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
-            ColorAlpha(tx_color, 0.5));
+            ColorAlpha(theme.gray.tx_color, 0.5));
     }
 }
 
@@ -368,19 +347,13 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
 //
 void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale)
 {
-    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
-    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
-
-    Color b_light = status == GUI_Status_Focus ? theme.b_color_1 : theme.b_color_0;
-    Color b_dark = status == GUI_Status_Focus ? theme.b_color_0 : theme.b_color_1;
-
-    DrawRectangleRec(shape, bg_color);
-    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+    DrawRectangleRec(shape, theme.gray.bg_color_3);
+    GUI_DrawBorders(shape, theme.gray.bg_color_2, theme.gray.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, value ? on_txt : off_txt, 
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        font.baseSize * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, theme.gray.tx_color);
 }
 
 void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle shape, GUI_State* gui)
