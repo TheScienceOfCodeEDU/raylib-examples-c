@@ -163,8 +163,8 @@ int main(void) {
         Rectangle window_limits = (Rectangle){ 
             0,
             gui.default_height,
-            GetRenderWidth(),
-            GetRenderHeight() 
+            GetScreenWidth(),
+            GetScreenHeight() - gui.default_height // Minus GUI_TopBar size
         };
 
         BeginTextureMode(buffer);
@@ -188,9 +188,8 @@ int main(void) {
                 GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
                 // Checkbox
                 GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
-            }
-            DrawRectangleRec(window, ColorAlpha(RED, 0.25));
-            DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            
+            }           
+            DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);
         EndTextureMode();
 
         gui.mouse_last = gui.mouse_current;
