@@ -95,6 +95,7 @@ GUI_ThemeColors Make_ThemeColorsGray()
 }
 
 struct {
+    // TODO@dc: Remove
     Color bg_color_0;       // Primary background color
     Color bg_color_1;       // Secondary background color
     Color bg_color_2;       // Tertiary background color
@@ -103,6 +104,8 @@ struct {
     Color color_2;          // Tertiary color
     Color b_color_0;        // Primary border color
     Color b_color_1;        // Secondary border color
+    // Remove
+
     Vector2 padding;        // Internal padding
     float border;           // Border thickness
     bool font_custom;       // Indicates if a custom font is used
@@ -444,12 +447,6 @@ void GUI_BeginVertical(float size)
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale, bool icon)
 {
-    Color bg_color = status == GUI_Status_Default ? theme.bg_color_2 : theme.bg_color_1;
-    Color tx_color = theme.color_0;
-
-    Color b_light = status == GUI_Status_Click ? theme.b_color_1 : theme.b_color_0;
-    Color b_dark = status == GUI_Status_Click ? theme.b_color_0 : theme.b_color_1;
-    
     // Background
     DrawRectangleRec(shape, theme.gray.bg_color_1);
     GUI_DrawBorders(shape, theme.gray.bg_color_0, theme.gray.bg_color_2, theme.border * scale);
@@ -461,7 +458,7 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, title,
         (Vector2) { shapeTitle.x + theme.padding.x + theme.border * scale, shapeTitle.y + theme.padding.y + theme.border * scale }, 
-        font.baseSize * scale, theme.font_spacing, tx_color);
+        font.baseSize * scale, theme.font_spacing, theme.gray.tx_color);
 }
 
 bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
