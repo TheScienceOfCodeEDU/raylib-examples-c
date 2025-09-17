@@ -43,3 +43,8 @@ Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
 
     return result;
 }
+
+bool IsKeyEnterPressed()
+{
+    return IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);
+}

@@ -155,6 +155,7 @@ struct {
     int window_focus_id;
     bool window_focus_moving;
     int control_focus_id;
+    bool already_granted_focus;
     Vector2 mouse_last;
     Vector2 mouse_current;
 
@@ -170,6 +171,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
         LoadFont("fnt/pixelplay.png"),
 
         -1,
+        0,
         0,
         0,
         (Vector2){ 0.0, 0.0},
@@ -302,7 +304,7 @@ void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GU
     }
 }
 
-bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
+void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
 {
     // Data
     GUI_Theme theme = gui->theme;
@@ -317,16 +319,18 @@ bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
     // Focus
-    bool focusable      = collide && interacting;
-    if (focusable) {
-        gui->control_focus_id = id;
-        blink_state = 1;
-        blink_timer = 0;
-    }    
-    GUI_ElementStatus status = gui->control_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+    bool receives_focus = collide && interacting;
+    if (receives_focus && gui->already_granted_focus == 0) {
+        gui->control_focus_id       = id;
+        gui->already_granted_focus  = 1;
+        blink_state                 = 1;
+        blink_timer                 = 0;
+    }
+    bool focused                = gui->control_focus_id == id;
+    GUI_ElementStatus status    = focused ? GUI_Status_Focus : GUI_Status_Default;
 
     // Update focused control
-    if (status == GUI_Status_Focus) {
+    if (focused) {
         int textLength = StringSize(value);
         // Handle text input
         int key = GetCharPressed();
@@ -354,8 +358,56 @@ bool GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui)
     }
 
     GUI_DrawTextBox(value, shape, status, gui->theme, gui->font_custom, gui->scale, blink_state);
-        
-    return false;
+}
+
+//
+// Check box
+//
+void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, float scale)
+{
+    Color bg_color = status == GUI_Status_Default ? theme.bg_color_0 : theme.bg_color_1;
+    Color tx_color = status == GUI_Status_Default ? theme.color_0 : theme.color_1;
+
+    Color b_light = status == GUI_Status_Focus ? theme.b_color_1 : theme.b_color_0;
+    Color b_dark = status == GUI_Status_Focus ? theme.b_color_0 : theme.b_color_1;
+
+    DrawRectangleRec(shape, bg_color);
+    GUI_DrawBorders(shape, b_dark, b_light, theme.border * scale);
+
+    Font font = GUI_GetFont(theme, font_custom);
+    DrawTextEx(font, value ? on_txt : off_txt, 
+        (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
+        font.baseSize * scale, theme.font_spacing, tx_color);
+}
+
+void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle shape, GUI_State* gui)
+{
+    // Data
+    GUI_Theme theme = gui->theme;
+
+    // Conditions
+    bool collide        = CheckCollisionPointRec(gui->mouse_current, shape);
+    bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();
+
+    // Focus
+    bool receives_focus = collide && interacting;
+    if (receives_focus && gui->already_granted_focus == 0) {
+        gui->control_focus_id       = id;
+        gui->already_granted_focus  = 1;
+    }
+    bool focused                = gui->control_focus_id == id;
+    GUI_ElementStatus status    = focused ? GUI_Status_Focus : GUI_Status_Default;
+
+    // Update focused control
+    if (focused) 
+    {        
+        if (interacting)
+        {
+             *value = !(*value); // Toggle the checkbox value
+        }
+    }
+
+    GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, gui->theme, gui->font_custom, gui->scale);
 }
 
 int GUI_GetVerticalCount(int value)
@@ -461,10 +513,12 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     
     // Focus
-    bool focusing = collide && gui->window_focus_id == 0;
-    if (focusing) {
+    bool receives_focus = collide && gui->window_focus_id == 0;
+    if (receives_focus && gui->already_granted_focus == 0) {
         gui->window_focus_id        = id;
         gui->window_focus_moving    = collide_title;
+        // Skip updating `already_granted_focus` as this field is reserved
+        // for the first non-window control that receives focus.
     }
 
     // Movement

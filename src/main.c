@@ -120,6 +120,7 @@ int main(void) {
     Rectangle window = (Rectangle) { 20, 20, 250, 200 };
     char textbox_contents[256] = "hello\0";
     char textbox2_contents[256] = "world\0";
+    bool checkbox_value = 0;
     
     while (!WindowShouldClose()) {
         //
@@ -127,15 +128,16 @@ int main(void) {
         //
 
         // UI
-        gui.default_height = GUI_CalcDefaultScaledHeight(&gui);
+        gui.default_height          = GUI_CalcDefaultScaledHeight(&gui);
+        gui.already_granted_focus   = 0;
+
         Rectangle mouse_limits = (Rectangle) {
             0,
             0,
             GetScreenWidth(),
             GetScreenHeight()
         };
-
-        gui.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);
+        gui.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
 
         Vector2 mouse_shape = (Vector2){
             gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
@@ -161,8 +163,8 @@ int main(void) {
         Rectangle window_limits = (Rectangle){ 
             0,
             gui.default_height,
-            GetScreenWidth(),
-            GetScreenHeight() 
+            GetRenderWidth(),
+            GetRenderHeight() 
         };
 
         BeginTextureMode(buffer);
@@ -172,7 +174,8 @@ int main(void) {
             GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
             // Window
-            window.height = gui.default_height * 3 + gui.theme.border * gui.scale * 3;
+            const int ELEMENTS = 4;
+            window.height =(gui.default_height + gui.theme.border * gui.scale) * ELEMENTS;
             GUI_Window(1, "Window title", &gui, &window, window_limits);
             {
                 // Window contents
@@ -183,8 +186,10 @@ int main(void) {
                 GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
                 // 2nd textbox
                 GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
+                // Checkbox
+                GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
             }
-            
+            DrawRectangleRec(window, ColorAlpha(RED, 0.25));
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);            
         EndTextureMode();
 
