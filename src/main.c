@@ -30,9 +30,9 @@ void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions, Rectangle target)
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui, &gui->icons.Save);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New, gui->theme.red);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open, gui->theme.gray);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui, &gui->icons.Save, gui->theme.gray);
 }
 
 
@@ -176,18 +176,18 @@ int main(void) {
             // Window
             const int ELEMENTS = 4;
             window.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
-            GUI_Window(1, "Window title", &gui, &window, window_limits);
+            GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray);
             {
                 // Window contents
                 Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
 
                 GUI_BeginVertical(gui.default_height);
                 // 1st Textbox
-                GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
+                GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
                 // 2nd textbox
-                GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
+                GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
                 // Checkbox
-                GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui);
+                GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
             }           
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);
         EndTextureMode();
