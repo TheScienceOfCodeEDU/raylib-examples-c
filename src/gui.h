@@ -498,7 +498,7 @@ bool GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     Rectangle shape_title = GUI_WindowTitle(*shape, gui);
 
     // Conditions
-    bool collide_focus  = second_pass == 0 && gui->window_focus_id != id && gui->window_focus_id > FOCUS_LOCKED && CheckCollisionPointRec(gui->mouse_current, gui->focus_shape_current);
+    bool collide_focus  = gui->window_focus_id != id && gui->window_focus_id != FOCUS_AVAILABLE && CheckCollisionPointRec(gui->mouse_current, gui->focus_shape_current);
     bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape) && !collide_focus;
     bool collide_title  = CheckCollisionPointRec(gui->mouse_current, shape_title);
     bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);

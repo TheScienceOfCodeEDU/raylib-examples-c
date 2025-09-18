@@ -178,9 +178,10 @@ int main(void) {
             bool second_pass = 0;
             while (true) {
                 if (second_pass == 1) {
-                    if (gui.window_focus_id != FOCUS_LOCKED && gui.window_focus_moving == 0) {
+                    if (gui.window_focus_id != FOCUS_LOCKED) {
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                             gui.window_focus_id     = FOCUS_AVAILABLE;
+                            gui.window_focus_moving = 0;
                         }
                     }
                 }
