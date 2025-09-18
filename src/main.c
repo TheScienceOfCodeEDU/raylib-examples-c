@@ -179,40 +179,35 @@ int main(void) {
             const int ELEMENTS = 4;
             window.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
 
-            bool second_pass = 0;
-            while (true) {
-                GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray, second_pass);
-                {
-                    // Window contents
-                    Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
+            
+            GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray);
+            {
+                // Window contents
+                Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
 
-                    GUI_BeginVertical(gui.default_height);
-                    // 1st Textbox
-                    GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                    // 2nd textbox
-                    GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                    // Checkbox
-                    GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
-                }
+                GUI_BeginVertical(gui.default_height);
+                // 1st Textbox
+                GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                // 2nd textbox
+                GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                // Checkbox
+                GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+            }
 
-                static Rectangle window2 = { 20, 220, 350, 200 };
-                window2.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 5);
-                GUI_Window(4, "Window title", &gui, &window2, window_limits, gui.theme.gray, second_pass);
-                {
-                    // Window contents
-                    Rectangle window_workspace = GUI_WindowWorkspace(window2, &gui);
+            static Rectangle window2 = { 20, 220, 350, 200 };
+            window2.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 5);
+            GUI_Window(4, "Window title", &gui, &window2, window_limits, gui.theme.gray);
+            {
+                // Window contents
+                Rectangle window_workspace = GUI_WindowWorkspace(window2, &gui);
 
-                    GUI_BeginVertical(gui.default_height);
-                    // 1st Textbox
-                    GUI_TextBox(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                    // 2nd textbox
-                    GUI_TextBox(6, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                    // Checkbox
-                    GUI_CheckBox(7, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
-                }
-
-                if (second_pass == 1)   break;
-                else                    second_pass = 1;
+                GUI_BeginVertical(gui.default_height);
+                // 1st Textbox
+                GUI_TextBox(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                // 2nd textbox
+                GUI_TextBox(6, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                // Checkbox
+                GUI_CheckBox(7, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
             }
             
             DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);

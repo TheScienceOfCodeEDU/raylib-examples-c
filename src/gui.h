@@ -491,7 +491,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
     return shape_workspace;
 }
 
-void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors, bool second_pass)
+void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors)
 {
     Rectangle shape_title = GUI_WindowTitle(*shape, gui);
 
@@ -501,28 +501,27 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     
     // Focus
-    if (second_pass == 0) {
-        bool receives_focus     = collide && gui->window_focus_id == FOCUS_AVAILABLE;
-        bool window_focusable   = gui->focus_state_current == GUI_Focus_Available;
-        if (receives_focus && window_focusable) {
-            gui->window_focus_id        = id;
-            gui->window_focus_moving    = collide_title;
-            gui->focus_state_current    = GUI_Focus_CanOverride; 
-        }
+    
+    bool receives_focus     = collide && gui->window_focus_id == FOCUS_AVAILABLE;
+    bool window_focusable   = gui->focus_state_current == GUI_Focus_Available;
+    if (receives_focus && window_focusable) {
+        gui->window_focus_id        = id;
+        gui->window_focus_moving    = collide_title;
+        gui->focus_state_current    = GUI_Focus_CanOverride; 
+    }
 
-        if (gui->window_focus_id == id){
-            // Movement
-            bool moving = interacting && gui->window_focus_moving;
-            if (moving) {
-                Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
-                Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);
-                Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
-                
-                shape->x += displacement.x;
-                shape->y += displacement.y;
-            } else {
-                gui->window_focus_moving = false;
-            }
+    if (gui->window_focus_id == id){
+        // Movement
+        bool moving = interacting && gui->window_focus_moving;
+        if (moving) {
+            Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
+            Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);
+            Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
+            
+            shape->x += displacement.x;
+            shape->y += displacement.y;
+        } else {
+            gui->window_focus_moving = false;
         }
     }
 
@@ -531,8 +530,6 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     shape_title     = GUI_WindowTitle(*shape, gui);
 
     // Draw
-    if ((gui->window_focus_id != id && second_pass == 0) || (gui->window_focus_id == id && second_pass == 1)) {
-        GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
-        GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);
-    }
+    GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+    GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);    
 }
