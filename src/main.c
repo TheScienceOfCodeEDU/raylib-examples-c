@@ -117,11 +117,6 @@ int main(void) {
 
     SetTargetFPS(60);
 
-    Rectangle window = (Rectangle) { 20, 20, 250, 200 };
-    char textbox_contents[256] = "hello\0";
-    char textbox2_contents[256] = "world\0";
-    bool checkbox_value = 0;
-    
     while (!WindowShouldClose()) {
         //
         // UPDATE
@@ -129,7 +124,7 @@ int main(void) {
 
         // UI
         gui.default_height          = GUI_CalcDefaultScaledHeight(&gui);
-        gui.already_granted_focus   = 0;
+        gui.focus_state_current     = GUI_Focus_Available;
 
         Rectangle mouse_limits = (Rectangle) {
             0,
@@ -150,12 +145,12 @@ int main(void) {
 
         if (gui.window_focus_id == 0){
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-                gui.window_focus_id = -1;
+                gui.window_focus_id     = FOCUS_LOCKED;
                 gui.window_focus_moving = 0;
             }
         } else {
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                gui.window_focus_id = 0;
+                gui.window_focus_id     = FOCUS_AVAILABLE;
                 gui.window_focus_moving = 0;
             }
         }
@@ -173,22 +168,54 @@ int main(void) {
             // Top bar
             GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
+            // Data
+            static bool checkbox_value = 0;
+            static char textbox_contents[256] = "hello\0";
+            static char textbox2_contents[256] = "world\0";
+
             // Window
+            static Rectangle window = { 20, 20, 250, 200 };
+    
             const int ELEMENTS = 4;
             window.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
-            GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray);
-            {
-                // Window contents
-                Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
 
-                GUI_BeginVertical(gui.default_height);
-                // 1st Textbox
-                GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                // 2nd textbox
-                GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                // Checkbox
-                GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
-            }           
+            bool second_pass = 0;
+            while (true) {
+                GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray, second_pass);
+                {
+                    // Window contents
+                    Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
+
+                    GUI_BeginVertical(gui.default_height);
+                    // 1st Textbox
+                    GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                    // 2nd textbox
+                    GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                    // Checkbox
+                    GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                }
+
+                static Rectangle window2 = { 20, 220, 350, 200 };
+                window2.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 5);
+                GUI_Window(4, "Window title", &gui, &window2, window_limits, gui.theme.gray, second_pass);
+                {
+                    // Window contents
+                    Rectangle window_workspace = GUI_WindowWorkspace(window2, &gui);
+
+                    GUI_BeginVertical(gui.default_height);
+                    // 1st Textbox
+                    GUI_TextBox(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                    // 2nd textbox
+                    GUI_TextBox(6, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                    // Checkbox
+                    GUI_CheckBox(7, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                }
+
+                if (second_pass == 1)   break;
+                else                    second_pass = 1;
+            }
+            
+            DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);
         EndTextureMode();
 

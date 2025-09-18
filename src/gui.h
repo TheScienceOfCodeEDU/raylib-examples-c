@@ -140,18 +140,28 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
     return theme;
 }
 
-struct {
-    GUI_Theme theme;
-    GUI_Icons icons;
-    float scale;
-    Font font_custom;
+#define FOCUS_AVAILABLE -1
+#define FOCUS_LOCKED    0
 
-    int window_focus_id;
-    bool window_focus_moving;
-    int control_focus_id;
-    bool already_granted_focus;
-    Vector2 mouse_last;
-    Vector2 mouse_current;
+enum {
+    GUI_Focus_Available,
+    GUI_Focus_CanOverride,
+    GUI_Focus_Granted
+} typedef GUI_Focus;
+
+struct {
+    GUI_Theme   theme;
+    GUI_Icons   icons;
+    float       scale;
+    Font        font_custom;
+
+    int         window_focus_id;
+    bool        window_focus_moving;
+    int         control_focus_id;
+    GUI_Focus   focus_state_current;
+
+    Vector2     mouse_last;
+    Vector2     mouse_current;
 
     float default_height;
 } typedef GUI_State;
@@ -167,7 +177,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
         -1,
         0,
         0,
-        0,
+        GUI_Focus_Available,
         (Vector2){ 0.0, 0.0},
         (Vector2){ 0.0, 0.0},
 
@@ -310,9 +320,9 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui, GUI_Theme
 
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && gui->already_granted_focus == 0) {
+    if (receives_focus && gui->focus_state_current <= GUI_Focus_CanOverride) {
         gui->control_focus_id       = id;
-        gui->already_granted_focus  = 1;
+        gui->focus_state_current    = GUI_Focus_Granted;
         blink_state                 = 1;
         blink_timer                 = 0;
     }
@@ -375,9 +385,9 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
 
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && gui->already_granted_focus == 0) {
+    if (receives_focus && gui->focus_state_current <= GUI_Focus_CanOverride) {
         gui->control_focus_id       = id;
-        gui->already_granted_focus  = 1;
+        gui->focus_state_current  = GUI_Focus_Granted;
     }
     bool focused                = gui->control_focus_id == id;
     GUI_ElementStatus status    = focused ? GUI_Status_Focus : GUI_Status_Default;
@@ -481,7 +491,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
     return shape_workspace;
 }
 
-void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors)
+void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors, bool second_pass)
 {
     Rectangle shape_title = GUI_WindowTitle(*shape, gui);
 
@@ -491,25 +501,29 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     
     // Focus
-    bool receives_focus = collide && gui->window_focus_id == 0;
-    if (receives_focus && gui->already_granted_focus == 0) {
-        gui->window_focus_id        = id;
-        gui->window_focus_moving    = collide_title;
-        // Skip updating `already_granted_focus` as this field is reserved
-        // for the first non-window control that receives focus.
-    }
+    if (second_pass == 0) {
+        bool receives_focus     = collide && gui->window_focus_id == FOCUS_AVAILABLE;
+        bool window_focusable   = gui->focus_state_current == GUI_Focus_Available;
+        if (receives_focus && window_focusable) {
+            gui->window_focus_id        = id;
+            gui->window_focus_moving    = collide_title;
+            gui->focus_state_current    = GUI_Focus_CanOverride; 
+        }
 
-    // Movement
-    bool moving = interacting && gui->window_focus_moving;
-    if (moving) {
-        Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
-        Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);
-        Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
-        
-        shape->x += displacement.x;
-        shape->y += displacement.y;
-    } else {
-        gui->window_focus_moving = false;
+        if (gui->window_focus_id == id){
+            // Movement
+            bool moving = interacting && gui->window_focus_moving;
+            if (moving) {
+                Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
+                Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);
+                Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
+                
+                shape->x += displacement.x;
+                shape->y += displacement.y;
+            } else {
+                gui->window_focus_moving = false;
+            }
+        }
     }
 
     // Limit
@@ -517,6 +531,8 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     shape_title     = GUI_WindowTitle(*shape, gui);
 
     // Draw
-    GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
-    GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);
+    if ((gui->window_focus_id != id && second_pass == 0) || (gui->window_focus_id == id && second_pass == 1)) {
+        GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+        GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);
+    }
 }
