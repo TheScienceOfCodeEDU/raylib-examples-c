@@ -140,13 +140,17 @@ int main(void) {
         };
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            gui.control_focus_id        = 0;
+            gui.control_focus_id = 0;
         }
 
-        if (gui.window_focus_id == FOCUS_LOCKED) {
-            gui.focus_shape_current     = (Rectangle) {0,0,0,0};
+        if (gui.window_focus_id == 0){
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
                 gui.window_focus_id     = FOCUS_LOCKED;
+                gui.window_focus_moving = 0;
+            }
+        } else {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                gui.window_focus_id     = FOCUS_AVAILABLE;
                 gui.window_focus_moving = 0;
             }
         }
@@ -177,16 +181,7 @@ int main(void) {
 
             bool second_pass = 0;
             while (true) {
-                if (second_pass == 1) {
-                    if (gui.window_focus_id != FOCUS_LOCKED) {
-                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                            gui.window_focus_id     = FOCUS_AVAILABLE;
-                            gui.window_focus_moving = 0;
-                        }
-                    }
-                }
-
-                if (GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray, second_pass))
+                GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray, second_pass);
                 {
                     // Window contents
                     Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
@@ -202,7 +197,7 @@ int main(void) {
 
                 static Rectangle window2 = { 20, 220, 350, 200 };
                 window2.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 5);
-                if (GUI_Window(4, "Window title", &gui, &window2, window_limits, gui.theme.gray, second_pass))
+                GUI_Window(4, "Window title", &gui, &window2, window_limits, gui.theme.gray, second_pass);
                 {
                     // Window contents
                     Rectangle window_workspace = GUI_WindowWorkspace(window2, &gui);
@@ -220,8 +215,7 @@ int main(void) {
                 else                    second_pass = 1;
             }
             
-            DrawRectangleRec(gui.focus_shape_current, ColorAlpha(RED, 0.15));
-            DrawText(TextFormat("window_focus_id: %d", gui.window_focus_id), 10, 70, 20, BLACK);
+            DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);
         EndTextureMode();
 
