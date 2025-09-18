@@ -157,6 +157,7 @@ struct {
 
     int         window_focus_id;
     bool        window_focus_moving;
+
     int         control_focus_id;
     GUI_Focus   focus_state_current;
 
@@ -496,23 +497,30 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     Rectangle shape_title = GUI_WindowTitle(*shape, gui);
 
     // Conditions
-    bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape);
-    bool collide_title  = CheckCollisionPointRec(gui->mouse_current, shape_title);
-    bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-    
-    // Focus
-    
-    bool receives_focus     = collide && gui->window_focus_id == FOCUS_AVAILABLE;
-    bool window_focusable   = gui->focus_state_current == GUI_Focus_Available;
-    if (receives_focus && window_focusable) {
-        gui->window_focus_id        = id;
-        gui->window_focus_moving    = collide_title;
-        gui->focus_state_current    = GUI_Focus_CanOverride; 
-    }
+    bool collide            = CheckCollisionPointRec(gui->mouse_current, *shape);
+    bool collide_title      = CheckCollisionPointRec(gui->mouse_current, shape_title);
+    bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool window_focusable   = gui->focus_state_current == GUI_Focus_Available && gui->window_focus_moving == 0;
 
+    // Focus ?
+    if (collide && interaction_starts && window_focusable) {
+        bool already_focused            = gui->window_focus_id == id;
+        if (already_focused) {
+            gui->focus_state_current    = GUI_Focus_CanOverride;
+            gui->window_focus_moving    = collide_title;
+        } else {
+            gui->window_focus_id        = id;
+            gui->window_focus_moving    = collide_title;
+            gui->focus_state_current    = GUI_Focus_CanOverride;
+        }
+    }
+    
+
+    // Active
     if (gui->window_focus_id == id){
         // Movement
-        bool moving = interacting && gui->window_focus_moving;
+        bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+        bool moving             = interacting && gui->window_focus_moving;
         if (moving) {
             Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
             Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);

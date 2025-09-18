@@ -143,18 +143,6 @@ int main(void) {
             gui.control_focus_id = 0;
         }
 
-        if (gui.window_focus_id == 0){
-            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-                gui.window_focus_id     = FOCUS_LOCKED;
-                gui.window_focus_moving = 0;
-            }
-        } else {
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                gui.window_focus_id     = FOCUS_AVAILABLE;
-                gui.window_focus_moving = 0;
-            }
-        }
-
         Rectangle window_limits = (Rectangle){ 
             0,
             gui.default_height,
