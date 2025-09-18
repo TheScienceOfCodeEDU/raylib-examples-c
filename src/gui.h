@@ -159,6 +159,7 @@ struct {
     bool        window_focus_moving;
     int         control_focus_id;
     GUI_Focus   focus_state_current;
+    Rectangle   focus_shape_current;
 
     Vector2     mouse_last;
     Vector2     mouse_current;
@@ -178,6 +179,7 @@ GUI_State GUI_MakeDefaultState(float opacity)
         0,
         0,
         GUI_Focus_Available,
+        (Rectangle) {0,0,0,0},
         (Vector2){ 0.0, 0.0},
         (Vector2){ 0.0, 0.0},
 
@@ -491,23 +493,31 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
     return shape_workspace;
 }
 
-void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors, bool second_pass)
+bool GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors, bool second_pass)
 {
     Rectangle shape_title = GUI_WindowTitle(*shape, gui);
 
     // Conditions
-    bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape);
+    bool collide_focus  = gui->window_focus_id != id && gui->window_focus_id != FOCUS_AVAILABLE && CheckCollisionPointRec(gui->mouse_current, gui->focus_shape_current);
+    bool collide        = CheckCollisionPointRec(gui->mouse_current, *shape) && !collide_focus;
     bool collide_title  = CheckCollisionPointRec(gui->mouse_current, shape_title);
     bool interacting    = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     
+    // If previous window got focus but none of its internal elements override it act as if already granted
+    if (gui->focus_state_current == GUI_Focus_CanOverride) {
+        gui->focus_state_current = GUI_Focus_Granted;
+    }
+
     // Focus
-    if (second_pass == 0) {
-        bool receives_focus     = collide && gui->window_focus_id == FOCUS_AVAILABLE;
+    bool focus_first_pass   = gui->window_focus_id == id && second_pass == 0;
+    bool focus_second_pass  = gui->window_focus_id != id && second_pass == 1;
+    if (focus_first_pass || focus_second_pass) {
+        bool receives_focus     = collide && interacting && gui->window_focus_id == FOCUS_AVAILABLE;
         bool window_focusable   = gui->focus_state_current == GUI_Focus_Available;
         if (receives_focus && window_focusable) {
             gui->window_focus_id        = id;
             gui->window_focus_moving    = collide_title;
-            gui->focus_state_current    = GUI_Focus_CanOverride; 
+            gui->focus_state_current    = GUI_Focus_CanOverride;
         }
 
         if (gui->window_focus_id == id){
@@ -524,15 +534,23 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
                 gui->window_focus_moving = false;
             }
         }
-    }
+        // Limit
+        *shape = LimitRect(*shape, limits);
+        shape_title = GUI_WindowTitle(*shape, gui);
 
-    // Limit
-    *shape          = LimitRect(*shape, limits);
-    shape_title     = GUI_WindowTitle(*shape, gui);
+        // Store shape (if focused) 
+        if (gui->window_focus_id == id) {
+            gui->focus_shape_current = *shape;
+        }
+    }
+    
+    
 
     // Draw
     if ((gui->window_focus_id != id && second_pass == 0) || (gui->window_focus_id == id && second_pass == 1)) {
         GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
         GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);
+        return 1;
     }
+    return 0;
 }
