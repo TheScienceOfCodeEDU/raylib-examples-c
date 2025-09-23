@@ -80,6 +80,38 @@ Game_Character* Game_GetCurrentCharacter(Game_State* state)
     return &state->characters[state->current_character];
 }
 
+Vector2 Game_GetCharacterCenter(Game_Character* character)
+{
+    return (Vector2){
+        character->Shape.x + character->Shape.width / 2.0f,
+        character->Shape.y + character->Shape.height / 2.0f
+    };
+}
+
+bool Game_CheckRingCollision(Game_Character* character1, Game_Character* character2, float radius)
+{
+    Vector2 center1 = Game_GetCharacterCenter(character1);
+    Vector2 center2 = Game_GetCharacterCenter(character2);
+    float distance = Vector2Distance(center1, center2);
+    return distance < (radius * 2);
+}
+
+void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
+{
+    for (int i = 0; i < CHARACTERS; i++) {
+        collisions[i] = false;
+    }
+    
+    for (int i = 0; i < state->alive_characters; ++i) {
+        for (int j = i + 1; j < state->alive_characters; ++j) {
+            if (Game_CheckRingCollision(&state->characters[i], &state->characters[j], radius)) {
+                collisions[i] = true;
+                collisions[j] = true;
+            }
+        }
+    }
+}
+
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
@@ -229,9 +261,18 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             // Game world
-            BeginMode2D(camera);
-                for (int i = 0; i < game_state.alive_characters; ++i ) {
+                bool collisions[CHARACTERS];
+                float radius = 30.0f;
+                Game_UpdateCollisions(&game_state, collisions, radius);
+                
+                for (int i = 0; i < game_state.alive_characters; ++i) {
                     Game_Character* c = &game_state.characters[i];
+                    
+                    Vector2 center = Game_GetCharacterCenter(c);
+                    
+                    Color ring_color = collisions[i] ? RED : BLACK;
+                    DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
+                    
                     DrawRectangleRec(c->Shape, c->Color);
                 }
             EndMode2D();
