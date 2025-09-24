@@ -287,6 +287,20 @@ bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon, GU
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
+void GUI_DrawLabel(const char* text, Rectangle shape, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale)
+{
+    Font font = GUI_GetFont(theme, font_custom);
+    DrawTextEx(font, text, 
+        (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
+        font.baseSize * scale, theme.font_spacing, colors.tx_color);
+}
+
+void GUI_Label(int id, const char* text, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
+{
+    GUI_Theme theme = gui->theme;
+    GUI_DrawLabel(text, shape, theme, gui->font_custom, colors, gui->scale);
+}
+
 void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale, bool blink)
 {
     DrawRectangleRec(shape, colors.bg_color_3);
@@ -405,37 +419,109 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
     GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, gui->theme, gui->font_custom, colors, gui->scale);
 }
 
-int GUI_GetVerticalCount(int value)
+
+//
+// LAYOUT HELPERS
+//
+
+#define RESET_COUNT     0
+#define ADD_COUNT       1
+#define ONLY_GET_COUNT  2
+#define DEFAULT_SIZE    0.0
+//
+// Vertical trackers
+int GUI_TrackVerticalCount(int action)
 {
     static int count = 0;
 
-    if (value == -1) {
-        count = 0;
-        return 0;
-    } else {
+    switch (action) {
+    case ADD_COUNT:
         return count++;
+    case ONLY_GET_COUNT:
+        return count;
+    default:
+        count = 0;
+        return count;
     }
 }
-
-float GUI_GetVerticalSize(float value)
+float GUI_TrackVerticalSize(float value)
 {
-    static float size = 0;
-    if (value != 0) size = value;
+    static float size = 0.0;
+    if (value != DEFAULT_SIZE)
+        size = value;
     return size;
 }
 
-Rectangle GUI_NextVertical()
+// 
+// Horizontal trackers
+int GUI_TrackHorizontalCount(int action)
 {
-    float size = GUI_GetVerticalSize(0.0);
-    Rectangle textbox = { 0, size * GUI_GetVerticalCount(0), (float)GetScreenWidth(), size};
-    return textbox;
+    static int count = 0;
+
+    switch (action) {
+    case ADD_COUNT:
+        return count++;
+    case ONLY_GET_COUNT:
+        return count;
+    default:
+        count = 0;
+        return count;
+    }
+}
+float GUI_TrackHorizontalSize(float value)
+{
+    static float size = DEFAULT_SIZE;
+    if (value != DEFAULT_SIZE)
+        size = value;
+    return size;
 }
 
+// NOTE: Only allow stateful operations that require Begin (like a reset)
+//       If an end is required, that could create hard to debug problems.
 void GUI_BeginVertical(float size)
 {
-    GUI_GetVerticalCount(-1);
-    GUI_GetVerticalSize(size);
+    GUI_TrackVerticalCount(RESET_COUNT);
+    GUI_TrackVerticalSize(size);
 }
+Rectangle GUI_NextVertical()
+{
+    float horizontal_size = GUI_TrackHorizontalSize(DEFAULT_SIZE);
+    if (horizontal_size == DEFAULT_SIZE) horizontal_size = (float)GetScreenWidth();
+
+    float size = GUI_TrackVerticalSize(DEFAULT_SIZE);
+    Rectangle shape = {
+        /* X */ horizontal_size * GUI_TrackHorizontalCount(ONLY_GET_COUNT),
+        /* Y */ size * GUI_TrackVerticalCount(ADD_COUNT),  
+        /* W */ horizontal_size, 
+        /* H */ size };
+    return shape;
+}
+float GUI_GetAvailableHorizontal(Rectangle window_workspace)
+{
+    return window_workspace.width - (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
+}
+void GUI_BeginHorizontal(float size)
+{
+    GUI_TrackHorizontalCount(RESET_COUNT);
+    GUI_TrackHorizontalSize(size);
+}
+Rectangle GUI_NextHorizontal()
+{
+    float vertical_size = GUI_TrackVerticalSize(DEFAULT_SIZE);
+    if (vertical_size == DEFAULT_SIZE) vertical_size = (float)GetScreenHeight();
+
+    float size = GUI_TrackHorizontalSize(DEFAULT_SIZE);
+    Rectangle shape = { 
+        /* X */ size * GUI_TrackHorizontalCount(ADD_COUNT),
+        /* Y */ vertical_size * GUI_TrackVerticalCount(ONLY_GET_COUNT),
+        /* W */ size,
+        /* H */ vertical_size };
+    return shape;
+}
+
+//
+// WINDOWS
+//
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale, bool icon)
 {
@@ -453,16 +539,7 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
         font.baseSize * scale, theme.font_spacing, colors.tx_color);
 }
 
-bool GUI_CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
-    Rectangle inner = {
-        rect.x + margin,
-        rect.y + margin, 
-        rect.width - 2 * margin,
-        rect.height - 2 * margin
-    };
 
-    return CheckCollisionPointRec(point, inner);
-}
 
 Rectangle GUI_WindowTitle(Rectangle shape, GUI_State* gui)
 {
@@ -490,6 +567,19 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
         DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
     }
     return shape_workspace;
+}
+
+Rectangle GUI_WindowsWorkspaceAvailable(Rectangle window_workspace)
+{
+    float used_w = (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
+    float used_h = (GUI_TrackVerticalSize(DEFAULT_SIZE)) * GUI_TrackVerticalCount(ONLY_GET_COUNT);
+    Rectangle result = {
+        window_workspace.x + used_w,
+        window_workspace.y + used_h,
+        window_workspace.width - used_w,
+        window_workspace.height - used_h
+    };
+    return result;
 }
 
 void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors)

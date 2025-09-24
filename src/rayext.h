@@ -32,6 +32,12 @@ Vector2 LimitVector2Rect(Vector2 point, Rectangle limits) {
     return point;
 }
 
+void DrawDebugRect(Rectangle rect, Color color)
+{
+    DrawRectangleRec(rect, ColorAlpha(color, 0.25));
+    DrawRectangleLinesEx(rect, 1.0, ColorAlpha(color, 0.65));
+}
+
 Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
 {
     Rectangle result = {
@@ -39,12 +45,22 @@ Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
         rectangle.y + relativeTo.y,
         rectangle.width > relativeTo.width ? relativeTo.width : rectangle.width,
         rectangle.height > relativeTo.height ? relativeTo.height : rectangle.height
-    };
-
+    };    
     return result;
 }
 
 bool IsKeyEnterPressed()
 {
     return IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);
+}
+
+bool CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
+    Rectangle inner = {
+        rect.x + margin,
+        rect.y + margin, 
+        rect.width - 2 * margin,
+        rect.height - 2 * margin
+    };
+
+    return CheckCollisionPointRec(point, inner);
 }

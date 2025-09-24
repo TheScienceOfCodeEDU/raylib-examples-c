@@ -173,29 +173,75 @@ int main(void) {
                 // Window contents
                 Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
 
-                GUI_BeginVertical(gui.default_height);
                 // 1st Textbox
-                GUI_TextBox(1, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                GUI_BeginVertical(gui.default_height);
+                GUI_BeginHorizontal(window_workspace.width / 2);
+                GUI_Label(1, "Name", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                GUI_NextVertical();
                 // 2nd textbox
-                GUI_TextBox(2, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                GUI_BeginHorizontal(window_workspace.width);
+                GUI_TextBox(3, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
                 // Checkbox
-                GUI_CheckBox(3, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                GUI_BeginHorizontal(window_workspace.width);
+                GUI_CheckBox(4, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
             }
 
-            static Rectangle window2 = { 20, 220, 350, 200 };
-            window2.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 5);
-            GUI_Window(4, "Window title", &gui, &window2, window_limits, gui.theme.gray);
+            static Rectangle win_debug = { 20, 220, 350, 200 };
+            float win_third     = window_limits.width / 3.0;
+            win_debug.x         = win_third * 2;
+            win_debug.y         = window_limits.y;
+            win_debug.width     = win_third;
+            win_debug.height    = window_limits.height;
+            
+            GUI_Window(4, "Kairos Debug", &gui, &win_debug, window_limits, gui.theme.gray);
             {
                 // Window contents
-                Rectangle window_workspace = GUI_WindowWorkspace(window2, &gui);
+                Rectangle window_workspace = GUI_WindowWorkspace(win_debug, &gui);
 
                 GUI_BeginVertical(gui.default_height);
+                GUI_BeginHorizontal(window_workspace.width);
+                GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
                 // 1st Textbox
-                GUI_TextBox(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                // 2nd textbox
-                GUI_TextBox(6, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                // Checkbox
-                GUI_CheckBox(7, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                GUI_BeginHorizontal(window_workspace.width/3);
+                /*GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);*/
+            }
+
+            static Rectangle win_layouts = { 20, 220, 350, 200 };
+            win_layouts.x         = win_third;
+            win_layouts.y         = window_limits.y;
+            win_layouts.width     = win_third;
+            win_layouts.height    = window_limits.height;
+            GUI_Window(500, "Kairos Layouts", &gui, &win_layouts, window_limits, gui.theme.gray);
+            {
+                // Window contents
+                Rectangle window_workspace = GUI_WindowWorkspace(win_layouts, &gui);
+
+                // First block
+                GUI_BeginVertical(gui.default_height);
+                GUI_BeginHorizontal(window_workspace.width);
+                DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), RED);
+                DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), YELLOW);
+                DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BLUE);
+                
+                // Second row
+                GUI_BeginHorizontal(window_workspace.width / 3);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKPURPLE);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKBROWN);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGREEN);
+                GUI_NextVertical();
+
+                GUI_BeginHorizontal(window_workspace.width / 5);
+                window_workspace = GUI_WindowsWorkspaceAvailable(window_workspace);
+
+                GUI_BeginVertical(window_workspace.height);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
             }
             
             DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);
