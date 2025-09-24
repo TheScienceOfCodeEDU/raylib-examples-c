@@ -220,28 +220,41 @@ int main(void) {
                 Rectangle window_workspace = GUI_WindowWorkspace(win_layouts, &gui);
 
                 // First block
+                // Reset width for elements of full width
+                // Reset horizontal for elements of default height
+                GUI_BeginHorizontal(window_workspace.width);                
                 GUI_BeginVertical(gui.default_height);
-                GUI_BeginHorizontal(window_workspace.width);
+                // 2 verticals of full width
                 DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), RED);
                 DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), YELLOW);
                 DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BLUE);
-                
-                // Second row
+                // Second block
+                // 3 horizontals of 1/3 of the available space
                 GUI_BeginHorizontal(window_workspace.width / 3);
+                window_workspace = GUI_WindowsWorkspaceAvailable(window_workspace);
+                GUI_BeginVertical(gui.default_height);
                 DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKPURPLE);
                 DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKBROWN);
                 DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGREEN);
                 GUI_NextVertical();
-
+                
+                // Prepare for a new block with 5 elements per row
                 GUI_BeginHorizontal(window_workspace.width / 5);
                 window_workspace = GUI_WindowsWorkspaceAvailable(window_workspace);
+                // Full available height minus a space for a last row
+                GUI_BeginVertical(window_workspace.height - gui.default_height);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                GUI_NextVertical();
 
-                GUI_BeginVertical(window_workspace.height);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                GUI_BeginHorizontal(window_workspace.width / 2);
+                window_workspace = GUI_WindowsWorkspaceAvailable(window_workspace);
+                GUI_BeginVertical(gui.default_height);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
+                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
             }
             
             DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);
