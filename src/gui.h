@@ -295,7 +295,7 @@ void GUI_DrawLabel(const char* text, Rectangle shape, GUI_Theme theme, Font font
         font.baseSize * scale, theme.font_spacing, colors.tx_color);
 }
 
-void GUI_Label(int id, const char* text, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
+void GUI_Label(const char* text, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
 {
     GUI_Theme theme = gui->theme;
     GUI_DrawLabel(text, shape, theme, gui->font_custom, colors, gui->scale);
@@ -535,7 +535,7 @@ Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
     };
     return result;
 }
-void GUI_ResetBlock()
+void GUI_ResetLayout()
 {
     GUI_TrackHorizontalCount(RESET_COUNT);
     GUI_TrackVerticalCount(RESET_COUNT);

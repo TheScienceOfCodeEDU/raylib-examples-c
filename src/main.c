@@ -203,19 +203,21 @@ int main(void) {
             {
                 // Window contents
                 Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
+                GUI_ResetLayout();
 
-                // 1st Textbox
-                GUI_BeginVertical(gui.default_height);
-                GUI_BeginHorizontal(window_workspace.width / 2);
-                GUI_Label(1, "Name", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                GUI_NextVertical();
-                // 2nd textbox
-                GUI_BeginHorizontal(window_workspace.width);
-                GUI_TextBox(3, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                // Checkbox
-                GUI_BeginHorizontal(window_workspace.width);
-                GUI_CheckBox(4, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                // 1st textbox
+                GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
+                GUI_Label("Name", 
+                    RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                GUI_TextBox(2, textbox_contents,
+                    RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                
+                // Other elements
+                GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
+                GUI_TextBox (3, textbox2_contents,
+                    RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                GUI_CheckBox(4, &checkbox_value, "On", "Off",
+                    RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
             }
 
         #if DEV_DEBUG_GUI
@@ -233,7 +235,7 @@ int main(void) {
 
                 GUI_BeginVertical(gui.default_height);
                 GUI_BeginHorizontal(window_workspace.width);
-                GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                GUI_Label(textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
             }
 
             static Rectangle win_layouts = { 20, 220, 350, 200 };
@@ -245,7 +247,7 @@ int main(void) {
             {
                 // Window contents
                 Rectangle window_workspace = GUI_WindowWorkspace(win_layouts, &gui);
-                GUI_ResetBlock();
+                GUI_ResetLayout();
 
                 // First block
                 // Reset width for elements of full width
