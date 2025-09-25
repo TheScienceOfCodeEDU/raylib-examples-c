@@ -16,14 +16,17 @@ Texture2D GenerateVoronoiTexture(int width, int height)
     Vector2 points[MAX_POINTS];
     Color colors[MAX_POINTS];
 
-    // Generate random points and colors
+    // Generate random points and colors within hue range
     for (int i = 0; i < MAX_POINTS; i++)
     {
         points[i] = (Vector2){ (float)GetRandomValue(0, width), (float)GetRandomValue(0, height) };
-        colors[i] = (Color){ (unsigned char)GetRandomValue(50, 255),
-                             (unsigned char)GetRandomValue(50, 255),
-                             (unsigned char)GetRandomValue(50, 255),
-                             255 };
+        // Generate colors in HSV space with fixed hue, random saturation (0.5-1.0), and value (0.5-1.0)
+        float randomHue = 200 /* HUE */  + GetRandomValue(-30, 30); // Slight variation (±30 degrees) around input hue
+        if (randomHue < 0) randomHue += 360;
+        if (randomHue >= 360) randomHue -= 360;
+        float saturation = GetRandomValue(40, 80) / 100.0f; // 0.5 to 1.0
+        float value = GetRandomValue(50, 100) / 100.0f;     // 0.5 to 1.0
+        colors[i] = HSVToRGB(randomHue, saturation, value);
     }
 
     // Initialize RenderTexture2D
@@ -69,7 +72,7 @@ Texture2D GenerateVoronoiTexture(int width, int height)
 
 // Function to generate a rain-like texture
 // Function to generate a rain-like texture
-Texture2D GenerateRainTexture(int width, int height, float speed, Color color)
+void DrawRain(int width, int height, float speed, Color color)
 {
     // Static arrays for particle positions, directions, speeds, and angles
     static Vector2 positions[MAX_PARTICLES];
@@ -96,10 +99,8 @@ Texture2D GenerateRainTexture(int width, int height, float speed, Color color)
     // Update particle positions and angles
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
-        // Slightly vary the angle (±10°)
-        angles[i] += GetRandomValue(-10, 10);
-        // Clamp angle to ensure downward movement (240° to 300°)
-        if (angles[i] < 240.0f) angles[i] = 240.0f;
+        // Clamp angle to ensure downward movement (280° to 300°)
+        if (angles[i] < 280.0f) angles[i] = 280.0f;
         if (angles[i] > 300.0f) angles[i] = 300.0f;
         // Update direction based on new angle
         directions[i] = (Vector2){ cosf(angles[i] * DEG2RAD), sinf(angles[i] * DEG2RAD) };
@@ -112,20 +113,12 @@ Texture2D GenerateRainTexture(int width, int height, float speed, Color color)
         if (positions[i].y > height) positions[i].y -= height;
     }
 
-    // Initialize RenderTexture2D
-    RenderTexture2D target = LoadRenderTexture(width, height);
-
     // Draw particles as short lines
-    BeginTextureMode(target);
-    ClearBackground(BLANK);
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
         Vector2 endPos = Vector2Add(positions[i], Vector2Scale(directions[i], 5.0f)); // Line length
         DrawLineV(positions[i], endPos, color);
     }
-    EndTextureMode();
-
-    return target.texture;
 }
 
 struct {
@@ -439,19 +432,22 @@ int main(void) {
         // RENDER
         //
 
+        // FXs
+        static RenderTexture2D rain_buffer  = { 0 };     
+        if (rain_buffer.id == 0) {
+            rain_buffer = LoadRenderTexture((int)(GetScreenWidth() / 5), (int)(GetScreenHeight() / 5 + 100));
+        }
+        BeginTextureMode(rain_buffer);
+            ClearBackground(BLANK);
+            DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5, ColorAlpha(BLUE, 0.2f));
+        EndTextureMode();
+
         // Draw
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            {
-                static Texture2D wallpaper_rain = {0};
-                wallpaper_rain = GenerateRainTexture(GetScreenWidth() / 5, GetScreenHeight() / 5, 1.0, ColorAlpha(gui.theme.gray.bg_color_0, 0.6f));
-            
-                Rectangle source = { 0, 0, (float)wallpaper.width, - (float)wallpaper.height };
-                DrawTextureRec(wallpaper, source, (Vector2){ 0, 0 }, WHITE);
-                DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){34,49,104,200});
-                DrawTexturePro(wallpaper_rain, (Rectangle){0,0, 320,480}, window_limits, (Vector2){0,0}, 0.0, WHITE);
-            }
+            DrawTextureRec(wallpaper, GetSourceRec(wallpaper), (Vector2){ 0, 0 }, gui.theme.gray.bg_color_3);
+            DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
 
             // Game world
             BeginMode2D(camera);
@@ -472,8 +468,9 @@ int main(void) {
             EndMode2D();
             
             // Draw UI Buffer
-            Rectangle sourceRec = { 0, 0, (float)buffer.texture.width, - (float)buffer.texture.height };
-            DrawTextureRec(buffer.texture, sourceRec, (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
+            {
+                DrawTextureRec(buffer.texture, FlipYRec(GetSourceRec(buffer.texture)), (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
+            }
         EndDrawing();
     }
 
