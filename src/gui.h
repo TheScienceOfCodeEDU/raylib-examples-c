@@ -583,7 +583,7 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, theme.border * scale);
 
     // Title
-    DrawRectangleRec(shapeTitle, colors.bg_color_2);
+    DrawRectangleRec(shapeTitle, colors.bg_color_3);
     GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
