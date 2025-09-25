@@ -199,7 +199,6 @@ int main(void) {
             const int ELEMENTS = 4;
             window.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
 
-            
             GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray);
             {
                 // Window contents
@@ -219,6 +218,7 @@ int main(void) {
                 GUI_CheckBox(4, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
             }
 
+        #if DEV_DEBUG_GUI
             static Rectangle win_debug = { 20, 220, 350, 200 };
             float win_third     = window_limits.width / 3.0;
             win_debug.x         = win_third * 2;
@@ -234,11 +234,6 @@ int main(void) {
                 GUI_BeginVertical(gui.default_height);
                 GUI_BeginHorizontal(window_workspace.width);
                 GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                // 1st Textbox
-                GUI_BeginHorizontal(window_workspace.width/3);
-                /*GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                GUI_Label(5, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);*/
             }
 
             static Rectangle win_layouts = { 20, 220, 350, 200 };
@@ -278,6 +273,7 @@ int main(void) {
                 DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
                 DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
             }
+        #endif
             
             DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);
             DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);
@@ -324,6 +320,7 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             // Game world
+            BeginMode2D(camera);
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
                 Game_UpdateCollisions(&game_state, collisions, radius);
