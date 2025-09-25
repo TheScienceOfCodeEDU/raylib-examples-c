@@ -424,6 +424,11 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
 // LAYOUT HELPERS
 //
 
+// DEBUG:
+// Add these watches:
+// GUI_TrackHorizontalCount::count
+// GUI_TrackVerticalCount::count
+
 #define RESET_COUNT     0
 #define ADD_COUNT       1
 #define ONLY_GET_COUNT  2
@@ -518,6 +523,53 @@ Rectangle GUI_NextHorizontal()
         /* H */ vertical_size };
     return shape;
 }
+Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
+{
+    float used_w = (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
+    float used_h = (GUI_TrackVerticalSize(DEFAULT_SIZE)) * GUI_TrackVerticalCount(ONLY_GET_COUNT);
+    Rectangle result = {
+        workspace.x + used_w,
+        workspace.y + used_h,
+        workspace.width - used_w,
+        workspace.height - used_h
+    };
+    return result;
+}
+void GUI_ResetBlock()
+{
+    GUI_TrackHorizontalCount(RESET_COUNT);
+    GUI_TrackVerticalCount(RESET_COUNT);
+}
+void GUI_BeginBlock(float width, float height, Rectangle* workspace)
+{
+    // Add jump if necessary after ONLY horizontal blocks
+    if (GUI_TrackHorizontalCount(ONLY_GET_COUNT) > 0 && GUI_TrackVerticalCount(ONLY_GET_COUNT) == 0) {
+        GUI_NextVertical();
+    }
+
+    // Horizontal
+    if (width > 0.0) {
+        GUI_BeginHorizontal(width);
+    } else if (width < 0.0) {
+        GUI_BeginHorizontal(workspace->width + width); // width is already negative
+    } else {
+        GUI_BeginHorizontal(workspace->width);
+    }
+
+    // Adjust to get y-available space
+    if (GUI_TrackVerticalCount(ONLY_GET_COUNT) != 0) {
+        *workspace = GUI_WorkspaceAvailable(*workspace);
+    }
+
+    // Vertical
+    if (height > 0.0) {
+        GUI_BeginVertical(height);
+    } else if (height < 0.0) {
+        GUI_BeginVertical(workspace->height + height); // height is already negative
+    } else {
+        GUI_BeginVertical(workspace->height);
+    }
+}
 
 //
 // WINDOWS
@@ -538,8 +590,6 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
         (Vector2) { shapeTitle.x + theme.padding.x + theme.border * scale, shapeTitle.y + theme.padding.y + theme.border * scale }, 
         font.baseSize * scale, theme.font_spacing, colors.tx_color);
 }
-
-
 
 Rectangle GUI_WindowTitle(Rectangle shape, GUI_State* gui)
 {
@@ -567,19 +617,6 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
         DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
     }
     return shape_workspace;
-}
-
-Rectangle GUI_WindowsWorkspaceAvailable(Rectangle window_workspace)
-{
-    float used_w = (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
-    float used_h = (GUI_TrackVerticalSize(DEFAULT_SIZE)) * GUI_TrackVerticalCount(ONLY_GET_COUNT);
-    Rectangle result = {
-        window_workspace.x + used_w,
-        window_workspace.y + used_h,
-        window_workspace.width - used_w,
-        window_workspace.height - used_h
-    };
-    return result;
 }
 
 void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors)

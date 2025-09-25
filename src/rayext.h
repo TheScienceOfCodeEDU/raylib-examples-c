@@ -34,8 +34,8 @@ Vector2 LimitVector2Rect(Vector2 point, Rectangle limits) {
 
 void DrawDebugRect(Rectangle rect, Color color)
 {
-    DrawRectangleRec(rect, ColorAlpha(color, 0.25));
-    DrawRectangleLinesEx(rect, 1.0, ColorAlpha(color, 0.65));
+    DrawRectangleRec(rect, ColorAlpha(color, 0.75));
+    DrawRectangleLinesEx(rect, 1.0, ColorAlpha(color, 0.95));
 }
 
 Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
