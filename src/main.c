@@ -311,7 +311,7 @@ int main(void) {
         if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) gui.scale += 1.0;
         if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 1.0;
 
-        static float ui_opacity = 250.0;
+        static float ui_opacity = 255.0;
 
         // 
         // RENDER
