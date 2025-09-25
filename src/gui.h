@@ -671,3 +671,16 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
     GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);    
 }
+
+Rectangle GUI_BeginWindowContents(Rectangle shape, GUI_State* gui)
+{
+    Rectangle window_workspace = GUI_WindowWorkspace(shape, gui);
+    GUI_ResetLayout();
+    BeginScissorModeRect(window_workspace);
+    return window_workspace;
+}
+
+void GUI_EndWindowContents()
+{
+    EndScissorMode();
+}

@@ -45,7 +45,7 @@ Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
         rectangle.y + relativeTo.y,
         rectangle.width > relativeTo.width ? relativeTo.width : rectangle.width,
         rectangle.height > relativeTo.height ? relativeTo.height : rectangle.height
-    };    
+    };
     return result;
 }
 

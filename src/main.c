@@ -316,26 +316,21 @@ int main(void) {
 
             GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray);
             {
-                // Window contents
-                Rectangle window_workspace = GUI_WindowWorkspace(window, &gui);
-                GUI_ResetLayout();
-
-                // 1st textbox
-                GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
-                GUI_Label("Name", 
-                    RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                GUI_TextBox(2, textbox_contents,
-                    RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                
-                // Other elements
-                GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
-                GUI_TextBox (3, textbox2_contents,
-                    RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                GUI_CheckBox(4, &checkbox_value, "On", "Off",
-                    RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                Rectangle window_workspace =
+                GUI_BeginWindowContents(window, &gui);
+                    GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
+                    // 1st textbox                    
+                    GUI_Label("Name", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                    GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                    
+                    // Other elements
+                    GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
+                    GUI_TextBox (3, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                    GUI_CheckBox(4, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                GUI_EndWindowContents();
             }
 
-        #if DEV_DEBUG_GUI
+        #if 1
             static Rectangle win_debug = { 20, 220, 350, 200 };
             float win_third     = window_limits.width / 3.0;
             win_debug.x         = win_third * 2;
@@ -346,11 +341,12 @@ int main(void) {
             GUI_Window(4, "Kairos Debug", &gui, &win_debug, window_limits, gui.theme.gray);
             {
                 // Window contents
-                Rectangle window_workspace = GUI_WindowWorkspace(win_debug, &gui);
-
-                GUI_BeginVertical(gui.default_height);
-                GUI_BeginHorizontal(window_workspace.width);
-                GUI_Label(textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                Rectangle window_workspace =
+                GUI_BeginWindowContents(win_debug, &gui);
+                    GUI_BeginVertical(gui.default_height);
+                    GUI_BeginHorizontal(window_workspace.width);
+                    GUI_Label(textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                GUI_EndWindowContents();
             }
 
             static Rectangle win_layouts = { 20, 220, 350, 200 };
@@ -361,34 +357,35 @@ int main(void) {
             GUI_Window(500, "Kairos Layouts", &gui, &win_layouts, window_limits, gui.theme.gray);
             {
                 // Window contents
-                Rectangle window_workspace = GUI_WindowWorkspace(win_layouts, &gui);
-                GUI_ResetLayout();
+                Rectangle window_workspace =
+                GUI_BeginWindowContents(win_layouts, &gui);
 
-                // First block
-                // Reset width for elements of full width
-                // Reset horizontal for elements of default height
-                // 2 verticals of full width
-                GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
-                DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), RED);
-                DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), YELLOW);
-                // Second block
-                // 3 horizontals of 1/3 of the available space
-                GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKPURPLE);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKBROWN);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGREEN);
-                
-                // Prepare for a new block with 5 elements per row
-                GUI_BeginBlock(window_workspace.width / 5, -gui.default_height, &window_workspace);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                
-                GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
-                DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
+                    // First block
+                    // Reset width for elements of full width
+                    // Reset horizontal for elements of default height
+                    // 2 verticals of full width
+                    GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
+                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), RED);
+                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), YELLOW);
+                    // Second block
+                    // 3 horizontals of 1/3 of the available space
+                    GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKPURPLE);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKBROWN);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGREEN);
+                    
+                    // Prepare for a new block with 5 elements per row
+                    GUI_BeginBlock(window_workspace.width / 5, -gui.default_height, &window_workspace);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+                    
+                    GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
+                GUI_EndWindowContents();
             }
         #endif
             
