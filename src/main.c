@@ -439,7 +439,6 @@ int main(void) {
         }
         BeginTextureMode(rain_buffer);
             ClearBackground(BLANK);
-            DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5, ColorAlpha(BLUE, 0.2f));
             DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5, ColorAlpha(BLUE, 0.4f));
         EndTextureMode();
 
