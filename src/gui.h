@@ -127,7 +127,7 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
         // Misc
         (Vector2) { 8, 8 },                // padding
         2.0f,                              // border
-        1,                                 // font_custom
+        0,                                 // font_custom
         1.0,                               // font_spacing
         (Vector2) { 2, 10 },               // blink_size
         (Vector2) { 1.9, 0 },              // blink_delta
