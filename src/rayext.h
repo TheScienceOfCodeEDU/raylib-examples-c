@@ -95,6 +95,17 @@ Rectangle MoveAndExtendXY(Rectangle rectangle, float dx, float dy)
     return result;
 }
 
+Rectangle AddRect(Rectangle rectangle, float dx, float dy, float dw, float dh)
+{
+    Rectangle result = {
+        rectangle.x + dx,
+        rectangle.y + dy,
+        rectangle.width + dw,
+        rectangle.height + dh
+    };
+    return result;
+}
+
 // Helper function to convert HSV to RGB
 Color HSVToRGB(float h, float s, float v)
 {
@@ -116,4 +127,8 @@ Color HSVToRGB(float h, float s, float v)
         (unsigned char)((b + m) * 255),
         255
     };
+}
+
+void BeginScissorModeRect(Rectangle rect) {
+    BeginScissorMode((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 }

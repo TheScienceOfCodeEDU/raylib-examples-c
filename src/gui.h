@@ -577,6 +577,7 @@ void GUI_BeginBlock(float width, float height, Rectangle* workspace)
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale, bool icon)
 {
+    
     // Background
     DrawRectangleRec(shape, colors.bg_color_1);
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, theme.border * scale);
@@ -586,9 +587,11 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
     GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
-    DrawTextEx(font, title,
-        (Vector2) { shapeTitle.x + theme.padding.x + theme.border * scale, shapeTitle.y + theme.padding.y + theme.border * scale }, 
-        font.baseSize * scale, theme.font_spacing, colors.tx_color);
+    BeginScissorModeRect(AddRect(shapeTitle, 0, 0, -theme.border * scale, -theme.border * scale));
+        DrawTextEx(font, title,
+            (Vector2) { shapeTitle.x + theme.padding.x + theme.border * scale, shapeTitle.y + theme.padding.y + theme.border * scale }, 
+            font.baseSize * scale, theme.font_spacing, colors.tx_color);
+    EndScissorMode();
 }
 
 Rectangle GUI_WindowTitle(Rectangle shape, GUI_State* gui)
@@ -596,7 +599,7 @@ Rectangle GUI_WindowTitle(Rectangle shape, GUI_State* gui)
     Rectangle shapeTitle = {
         shape.x + gui->theme.border * gui->scale,
         shape.y + gui->theme.border * gui->scale,
-        shape.width - 50,
+        shape.width - (gui->theme.border * gui->scale * 2),
         gui->default_height
     };
     return shapeTitle;
