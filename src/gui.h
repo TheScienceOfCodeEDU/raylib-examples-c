@@ -340,7 +340,7 @@ void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GU
         int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
         int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
         DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
-            ColorAlpha(colors.tx_color, 0.5));
+            ColorAlpha(colors.tx_color, 0.95));
     }    
 }
 

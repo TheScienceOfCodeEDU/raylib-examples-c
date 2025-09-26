@@ -322,14 +322,12 @@ int main(void) {
                     // 1st textbox                
                     GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
                     GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.gray);
-                    GUI_NextVertical();
                     
                     // Other elements
                     GUI_BeginDuplicateBlock(&window_workspace);
                     GUI_Label("Other", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
                     GUI_TextBox(3, textbox2_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.gray);
-                    GUI_NextVertical();
-
+                    
                     GUI_BeginDuplicateBlock(&window_workspace);
                     GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
                     GUI_CheckBox(4, &checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
@@ -367,18 +365,25 @@ int main(void) {
                 GUI_BeginWindowContents(win_layouts, &gui);
 
                     // First block
-                    // Reset width for elements of full width
-                    // Reset horizontal for elements of default height
-                    // 2 verticals of full width
                     GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
-                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), RED);
-                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), YELLOW);
+                    GUI_Label("Some sample layouts for imKairos", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+
+                    // and more verticals of full width (can be written as Horizontals too, but requires
+                    // an explicit call to GUI_BeginBlock() to end each line)
+                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BROWN);                    
+                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BEIGE);
+
+                    // 1/3rd and 2/3rds blocks
+                    GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), YELLOW);                    
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontals(2), window_workspace), GREEN);
+
                     // Second block
                     // 3 horizontals of 1/3 of the available space
                     GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKPURPLE);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKBROWN);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGREEN);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGRAY);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), GRAY);
+                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), LIGHTGRAY);
                     
                     // Prepare for a new block with 5 elements per row
                     GUI_BeginBlock(window_workspace.width / 5, -gui.default_height, &window_workspace);
