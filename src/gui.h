@@ -165,7 +165,7 @@ struct {
 
 GUI_FontSetup GUI_MakeDefaultFontSetup() {
     GUI_FontSetup result = {
-        1.0,
+        2.0,
         (Vector2) { -0.5, -1.0},            // delta
         LoadFont("fnt/pixelplay.png"),  
         0,                                  // font_custom
