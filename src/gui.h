@@ -69,9 +69,9 @@ GUI_Icons GUI_LoadIcons()
 }
 
 enum {
-    GUI_Status_Default,
-    GUI_Status_Focus,
-    GUI_Status_Click
+    EGUI_Status_Default,
+    EGUI_Status_Collide,
+    EGUI_Status_Focused
 } typedef GUI_ElementStatus;
 
 struct {
@@ -104,6 +104,7 @@ struct {
 
     GUI_ThemeColors gray;
     GUI_ThemeColors red;
+    GUI_ThemeColors green;
 } typedef GUI_Theme;
 
 
@@ -134,12 +135,15 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
 
         // Theme colors
         Make_ThemeColors(180.0f),
-        Make_ThemeColors(3.0f),
+        Make_ThemeColors(3.0f)/*
+        TODO@dc
+        Make_ThemeColors()*/
     };
 
     return theme;
 }
 
+#define COLOR_CHANGE    0.1
 #define FOCUS_AVAILABLE -1
 #define FOCUS_LOCKED    0
 
@@ -148,6 +152,14 @@ enum {
     GUI_Focus_CanOverride,
     GUI_Focus_Granted
 } typedef GUI_Focus;
+
+// NOTE: Always that this kind of conditions are gonna be used,
+//       define a function near the type instead of using it everywhere.
+//       Now, we know that the order matters for this Enum.
+bool FocusOverridable(GUI_Focus focus)
+{
+    return focus <= GUI_Focus_CanOverride;
+}
 
 struct {
     GUI_Theme   theme;
@@ -234,13 +246,16 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border)
 
 void GUI_DrawButton(char* text, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale, float icon_w) 
 {
-    Color bg_color =    status == GUI_Status_Click  ? colors.bg_color_3 : status == GUI_Status_Click  ? colors.bg_color_3 :
-                        status == GUI_Status_Focus  ? ColorBrightness(colors.bg_color_2, 0.1)
-                                                    : colors.bg_color_2;
-    Color b_color_a =   status == GUI_Status_Click  ? colors.bg_color_3
-                                                    : colors.bg_color_1;
-    Color b_color_b =   status == GUI_Status_Click  ? colors.bg_color_2
-                                                    : colors.bg_color_3;
+    Color bg_color =    status == EGUI_Status_Focused  ? colors.bg_color_3 :
+                        status == EGUI_Status_Focused  ? colors.bg_color_3 :
+                        status == EGUI_Status_Collide  ? ColorBrightness(colors.bg_color_2, COLOR_CHANGE) :
+                                                       colors.bg_color_2;
+
+    Color b_color_a =   status == EGUI_Status_Focused  ? colors.bg_color_3 :
+                                                       colors.bg_color_1;
+
+    Color b_color_b =   status == EGUI_Status_Focused  ? colors.bg_color_2 :
+                                                       colors.bg_color_3;
 
     DrawRectangleRec(shape, bg_color);
     GUI_DrawBorders(shape, b_color_a, b_color_b, theme.border * scale);
@@ -265,16 +280,16 @@ void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale,
 bool GUI_Button(char* text, Rectangle shape, GUI_State* gui, Texture2D* icon, GUI_ThemeColors colors)
 {
     GUI_Theme theme = gui->theme;
-    GUI_ElementStatus status = GUI_Status_Default;
+    GUI_ElementStatus status = EGUI_Status_Default;
 
     bool collide            = CheckCollisionPointRec(gui->mouse_current, shape);
     bool moving_window      = gui->window_focus_moving == 0;
     bool focusable          = collide && moving_window;
     if (focusable) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            status = GUI_Status_Focus;
+            status = EGUI_Status_Collide;
         } else {
-            status = GUI_Status_Click;
+            status = EGUI_Status_Focused;
         }
     }
     
@@ -311,12 +326,19 @@ void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GU
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         font.baseSize * scale, theme.font_spacing, colors.tx_color);
 
-    if (status == GUI_Status_Focus && blink) {
-        int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
-        int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
-        DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
-            ColorAlpha(colors.tx_color, 0.5));
+    if (status == EGUI_Status_Focused) {
+        if (blink) {
+            int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
+            int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
+            DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
+                ColorAlpha(colors.tx_color, 0.5));
+        }
+        DrawRectangleLinesEx(shape, theme.border * scale, colors.tx_color);
     }
+    if (status == EGUI_Status_Collide) {
+        DrawRectangleLinesEx(shape, theme.border * scale, colors.bg_color_0);
+    }
+    
 }
 
 void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
@@ -335,16 +357,15 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui, GUI_Theme
 
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && gui->focus_state_current <= GUI_Focus_CanOverride) {
+    if (receives_focus && FocusOverridable(gui->focus_state_current)) {
         gui->control_focus_id       = id;
         gui->focus_state_current    = GUI_Focus_Granted;
         blink_state                 = 1;
         blink_timer                 = 0;
     }
-    bool focused                = gui->control_focus_id == id;
-    GUI_ElementStatus status    = focused ? GUI_Status_Focus : GUI_Status_Default;
-
+    
     // Update focused control
+    bool focused = gui->control_focus_id == id;
     if (focused) {
         int textLength = StringSize(value);
         // Handle text input
@@ -371,7 +392,9 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui, GUI_Theme
         if (blink_timer > blink_speed)  blink_state = 0;
         if (blink_timer < 0)            blink_state = 1;
     }
-
+    GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
+                                  collide ? EGUI_Status_Collide : 
+                                            EGUI_Status_Default;
     GUI_DrawTextBox(value, shape, status, gui->theme, gui->font_custom, colors, gui->scale, blink_state);
 }
 
@@ -387,6 +410,13 @@ void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, 
     DrawTextEx(font, value ? on_txt : off_txt, 
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         font.baseSize * scale, theme.font_spacing, colors.tx_color);
+
+    if (status == EGUI_Status_Focused) {
+        DrawRectangleLinesEx(shape, theme.border * scale, colors.tx_color);
+    }
+    if (status == EGUI_Status_Collide) {
+        DrawRectangleLinesEx(shape, theme.border * scale, colors.bg_color_0);
+    }
 }
 
 void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
@@ -400,14 +430,13 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
 
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && gui->focus_state_current <= GUI_Focus_CanOverride) {
+    if (receives_focus && FocusOverridable(GUI_Focus_CanOverride)) {
         gui->control_focus_id       = id;
-        gui->focus_state_current  = GUI_Focus_Granted;
+        gui->focus_state_current    = GUI_Focus_Granted;
     }
-    bool focused                = gui->control_focus_id == id;
-    GUI_ElementStatus status    = focused ? GUI_Status_Focus : GUI_Status_Default;
-
+    
     // Update focused control
+    bool focused = gui->control_focus_id == id;
     if (focused) 
     {        
         if (interacting)
@@ -416,6 +445,9 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
         }
     }
 
+    GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
+                                  collide ? EGUI_Status_Collide : 
+                                            EGUI_Status_Default;
     GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, gui->theme, gui->font_custom, colors, gui->scale);
 }
 
@@ -577,14 +609,22 @@ void GUI_BeginBlock(float width, float height, Rectangle* workspace)
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale, bool icon)
 {
-    
     // Background
     DrawRectangleRec(shape, colors.bg_color_1);
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, theme.border * scale);
 
-    // Title
-    DrawRectangleRec(shapeTitle, colors.bg_color_3);
-    GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+    if (status == EGUI_Status_Default) {
+        DrawRectangleRec(shapeTitle, colors.bg_color_3);
+        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+    } if (status == EGUI_Status_Focused) {
+        DrawRectangleRec(shapeTitle, ColorBrightness(colors.bg_color_3, -COLOR_CHANGE));
+        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-COLOR_CHANGE), theme.border * scale);
+    } if (status == EGUI_Status_Collide) {
+        DrawRectangleRec(shapeTitle, ColorBrightness(colors.bg_color_3, COLOR_CHANGE));
+        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, COLOR_CHANGE), theme.border * scale);
+    }
 
     Font font = GUI_GetFont(theme, font_custom);
     BeginScissorModeRect(AddRect(shapeTitle, 0, 0, -theme.border * scale, -theme.border * scale));
@@ -668,7 +708,9 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     shape_title     = GUI_WindowTitle(*shape, gui);
 
     // Draw
-    GUI_ElementStatus status = gui->window_focus_id == id ? GUI_Status_Focus : GUI_Status_Default;
+    GUI_ElementStatus status = gui->window_focus_id == id   ? EGUI_Status_Focused :
+                               collide_title                ? EGUI_Status_Collide :
+                                                              EGUI_Status_Default;
     GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_custom, colors, gui->scale, false);    
 }
 
