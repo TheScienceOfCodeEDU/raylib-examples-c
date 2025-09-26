@@ -143,7 +143,7 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
     return theme;
 }
 
-#define COLOR_CHANGE    0.1
+#define COLOR_CHANGE    0.05
 #define FOCUS_AVAILABLE -1
 #define FOCUS_LOCKED    0
 
@@ -318,27 +318,30 @@ void GUI_Label(const char* text, Rectangle shape, GUI_State* gui, GUI_ThemeColor
 
 void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale, bool blink)
 {
-    DrawRectangleRec(shape, colors.bg_color_3);
-    GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+    if (status == EGUI_Status_Default) 
+        DrawRectangleRec(shape, colors.bg_color_3);
+    else if (status == EGUI_Status_Collide) 
+        DrawRectangleRec(shape, ColorBrightness(colors.bg_color_3, COLOR_CHANGE));
+    else if (status == EGUI_Status_Focused) 
+        DrawRectangleRec(shape, ColorBrightness(colors.bg_color_2, -COLOR_CHANGE));
+    
+
+    if (status == EGUI_Status_Focused) 
+        GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -COLOR_CHANGE), ColorBrightness(colors.bg_color_0, COLOR_CHANGE), theme.border * scale);
+    else
+        GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, value, 
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         font.baseSize * scale, theme.font_spacing, colors.tx_color);
 
-    if (status == EGUI_Status_Focused) {
-        if (blink) {
-            int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
-            int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
-            DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
-                ColorAlpha(colors.tx_color, 0.5));
-        }
-        DrawRectangleLinesEx(shape, theme.border * scale, colors.tx_color);
-    }
-    if (status == EGUI_Status_Collide) {
-        DrawRectangleLinesEx(shape, theme.border * scale, colors.bg_color_0);
-    }
-    
+    if (status == EGUI_Status_Focused && blink) {
+        int text_w = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).x + theme.blink_delta.x * scale;
+        int text_h = MeasureTextEx(font, value, font.baseSize * scale, theme.font_spacing).y + theme.blink_delta.y * scale;
+        DrawRectangle(shape.x + theme.padding.x + text_w, shape.y + theme.padding.y, theme.blink_size.x * scale, text_h, 
+            ColorAlpha(colors.tx_color, 0.5));
+    }    
 }
 
 void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
@@ -403,20 +406,27 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_State* gui, GUI_Theme
 //
 void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, Font font_custom, GUI_ThemeColors colors, float scale)
 {
-    DrawRectangleRec(shape, colors.bg_color_3);
-    GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+    Color tx = value ? colors.tx_color : colors.bg_color_0;
+    Color bg = value ? colors.bg_color_3 : colors.bg_color_2;
+    Color b1 = value ? colors.bg_color_2 : colors.bg_color_0;
+    Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
+    if (status == EGUI_Status_Default) 
+        DrawRectangleRec(shape, bg);
+    else if (status == EGUI_Status_Collide) 
+        DrawRectangleRec(shape, ColorBrightness(bg, COLOR_CHANGE));
+    else if (status == EGUI_Status_Focused) 
+        DrawRectangleRec(shape, ColorBrightness(bg, -COLOR_CHANGE));
+    
+
+    if (status == EGUI_Status_Focused) 
+        GUI_DrawBorders(shape, ColorBrightness(b1, -COLOR_CHANGE), ColorBrightness(b2, COLOR_CHANGE), theme.border * scale);
+    else
+        GUI_DrawBorders(shape, b1, b2, theme.border * scale);
 
     Font font = GUI_GetFont(theme, font_custom);
     DrawTextEx(font, value ? on_txt : off_txt, 
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        font.baseSize * scale, theme.font_spacing, colors.tx_color);
-
-    if (status == EGUI_Status_Focused) {
-        DrawRectangleLinesEx(shape, theme.border * scale, colors.tx_color);
-    }
-    if (status == EGUI_Status_Collide) {
-        DrawRectangleLinesEx(shape, theme.border * scale, colors.bg_color_0);
-    }
+        font.baseSize * scale, theme.font_spacing, tx);
 }
 
 void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
@@ -555,6 +565,49 @@ Rectangle GUI_NextHorizontal()
         /* H */ vertical_size };
     return shape;
 }
+Rectangle GUI_NextHorizontals(int quantity)
+{
+    //TODO@dc: assert(quantity > 1);
+    float original  = GUI_TrackHorizontalSize(DEFAULT_SIZE);
+    float real_size = GUI_TrackHorizontalSize(DEFAULT_SIZE) * quantity;
+    
+    // Push value for next element
+    Rectangle first = GUI_NextHorizontal();
+    Rectangle last = {0};
+    for (int i = 1; i < quantity; ++i) {
+        last = GUI_NextHorizontal();
+    }
+    
+    Rectangle result = {
+        first.x,
+        first.y,
+        first.width + last.width,
+        first.height
+    };
+    return result;
+}
+Rectangle GUI_NextVerticals(int quantity)
+{
+    //TODO@dc: assert(quantity > 1);
+    float original = GUI_TrackVerticalSize(DEFAULT_SIZE);
+    float real_size = GUI_TrackVerticalSize(DEFAULT_SIZE) * quantity;
+
+    // Push value for next element
+    Rectangle first = GUI_NextVertical();
+    Rectangle last = {0};
+    for (int i = 1; i < quantity; ++i) {
+        last = GUI_NextVertical();
+    }
+
+    Rectangle result = {
+        first.x,
+        first.y,
+        first.width,
+        first.height + last.height
+    };
+    return result;
+}
+
 Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
 {
     float used_w = (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
@@ -601,6 +654,10 @@ void GUI_BeginBlock(float width, float height, Rectangle* workspace)
     } else {
         GUI_BeginVertical(workspace->height);
     }
+}
+void GUI_BeginDuplicateBlock(Rectangle* workspace)
+{
+    GUI_BeginBlock(GUI_TrackHorizontalSize(DEFAULT_SIZE), GUI_TrackVerticalSize(DEFAULT_SIZE), workspace);
 }
 
 //

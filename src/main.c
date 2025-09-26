@@ -305,7 +305,7 @@ int main(void) {
 
             // Data
             static bool checkbox_value = 0;
-            static char textbox_contents[256] = "hello\0";
+            static char textbox_contents[256] = "world\0";
             static char textbox2_contents[256] = "world\0";
 
             // Window
@@ -318,15 +318,21 @@ int main(void) {
             {
                 Rectangle window_workspace =
                 GUI_BeginWindowContents(window, &gui);
-                    GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
-                    // 1st textbox                    
-                    GUI_Label("Name", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                    GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                    GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
+                    // 1st textbox                
+                    GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                    GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.gray);
+                    GUI_NextVertical();
                     
                     // Other elements
-                    GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
-                    GUI_TextBox (3, textbox2_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                    GUI_CheckBox(4, &checkbox_value, "On", "Off", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                    GUI_BeginDuplicateBlock(&window_workspace);
+                    GUI_Label("Other", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                    GUI_TextBox(3, textbox2_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.gray);
+                    GUI_NextVertical();
+
+                    GUI_BeginDuplicateBlock(&window_workspace);
+                    GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
+                    GUI_CheckBox(4, &checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
                 GUI_EndWindowContents();
             }
 
@@ -420,7 +426,7 @@ int main(void) {
         if (camera.zoom > 3.0f) camera.zoom = 3.0f;
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 
-        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) gui.scale += 1.0;
+        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL))      gui.scale += 1.0;
         if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 1.0;
 
         static float ui_opacity = 255.0;
