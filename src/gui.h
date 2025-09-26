@@ -165,8 +165,8 @@ struct {
 
 GUI_FontSetup GUI_MakeDefaultFontSetup() {
     GUI_FontSetup result = {
-        2.0,
-        (Vector2) { -1.0, -2.0},            // delta
+        1.0,
+        (Vector2) { -0.5, -1.0},            // delta
         LoadFont("fnt/pixelplay.png"),  
         0,                                  // font_custom
         1.0,                                // font_spacing
@@ -241,7 +241,7 @@ Font GUI_GetFont(GUI_FontSetup setup)
 float GUI_CalcDefaultHeight(GUI_State* gui)
 {
     Font font = GUI_GetFont(gui->font_setup);
-    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font.baseSize, gui->font_setup.font_spacing);
+    Vector2 textShape = MeasureTextEx(GetFontDefault(), "Hello raylib", font.baseSize * gui->font_setup.scale, gui->font_setup.font_spacing);
     return textShape.y;
 }
 
