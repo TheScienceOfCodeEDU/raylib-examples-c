@@ -95,6 +95,17 @@ Rectangle MoveAndExtendXY(Rectangle rectangle, float dx, float dy)
     return result;
 }
 
+Rectangle MoveRect(Rectangle rect, Vector2 offset)
+{
+    Rectangle result = {
+        rect.x + offset.x,
+        rect.y + offset.y,
+        rect.width,
+        rect.height
+    };
+    return result;
+}
+
 Rectangle AddRect(Rectangle rectangle, float dx, float dy, float dw, float dh)
 {
     Rectangle result = {
