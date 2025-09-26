@@ -330,7 +330,7 @@ int main(void) {
                     
                     GUI_BeginDuplicateBlock(&window_workspace);
                     GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                    GUI_CheckBox(4, &checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.red);
+                    GUI_CheckBox(4, &checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.red);
                 GUI_EndWindowContents();
             }
 
