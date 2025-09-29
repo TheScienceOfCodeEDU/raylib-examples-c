@@ -427,6 +427,7 @@ int main(void) {
 
         // Update camera
         camera.target = (Vector2){ player->Shape.x, player->Shape.y };
+        camera.offset = (Vector2){ window_limits.width / 2.0f,  window_limits.height / 2.0f };
         camera.zoom += ((float)GetMouseWheelMove() * 0.1f);
         if (camera.zoom > 3.0f) camera.zoom = 3.0f;
         else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
