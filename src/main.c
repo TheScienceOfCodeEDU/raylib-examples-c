@@ -163,6 +163,7 @@ struct {
     int current_character;
     int alive_characters;
     Game_Character characters[CHARACTERS];
+    Camera2D camera2D;
 } typedef Game_State;
 
 Game_State Game_MakeState()
@@ -174,7 +175,9 @@ Game_State Game_MakeState()
         (Game_Character){ 10, 30, 10, 20, BLUE},
         (Game_Character){ 50, 60, 10, 20, GREEN},
         (Game_Character){ 80, 60, 10, 20, ORANGE},
+        { (Vector2){ 0, 0 }, { 0, 0 }, 0.0f, 1.0f }
     };
+
     return state;
 }
 
@@ -255,12 +258,6 @@ int main(void) {
     
     Game_State game_state = Game_MakeState();
     PLAYER_Actions player_actions = PLAYER_MakeActions();
-
-    Camera2D camera     = { 0 };
-    camera.target       = (Vector2){ 0, 0 };
-    camera.offset       = (Vector2){ screen_max.x / 2.0f, screen_max.y / 2.0f };
-    camera.rotation     = 0.0f;
-    camera.zoom         = 1.0f;
 
     SetTargetFPS(60);
 
@@ -426,11 +423,12 @@ int main(void) {
         if (player_actions.move_right)   player->Shape.x += CHARACTER_MAX_SPEED;
 
         // Update camera
-        camera.target = (Vector2){ player->Shape.x, player->Shape.y };
-        camera.offset = (Vector2){ window_limits.width / 2.0f,  window_limits.height / 2.0f };
-        camera.zoom += ((float)GetMouseWheelMove() * 0.1f);
-        if (camera.zoom > 3.0f) camera.zoom = 3.0f;
-        else if (camera.zoom < 0.1f) camera.zoom = 0.1f;
+        Camera2D *camera = &game_state.camera2D;
+        camera->target = (Vector2){ player->Shape.x, player->Shape.y };
+        camera->offset = (Vector2){ window_limits.width / 2.0f,  window_limits.height / 2.0f };
+        camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
+        if (camera->zoom > 3.0f) camera->zoom = 3.0f;
+        else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
 
         if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL))      gui.scale += 1.0;
         if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 1.0;
@@ -459,7 +457,7 @@ int main(void) {
             DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
 
             // Game world
-            BeginMode2D(camera);
+            BeginMode2D(*camera);
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
                 Game_UpdateCollisions(&game_state, collisions, radius);
