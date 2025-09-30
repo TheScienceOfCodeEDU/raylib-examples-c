@@ -51,7 +51,6 @@ Color GetThemeColorFromHue(float hue, float t) {
     return (Color){r, g, b, 255}; // Full alpha
 }
 
-
 struct {
     Texture2D New;
     Texture2D Open;
@@ -222,7 +221,8 @@ enum {
     GUI_Track_Write
 } typedef GUI_Track;
 
-void GUI_TrackState(GUI_State** state, GUI_Track action) {
+void GUI_TrackState(GUI_State** state, GUI_Track action)
+{
     static GUI_State* tracked_state = { 0 };
 
     if (action == GUI_Track_Read) {
@@ -230,6 +230,13 @@ void GUI_TrackState(GUI_State** state, GUI_Track action) {
     } else {
         tracked_state = *state;
     }
+}
+
+GUI_State* GUI_GetState()
+{
+    GUI_State *state = 0;
+    GUI_TrackState(&state, GUI_Track_Read);
+    return state;
 }
 
 Font GUI_GetFont(GUI_FontSetup setup)
@@ -709,6 +716,29 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 // WINDOWS
 //
 
+#define MAX_WINDOW_TITLE 16
+struct GUI_Window;
+typedef struct GUI_Window {
+    int             id;
+    Rectangle       shape;
+    Rectangle       limits;
+    GUI_ThemeColors colors;
+    char            *title;           
+    void (*contents) (struct GUI_Window*, void*);
+} GUI_Window;
+
+GUI_Window GUI_MakeWindow(int id, char *title, Rectangle shape, Rectangle limits, GUI_ThemeColors colors, void (*contents)(GUI_Window*, void*)) {
+    GUI_Window window = {
+        id,
+        shape,
+        limits,
+        colors,
+        title,
+        contents
+    };
+    return window;
+}
+
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup font_setup, GUI_ThemeColors colors, float scale, bool icon)
 {
     // Background
@@ -763,24 +793,25 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
     return shape_workspace;
 }
 
-void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangle limits, GUI_ThemeColors colors)
+void GUI_UpdateAndDrawWindow(GUI_Window *window)
 {
-    Rectangle shape_title = GUI_WindowTitle(*shape, gui);
+    GUI_State *gui          = GUI_GetState();
+    Rectangle shape_title   = GUI_WindowTitle(window->shape, gui);
 
     // Conditions
-    bool collide            = CheckCollisionPointRec(gui->mouse_current, *shape);
+    bool collide            = CheckCollisionPointRec(gui->mouse_current, window->shape);
     bool collide_title      = CheckCollisionPointRec(gui->mouse_current, shape_title);
     bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool window_focusable   = gui->focus_state_current == GUI_Focus_Available && gui->window_focus_moving == 0;
 
     // Focus ?
     if (collide && interaction_starts && window_focusable) {
-        bool already_focused            = gui->window_focus_id == id;
+        bool already_focused            = gui->window_focus_id == window->id;
         if (already_focused) {
             gui->focus_state_current    = GUI_Focus_CanOverride;
             gui->window_focus_moving    = collide_title;
         } else {
-            gui->window_focus_id        = id;
+            gui->window_focus_id        = window->id;
             gui->window_focus_moving    = collide_title;
             gui->focus_state_current    = GUI_Focus_CanOverride;
         }
@@ -788,36 +819,36 @@ void GUI_Window(int id, char* title, GUI_State* gui, Rectangle *shape,  Rectangl
     
 
     // Active
-    if (gui->window_focus_id == id){
+    if (gui->window_focus_id == window->id){
         // Movement
         bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         bool moving             = interacting && gui->window_focus_moving;
         if (moving) {
-            Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
-            Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);
+            Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, window->limits);
+            Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, window->limits);
             Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
             
-            shape->x += displacement.x;
-            shape->y += displacement.y;
+            window->shape.x += displacement.x;
+            window->shape.y += displacement.y;
         } else {
             gui->window_focus_moving = false;
         }
     }
 
     // Limit
-    *shape          = LimitRect(*shape, limits);
-    shape_title     = GUI_WindowTitle(*shape, gui);
+    window->shape   = LimitRect(window->shape, window->limits);
+    shape_title     = GUI_WindowTitle(window->shape, gui);
 
     // Draw
-    GUI_ElementStatus status = gui->window_focus_id == id   ? EGUI_Status_Focused :
-                               collide_title                ? EGUI_Status_Collide :
-                                                              EGUI_Status_Default;
-    GUI_DrawWindow(title, *shape, shape_title, status, gui->theme, gui->font_setup, colors, gui->scale, false);    
+    GUI_ElementStatus status = gui->window_focus_id == window->id   ? EGUI_Status_Focused :
+                               collide_title                        ? EGUI_Status_Collide :
+                                                                      EGUI_Status_Default;
+    GUI_DrawWindow(window->title, window->shape, shape_title, status, gui->theme, gui->font_setup, window->colors, gui->scale, false);    
 }
 
-Rectangle GUI_BeginWindowContents(Rectangle shape, GUI_State* gui)
+Rectangle GUI_BeginWindowContents(GUI_Window* window, GUI_State* gui)
 {
-    Rectangle window_workspace = GUI_WindowWorkspace(shape, gui);
+    Rectangle window_workspace = GUI_WindowWorkspace(window->shape, gui);
     GUI_ResetLayout();
     BeginScissorModeRect(window_workspace);
     return window_workspace;

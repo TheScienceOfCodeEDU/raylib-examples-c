@@ -166,6 +166,11 @@ struct {
     Camera2D camera2D;
 } typedef Game_State;
 
+struct {
+    bool checkbox_value;
+    char textbox_contents[256];
+} typedef Game_WindowState;
+
 Game_State Game_MakeState()
 {
     Game_State state = {
@@ -229,6 +234,26 @@ void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
     }
 }
 
+
+void window_contents(GUI_Window* window, void* data)
+{
+    Game_WindowState* state = (Game_WindowState*)data;
+
+    GUI_State* gui = GUI_GetState();
+    Rectangle window_workspace =
+    GUI_BeginWindowContents(window, gui);
+        GUI_BeginBlock(window_workspace.width / 3, gui->default_height, &window_workspace);
+        // 1st textbox                
+        GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), gui, window->colors);
+        GUI_TextBox(2, state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), gui, window->colors);
+        
+        // Switch
+        GUI_BeginDuplicateBlock(&window_workspace);
+        GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), gui, window->colors);
+        GUI_CheckBox(4, &state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), gui, gui->theme.red);
+    GUI_EndWindowContents();
+}
+
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
@@ -250,12 +275,17 @@ int main(void) {
     if (DEV_HIDE_CURSOR)
         HideCursor();
 
-    // Create render texture for the UI
+    // PREPARE GUI
+    // Create render texture for the GUI
     RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
     GUI_State gui               = GUI_MakeDefaultState(255);
     Texture2D mouse_texture     = LoadTexture("ico/cursor.png");
     Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
-    
+
+    GUI_State *pGui = &gui;  
+    GUI_TrackState(&pGui, GUI_Track_Write);
+
+    // PREPARE GAME
     Game_State game_state = Game_MakeState();
     PLAYER_Actions player_actions = PLAYER_MakeActions();
 
@@ -301,37 +331,19 @@ int main(void) {
             GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
 
             // Data
-            static bool checkbox_value = 0;
-            static char textbox_contents[256] = "world\0";
-            static char textbox2_contents[256] = "world\0";
+            static Game_WindowState window_state = {0};
 
             // Window
-            static Rectangle window = { 20, 20, 250, 200 };
+            static GUI_Window window = {0};
+            if (window.id == 0)
+                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, window_limits, gui.theme.gray, window_contents);
     
             const int ELEMENTS = 4;
-            window.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
+            window.shape.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
 
-            GUI_Window(1, "Window title", &gui, &window, window_limits, gui.theme.gray);
-            {
-                Rectangle window_workspace =
-                GUI_BeginWindowContents(window, &gui);
-                    GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
-                    // 1st textbox                
-                    GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                    GUI_TextBox(2, textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.gray);
-                    
-                    // Other elements
-                    GUI_BeginDuplicateBlock(&window_workspace);
-                    GUI_Label("Other", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                    GUI_TextBox(3, textbox2_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.gray);
-                    
-                    GUI_BeginDuplicateBlock(&window_workspace);
-                    GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), &gui, gui.theme.gray);
-                    GUI_CheckBox(4, &checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), &gui, gui.theme.red);
-                GUI_EndWindowContents();
-            }
-
-        #if 1
+            GUI_UpdateAndDrawWindow(&window);
+            window.contents(&window, &window_state);
+        #if 0
             static Rectangle win_debug = { 20, 220, 350, 200 };
             float win_third     = window_limits.width / 3.0;
             win_debug.x         = win_third * 2;
@@ -339,6 +351,7 @@ int main(void) {
             win_debug.width     = win_third;
             win_debug.height    = window_limits.height;
             
+            void (*win_debug_contents)
             GUI_Window(4, "Kairos Debug", &gui, &win_debug, window_limits, gui.theme.gray);
             {
                 // Window contents
