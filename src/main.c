@@ -137,16 +137,17 @@ PLAYER_Actions PLAYER_MakeActions()
     return actions;
 }
 
-void GUI_TopBar(GUI_State* gui, PLAYER_Actions* actions, Rectangle target)
+void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 {
+    GUI_Setup* setup = GUI_GetSetup();
     int buttons = 3;
     float screen_w = target.width;
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, gui, &gui->icons.New, gui->theme.red);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, gui, &gui->icons.Open, gui->theme.gray);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, gui, &gui->icons.Save, gui->theme.gray);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &setup->icons.New, setup->theme.red);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &setup->icons.Open, setup->theme.gray);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &setup->icons.Save, setup->theme.gray);
 }
 
 
@@ -240,17 +241,18 @@ void window_contents(GUI_Window* window, void* data)
     Game_WindowState* state = (Game_WindowState*)data;
 
     GUI_State* gui = GUI_GetState();
+    GUI_Setup* setup = GUI_GetSetup();
     Rectangle window_workspace =
     GUI_BeginWindowContents(window, gui);
         GUI_BeginBlock(window_workspace.width / 3, gui->default_height, &window_workspace);
         // 1st textbox                
         GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), gui, window->colors);
-        GUI_TextBox(2, state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), gui, window->colors);
+        GUI_TextBox(2, state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors);
         
         // Switch
         GUI_BeginDuplicateBlock(&window_workspace);
         GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), gui, window->colors);
-        GUI_CheckBox(4, &state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), gui, gui->theme.red);
+        GUI_CheckBox(4, &state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red);
     GUI_EndWindowContents();
 }
 
@@ -278,12 +280,11 @@ int main(void) {
     // PREPARE GUI
     // Create render texture for the GUI
     RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
-    GUI_State gui               = GUI_MakeDefaultState(255);
+    GUI_State state             = GUI_MakeDefaultState();
+    GUI_Setup setup             = GUI_MakeDefaultSetup(255);
     Texture2D mouse_texture     = LoadTexture("ico/cursor.png");
     Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
-
-    GUI_State *pGui = &gui;  
-    GUI_TrackState(&pGui, GUI_Track_Write);
+    GUI_SetContext(&state, &setup);
 
     // PREPARE GAME
     Game_State game_state = Game_MakeState();
@@ -297,8 +298,8 @@ int main(void) {
         //
 
         // UI
-        gui.default_height          = GUI_CalcDefaultScaledHeight(&gui);
-        gui.focus_state_current     = GUI_Focus_Available;
+        state.default_height        = GUI_CalcDefaultScaledHeight(setup, state);
+        state.focus_state_current   = GUI_Focus_Available;
 
         Rectangle mouse_limits = (Rectangle) {
             0,
@@ -306,29 +307,29 @@ int main(void) {
             GetScreenWidth(),
             GetScreenHeight()
         };
-        gui.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
+        state.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
 
         Vector2 mouse_shape = (Vector2){
-            gui.mouse_current.x - (mouse_texture.width * gui.scale * 0.5f),
-            gui.mouse_current.y - (mouse_texture.height * gui.scale * 0.5f),
+            state.mouse_current.x - (mouse_texture.width * state.scale * 0.5f),
+            state.mouse_current.y - (mouse_texture.height * state.scale * 0.5f),
         };
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            gui.control_focus_id = 0;
+            state.control_focus_id = 0;
         }
 
         Rectangle window_limits = (Rectangle){ 
             0,
-            gui.default_height,
+            state.default_height,                       // GUI_TopBar size
             GetScreenWidth(),
-            GetScreenHeight() - gui.default_height // Minus GUI_TopBar size
+            GetScreenHeight() - state.default_height    // Minus GUI_TopBar size
         };
 
         BeginTextureMode(buffer);
             ClearBackground(BLANK);
             
             // Top bar
-            GUI_TopBar(&gui, &player_actions, (Rectangle){ 0, 0, GetScreenWidth(), gui.default_height });
+            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), state.default_height });
 
             // Data
             static Game_WindowState window_state = {0};
@@ -336,10 +337,10 @@ int main(void) {
             // Window
             static GUI_Window window = {0};
             if (window.id == 0)
-                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, gui.theme.gray, window_contents);
+                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, window_contents);
     
             const int ELEMENTS = 4;
-            window.shape.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
+            window.shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
 
             GUI_UpdateAndDrawWindow(&window, window_limits);
             window.contents(&window, &window_state);
@@ -410,11 +411,11 @@ int main(void) {
             }
         #endif
             
-            DrawText(TextFormat("focus_win: %d", gui.window_focus_id), 10, 70, 20, BLACK);
-            DrawTextureEx(mouse_texture, mouse_shape, 0, gui.scale, WHITE);
+            DrawText(TextFormat("focus_win: %d", state.window_focus_id), 10, 70, 20, BLACK);
+            DrawTextureEx(mouse_texture, mouse_shape, 0, state.scale, WHITE);
         EndTextureMode();
 
-        gui.mouse_last = gui.mouse_current;
+        state.mouse_last = state.mouse_current;
         
         // Keyboard
         player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
@@ -443,8 +444,8 @@ int main(void) {
         if (camera->zoom > 3.0f) camera->zoom = 3.0f;
         else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
 
-        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL))      gui.scale += 1.0;
-        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) gui.scale -= 1.0;
+        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL))      state.scale += 1.0;
+        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) state.scale -= 1.0;
 
         static float ui_opacity = 255.0;
 
@@ -466,7 +467,7 @@ int main(void) {
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            DrawTextureRec(wallpaper, GetSourceRec(wallpaper), (Vector2){ 0, 0 }, gui.theme.gray.bg_color_3);
+            DrawTextureRec(wallpaper, GetSourceRec(wallpaper), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
             DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
 
             // Game world
