@@ -721,17 +721,15 @@ struct GUI_Window;
 typedef struct GUI_Window {
     int             id;
     Rectangle       shape;
-    Rectangle       limits;
     GUI_ThemeColors colors;
     char            *title;           
     void (*contents) (struct GUI_Window*, void*);
 } GUI_Window;
 
-GUI_Window GUI_MakeWindow(int id, char *title, Rectangle shape, Rectangle limits, GUI_ThemeColors colors, void (*contents)(GUI_Window*, void*)) {
+GUI_Window GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors colors, void (*contents)(GUI_Window*, void*)) {
     GUI_Window window = {
         id,
         shape,
-        limits,
         colors,
         title,
         contents
@@ -793,7 +791,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, GUI_State* gui)
     return shape_workspace;
 }
 
-void GUI_UpdateAndDrawWindow(GUI_Window *window)
+void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 {
     GUI_State *gui          = GUI_GetState();
     Rectangle shape_title   = GUI_WindowTitle(window->shape, gui);
@@ -824,8 +822,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window)
         bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         bool moving             = interacting && gui->window_focus_moving;
         if (moving) {
-            Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, window->limits);
-            Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, window->limits);
+            Vector2 mouse_current_valid     = LimitVector2Rect(gui->mouse_current, limits);
+            Vector2 mouse_last_valid        = LimitVector2Rect(gui->mouse_last, limits);
             Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
             
             window->shape.x += displacement.x;
@@ -836,7 +834,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window)
     }
 
     // Limit
-    window->shape   = LimitRect(window->shape, window->limits);
+    window->shape   = LimitRect(window->shape, limits);
     shape_title     = GUI_WindowTitle(window->shape, gui);
 
     // Draw

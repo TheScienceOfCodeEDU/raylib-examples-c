@@ -336,12 +336,12 @@ int main(void) {
             // Window
             static GUI_Window window = {0};
             if (window.id == 0)
-                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, window_limits, gui.theme.gray, window_contents);
+                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, gui.theme.gray, window_contents);
     
             const int ELEMENTS = 4;
             window.shape.height =(gui.default_height + gui.theme.border * gui.scale) * (ELEMENTS + 1);
 
-            GUI_UpdateAndDrawWindow(&window);
+            GUI_UpdateAndDrawWindow(&window, window_limits);
             window.contents(&window, &window_state);
         #if 0
             static Rectangle win_debug = { 20, 220, 350, 200 };
