@@ -376,11 +376,12 @@ void GUI_DrawLabel(char* text, Rectangle shape, GUI_Theme theme, GUI_FontSetup* 
         colors.tx_color, scale);
 }
 
-void GUI_Label(char* text, Rectangle shape, GUI_State* gui, GUI_ThemeColors colors)
+void GUI_Label(char* text, Rectangle shape, GUI_ThemeColors colors)
 {
+    GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
     GUI_Theme theme = setup->theme;
-    GUI_DrawLabel(text, shape, theme, &setup->font_setup, colors, gui->scale);
+    GUI_DrawLabel(text, shape, theme, &setup->font_setup, colors, state->scale);
 }
 
 void GUI_DrawTextBox(char* value, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup* font_setup, GUI_ThemeColors colors, float scale, bool blink)
@@ -882,7 +883,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     GUI_DrawWindow(window->title, window->shape, shape_title, status, theme, &setup->font_setup, window->colors, state->scale, false);    
 }
 
-Rectangle GUI_BeginWindowContents(GUI_Window* window, GUI_State* gui)
+Rectangle GUI_BeginWindowContents(GUI_Window* window)
 {
     Rectangle window_workspace = GUI_WindowWorkspace(window->shape);
     GUI_ResetLayout();

@@ -236,24 +236,30 @@ void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
 }
 
 
-void window_contents(GUI_Window* window, void* data)
+void WIN_window(GUI_Window* window, void* data)
 {
-    Game_WindowState* state = (Game_WindowState*)data;
-
-    GUI_State* gui = GUI_GetState();
+    Game_WindowState* win_state = (Game_WindowState*)data;
+    GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
+    float default_height = state->default_height;
+
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, gui);
-        GUI_BeginBlock(window_workspace.width / 3, gui->default_height, &window_workspace);
+    GUI_BeginWindowContents(window);
+        GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
         // 1st textbox                
-        GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), gui, window->colors);
-        GUI_TextBox(2, state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors);
+        GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors);
+        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors);
         
         // Switch
         GUI_BeginDuplicateBlock(&window_workspace);
-        GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), gui, window->colors);
-        GUI_CheckBox(4, &state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red);
+        GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors);
+        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red);
     GUI_EndWindowContents();
+}
+
+void WIN_layout(GUI_Window* window, void* data)
+{
+
 }
 
 int main(void) {
@@ -337,7 +343,7 @@ int main(void) {
             // Window
             static GUI_Window window = {0};
             if (window.id == 0)
-                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, window_contents);
+                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_window);
     
             const int ELEMENTS = 4;
             window.shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
