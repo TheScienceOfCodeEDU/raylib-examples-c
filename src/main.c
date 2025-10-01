@@ -405,29 +405,30 @@ int main(void) {
             // Window(s)
             static Game_WindowState win_state = {0};
             {
-                static GUI_Window win_window = {0};
-                if (win_window.id == 0)
+                static GUI_Window* win_window = NULL;
+                if (win_window == NULL)
                     win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_window);
-        
-                const int ELEMENTS = 4;
-                win_window.shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
-                GUI_UpdateAndDrawWindow(&win_window, window_limits);
-                win_window.contents(&win_window, &win_state);
+                
+                if (win_window != NULL) {
+                    const int ELEMENTS = 4;                
+                    win_window->shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
+                }
             }
             {
-                static GUI_Window win_layouts = {0};
-                if (win_layouts.id == 0)
+                static GUI_Window* win_layouts = NULL;
+                if (win_layouts == NULL)
                     win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_layouts);
                 
-                float win_third             = window_limits.width / 3.0;
-                win_layouts.shape.x         = win_third;
-                win_layouts.shape.y         = window_limits.y;
-                win_layouts.shape.width     = win_third;
-                win_layouts.shape.height    = window_limits.height;
-                
-                GUI_UpdateAndDrawWindow(&win_layouts, window_limits);
-                win_layouts.contents(&win_layouts, &win_state);
+                if (win_layouts != NULL) {
+                    float win_third             = window_limits.width / 3.0;
+                    win_layouts->shape.x         = win_third;
+                    win_layouts->shape.y         = window_limits.y;
+                    win_layouts->shape.width     = win_third;
+                    win_layouts->shape.height    = window_limits.height;
+                }
             }
+
+            GUI_UpdateAndDrawWindows(window_limits, &win_state);
             
         #if 0
             static Rectangle win_debug = { 20, 220, 350, 200 };

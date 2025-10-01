@@ -5,6 +5,8 @@
  #include "env.h"
 #endif
 
+#define REPEAT_INIT(value, N) { [0 ... (N)-1] = value }
+
 #define GUI_Assert(cond) \
     do { \
         if (!(cond)) { \
@@ -148,6 +150,7 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
 #define FOCUS_LOCKED        0
 #define GUI_DEF_WINFOCUS    0
 #define GUI_DEF_CTRFOCUS    0
+#define GUI_MAX_OPEN_WINS   16
 
 enum {
     GUI_Focus_Available,
@@ -202,6 +205,30 @@ GUI_Setup GUI_MakeDefaultSetup(float opacity)
     return setup;
 }
 
+//
+// WINDOW
+//
+#define MAX_WINDOW_TITLE 16
+struct GUI_Window;
+typedef struct GUI_Window {
+    int             id;
+    Rectangle       shape;
+    GUI_ThemeColors colors;
+    char            *title;           
+    void (*contents) (struct GUI_Window*, void*);
+} GUI_Window;
+
+GUI_Window GUI_MakeEmptyWindow(void)
+{
+    GUI_Window window = {
+        .id       = 0,
+        .shape    = {0},        // Rectangle { x=0, y=0, width=0, height=0 }
+        .colors   = {0},        // GUI_ThemeColors all zeros
+        .title    = NULL,
+        .contents = NULL
+    };
+    return window;
+}
 struct {
     float           scale;
 
@@ -215,6 +242,9 @@ struct {
     Vector2         mouse_current;
 
     float           default_height;
+
+    struct
+    GUI_Window      window_s[GUI_MAX_OPEN_WINS];
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState()
@@ -229,9 +259,11 @@ GUI_State GUI_MakeDefaultState()
 
         (Vector2){ 0.0, 0.0},
         (Vector2){ 0.0, 0.0},
-        0
+        0,
+        
+        REPEAT_INIT(GUI_MakeEmptyWindow(), 16)
     };
-    //SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
+    // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
 
@@ -239,7 +271,7 @@ GUI_State GUI_MakeDefaultState()
 static struct {
     GUI_State* state;
     GUI_Setup* setup;
-    
+
     // LAYOUT DATA
     // Vertical
     int    vertical_count;
@@ -248,7 +280,6 @@ static struct {
     // Horizontal
     int    horizontal_count;
     float  horizontal_size;
-
 } GUI_CTX = { 0 };
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup)
 {
@@ -631,7 +662,7 @@ Rectangle GUI_NextHorizontals(int quantity)
 Rectangle GUI_NextVerticals(int quantity)
 {
     GUI_Assert(quantity > 1);
-    
+
     // Push value for next element
     Rectangle first = GUI_NextVertical();
     Rectangle last = {0};
@@ -701,29 +732,8 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 }
 
 //
-// WINDOWS
+// WINDOW FUNCTIONS
 //
-
-#define MAX_WINDOW_TITLE 16
-struct GUI_Window;
-typedef struct GUI_Window {
-    int             id;
-    Rectangle       shape;
-    GUI_ThemeColors colors;
-    char            *title;           
-    void (*contents) (struct GUI_Window*, void*);
-} GUI_Window;
-
-GUI_Window GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors colors, void (*contents)(GUI_Window*, void*)) {
-    GUI_Window window = {
-        id,
-        shape,
-        colors,
-        title,
-        contents
-    };
-    return window;
-}
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup* font_setup, GUI_ThemeColors colors, float scale, bool icon)
 {
@@ -840,6 +850,36 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
                                collide_title                            ? EGUI_Status_Collide :
                                                                           EGUI_Status_Default;
     GUI_DrawWindow(window->title, window->shape, shape_title, status, theme, &setup->font_setup, window->colors, state->scale, false);    
+}
+
+GUI_Window* GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors colors, void (*contents)(GUI_Window*, void*)) {
+    GUI_State* state = GUI_GetState();
+
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &state->window_s[i];
+        if (window->id == 0) {
+            window->id          = id;
+            window->shape       = shape;
+            window->colors      = colors;
+            window->title       = title;
+            window->contents    = contents;
+            return window;
+        }
+    }
+    return 0;
+}
+
+void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
+{
+    GUI_State* state = GUI_GetState();
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
+        GUI_Window* window = &state->window_s[i];
+        if (window->id == 0)
+            continue;
+
+        GUI_UpdateAndDrawWindow(window, limits);
+        window->contents(window, win_state);
+    }
 }
 
 Rectangle GUI_BeginWindowContents(GUI_Window* window)
