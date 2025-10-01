@@ -1,8 +1,17 @@
 #ifndef UNITY_BUILD
+ #include <stdio.h>
  #include "rayext.h"
  #include "str.h"
  #include "env.h"
 #endif
+
+#define GUI_Assert(cond) \
+    do { \
+        if (!(cond)) { \
+            fprintf(stderr, "GUI_Assert failed: %s, file %s, line %d\n", #cond, __FILE__, __LINE__); \
+            exit(1); \
+        } \
+    } while (0)
 
 // Generates a color with a specified hue and interpolated saturation and value.
 // Parameters:
@@ -225,6 +234,7 @@ GUI_State GUI_MakeDefaultState()
     //SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
+
 
 static struct {
     GUI_State* state;
