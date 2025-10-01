@@ -245,6 +245,8 @@ struct {
 
     struct
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
+
+    int             z_index[GUI_MAX_OPEN_WINS];
 } typedef GUI_State;
 
 GUI_State GUI_MakeDefaultState()
@@ -260,9 +262,11 @@ GUI_State GUI_MakeDefaultState()
         (Vector2){ 0.0, 0.0},
         (Vector2){ 0.0, 0.0},
         0,
-        
-        REPEAT_INIT(GUI_MakeEmptyWindow(), 16)
     };
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
+        state.window_s[i] = GUI_MakeEmptyWindow();
+        state.z_index[i]  = 0;
+    }
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
@@ -869,16 +873,107 @@ GUI_Window* GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors
     return 0;
 }
 
+
+
 void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 {
     GUI_State* state = GUI_GetState();
+
+    // Remove unused window ids
+    for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
+        int id = state->z_index[j];
+        if (id == 0)
+            continue;
+
+        bool found_id = false;
+        for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+            GUI_Window* window = &state->window_s[i];
+            if (window->id == id) {
+                found_id = true;
+                break;
+            }
+        }
+
+        if (found_id == false) {
+            state->z_index[j] = 0; // Clean
+        }
+    }
+    
+    // Grant that all window_s are in the z-index
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
         GUI_Window* window = &state->window_s[i];
         if (window->id == 0)
             continue;
 
-        GUI_UpdateAndDrawWindow(window, limits);
-        window->contents(window, win_state);
+        int first_zero = -1;
+        bool found_id = false;
+        for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
+            if (state->z_index[j] == window->id){
+                found_id = true;
+                break;
+            }
+            if (state->z_index[j] == 0 && first_zero < 0) {
+                first_zero = j;
+            }
+        }
+        if (found_id == false) {
+            state->z_index[first_zero] = window->id;
+        }
+    }
+    
+    bool interacting  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    if (interacting) {
+        // Find ID
+        int interacted_id = 0;
+        for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
+            int id = state->z_index[j];
+            if (id == 0) continue;
+
+            for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+                GUI_Window* window = &state->window_s[i];
+                if (window->id != id) continue;
+                if (CheckCollisionPointRec(state->mouse_current, window->shape)) {
+                    interacted_id = window->id;
+                    break;
+                }
+            }
+        }
+
+        if (interacted_id > 0) {
+            // Move all elements to the right
+            for (int j = GUI_MAX_OPEN_WINS - 1; j > 0; --j) {
+                state->z_index[j] = state->z_index[j - 1];
+            }
+            
+            // Add this one
+            state->z_index[0] = interacted_id;
+        }
+    }
+
+    // Clean duplicates
+    for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
+        int id = state->z_index[j];
+        if (id == 0) continue;
+
+        for (int k = GUI_MAX_OPEN_WINS - 1; k > j; --k) {
+            if (state->z_index[k] == id) {
+                state->z_index[k] = 0; 
+            }
+        }
+    }
+
+    // Process
+    for (int j = GUI_MAX_OPEN_WINS - 1; j >= 0 ; --j) { 
+        int id = state->z_index[j];
+        if (id == 0) continue;
+
+        for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
+            GUI_Window* window = &state->window_s[i];
+            if (window->id != id) continue;
+
+            GUI_UpdateAndDrawWindow(window, limits);
+            window->contents(window, win_state);
+        }
     }
 }
 
