@@ -315,10 +315,12 @@ void WIN_winman(GUI_Window* window, void* data)
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
         GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
-        for (int z = 0; z < GUI_MAX_OPEN_WINS; ++z) {
-            if (state->z_index[z] == 0) continue;
-            GUI_Window* win = GUI_GetWindow(state->z_index[z], state);
-            GUI_Button(win->title, RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors);
+        for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+            GUI_Window* win = &state->window_s[i];
+            if (win->id == 0 || window->id == win->id) continue;
+            if (GUI_Button(win->title, RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors)) {
+                state->force_z_index = win->id;
+            }
         }
     GUI_EndWindowContents();
 }
@@ -378,7 +380,7 @@ int main(void) {
     PLAYER_Actions player_actions = PLAYER_MakeActions();
 
     SetTargetFPS(60);
-
+    bool first_render = true;
     while (!WindowShouldClose()) {
         //
         // UPDATE
@@ -387,7 +389,7 @@ int main(void) {
         // UI
         state.default_height        = GUI_CalcDefaultScaledHeight(setup, state);
         state.focus_state_current   = GUI_Focus_Available;
-
+        
         Rectangle mouse_limits = (Rectangle) {
             0,
             0,
@@ -421,10 +423,11 @@ int main(void) {
             GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), state.default_height });
 
             // Window(s)
+            float win_third = window_limits.width / 3.0;
             static Game_WindowState win_state = {0};
             {
                 static GUI_Window* win_window = NULL;
-                if (win_window == NULL)
+                if (win_window == NULL && !first_render)
                     win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_window);
                 
                 if (win_window != NULL) {
@@ -434,22 +437,23 @@ int main(void) {
             }
             {
                 static GUI_Window* win_layouts = NULL;
-                if (win_layouts == NULL)
+                if (win_layouts == NULL && !first_render) {
                     win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_layouts);
+                    win_layouts->shape.x         = win_third;
+                    win_layouts->shape.y         = state.default_height;
+                }
                 
-                if (win_layouts != NULL) {
-                    float win_third             = window_limits.width / 3.0;                    
+                if (win_layouts != NULL) {                    
                     win_layouts->shape.width     = win_third;
                     win_layouts->shape.height    = window_limits.height;
                 }
             }
             {
                 static GUI_Window* win_man = NULL;
-                if (win_man == NULL)
+                if (win_man == NULL && !first_render)
                     win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_winman);
                 
                 if (win_man != NULL) {
-                    float win_third          = window_limits.width / 3.0;
                     win_man->shape.x         = win_third * 2;
                     win_man->shape.y         = window_limits.y;
                     win_man->shape.width     = win_third;
@@ -573,6 +577,8 @@ int main(void) {
                 DrawTextureRec(buffer.texture, FlipYRec(GetSourceRec(buffer.texture)), (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
             }
         EndDrawing();
+
+        first_render = false;
     }
 
     CloseWindow();

@@ -244,6 +244,7 @@ struct {
     struct
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
 
+    int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
 } typedef GUI_State;
 
@@ -260,8 +261,9 @@ GUI_State GUI_MakeDefaultState()
         0,
     };
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
-        state.window_s[i] = GUI_MakeEmptyWindow();
-        state.z_index[i]  = 0;
+        state.window_s[i]   = GUI_MakeEmptyWindow();
+        state.z_index[i]    = 0;
+        state.force_z_index = 0;
     }
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
@@ -412,13 +414,12 @@ bool GUI_Button(char* text, Rectangle shape, Texture2D* icon, GUI_ThemeColors co
     }
     
     float icon_w = icon != NULL ? GUI_CalcDefaultIconSize() : 0;
+    GUI_DrawButton(text, shape, status, theme, colors, state->scale, icon_w, &setup->font_setup);
     if (icon_w > 0) {
         GUI_Icon(icon, 
             (Vector2) { shape.x + theme.border * state->scale, shape.y + theme.border * state->scale }, 
             icon_w, 1.0f, WHITE);
     }
-    GUI_DrawButton(text, shape, status, theme, colors, state->scale, icon_w, &setup->font_setup);
-
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
@@ -924,28 +925,34 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
         }
     }
     
-    bool interacting  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    if (interacting) {
+    bool force_z_index  = state->force_z_index > 0;
+    bool interacting    = !force_z_index && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    if (interacting || force_z_index) {
         // Find ID
-        int interacted_id = 0;
+        int interacted_id = state->force_z_index;
         int current_zindex = -1;
+
+        // Restore state values z-index is being updated
+        state->force_z_index = 0;
+
         for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
             int id = state->z_index[j];
             if (id == 0) continue;
 
-            for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-                GUI_Window* window = &state->window_s[i];
-                if (window->id != id) continue;
-                if (CheckCollisionPointRec(state->mouse_current, window->shape)) {
-                    interacted_id = window->id;
-                    current_zindex = j;
-                    break;
-                }
+            GUI_Window* window = GUI_GetWindow(id, state);
+            if (window == NULL) continue;
+
+            bool find_window    = interacted_id > 0 && interacted_id == window->id;
+            bool check_window   = interacted_id == 0 && CheckCollisionPointRec(state->mouse_current, window->shape);
+            if (find_window || check_window) {
+                interacted_id = window->id;
+                current_zindex = j;
+                break;
             }
-            if (interacted_id > 0) break;
         }
 
-        if (interacted_id > 0) {
+        if (interacted_id > 0 && current_zindex > 0) {
             // Move all elements to the right starting at current_zindex
             bool found_id = false;
             for (int j = current_zindex; j > 0; --j) {
