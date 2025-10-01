@@ -257,9 +257,49 @@ void WIN_window(GUI_Window* window, void* data)
     GUI_EndWindowContents();
 }
 
-void WIN_layout(GUI_Window* window, void* data)
+void WIN_layouts(GUI_Window* window, void* data)
 {
+    Game_WindowState* win_state = (Game_WindowState*)data;
+    GUI_State* state = GUI_GetState();
+    GUI_Setup* setup = GUI_GetSetup();
+    float default_height = state->default_height;
 
+    Rectangle window_workspace =
+    GUI_BeginWindowContents(window);
+
+        // First block
+        GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
+        GUI_Label("Some sample layouts for imKairos", RelativeToRect(GUI_NextVertical(), window_workspace), setup->theme.gray);
+
+        // and more verticals of full width (can be written as Horizontals too, but requires
+        // an explicit call to GUI_BeginBlock() to end each line)
+        DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BROWN);                    
+        DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BEIGE);
+
+        // 1/3rd and 2/3rds blocks
+        GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), YELLOW);                    
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontals(2), window_workspace), GREEN);
+
+        // Second block
+        // 3 horizontals of 1/3 of the available space
+        GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGRAY);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), GRAY);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), LIGHTGRAY);
+        
+        // Prepare for a new block with 5 elements per row
+        GUI_BeginBlock(window_workspace.width / 5, -default_height, &window_workspace);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+        
+        GUI_BeginBlock(window_workspace.width / 2, default_height, &window_workspace);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
+        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
+    GUI_EndWindowContents();
 }
 
 int main(void) {
@@ -288,7 +328,9 @@ int main(void) {
     RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
     GUI_State state             = GUI_MakeDefaultState();
     GUI_Setup setup             = GUI_MakeDefaultSetup(255);
-    Texture2D mouse_texture     = LoadTexture("ico/cursor.png");
+    bool use_pointer            = true;
+    Texture2D cursor_texture    = LoadTexture("ico/cursor.png");
+    Texture2D pointer_texture   = LoadTexture("ico/pointer.png");
     Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&state, &setup);
 
@@ -316,8 +358,10 @@ int main(void) {
         state.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
 
         Vector2 mouse_shape = (Vector2){
-            state.mouse_current.x - (mouse_texture.width * state.scale * 0.5f),
-            state.mouse_current.y - (mouse_texture.height * state.scale * 0.5f),
+            use_pointer ? state.mouse_current.x
+                        : state.mouse_current.x - (pointer_texture.width * state.scale * 0.5f),
+            use_pointer ? state.mouse_current.y
+                        : state.mouse_current.y - (pointer_texture.height * state.scale * 0.5f)
         };
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -337,19 +381,33 @@ int main(void) {
             // Top bar
             GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), state.default_height });
 
-            // Data
-            static Game_WindowState window_state = {0};
-
-            // Window
-            static GUI_Window window = {0};
-            if (window.id == 0)
-                window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_window);
-    
-            const int ELEMENTS = 4;
-            window.shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
-
-            GUI_UpdateAndDrawWindow(&window, window_limits);
-            window.contents(&window, &window_state);
+            // Window(s)
+            static Game_WindowState win_state = {0};
+            {
+                static GUI_Window win_window = {0};
+                if (win_window.id == 0)
+                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_window);
+        
+                const int ELEMENTS = 4;
+                win_window.shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
+                GUI_UpdateAndDrawWindow(&win_window, window_limits);
+                win_window.contents(&win_window, &win_state);
+            }
+            {
+                static GUI_Window win_layouts = {0};
+                if (win_layouts.id == 0)
+                    win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_layouts);
+                
+                float win_third             = window_limits.width / 3.0;
+                win_layouts.shape.x         = win_third;
+                win_layouts.shape.y         = window_limits.y;
+                win_layouts.shape.width     = win_third;
+                win_layouts.shape.height    = window_limits.height;
+                
+                GUI_UpdateAndDrawWindow(&win_layouts, window_limits);
+                win_layouts.contents(&win_layouts, &win_state);
+            }
+            
         #if 0
             static Rectangle win_debug = { 20, 220, 350, 200 };
             float win_third     = window_limits.width / 3.0;
@@ -379,46 +437,12 @@ int main(void) {
             {
                 // Window contents
                 Rectangle window_workspace =
-                GUI_BeginWindowContents(win_layouts, &gui);
-
-                    // First block
-                    GUI_BeginBlock(window_workspace.width, gui.default_height, &window_workspace);
-                    GUI_Label("Some sample layouts for imKairos", RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-
-                    // and more verticals of full width (can be written as Horizontals too, but requires
-                    // an explicit call to GUI_BeginBlock() to end each line)
-                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BROWN);                    
-                    DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BEIGE);
-
-                    // 1/3rd and 2/3rds blocks
-                    GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), YELLOW);                    
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontals(2), window_workspace), GREEN);
-
-                    // Second block
-                    // 3 horizontals of 1/3 of the available space
-                    GUI_BeginBlock(window_workspace.width / 3, gui.default_height, &window_workspace);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGRAY);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), GRAY);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), LIGHTGRAY);
-                    
-                    // Prepare for a new block with 5 elements per row
-                    GUI_BeginBlock(window_workspace.width / 5, -gui.default_height, &window_workspace);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-                    
-                    GUI_BeginBlock(window_workspace.width / 2, gui.default_height, &window_workspace);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
-                    DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
-                GUI_EndWindowContents();
+                
             }
         #endif
             
             DrawText(TextFormat("focus_win: %d", state.window_focus_id), 10, 70, 20, BLACK);
-            DrawTextureEx(mouse_texture, mouse_shape, 0, state.scale, WHITE);
+            DrawTextureEx(use_pointer ? pointer_texture : cursor_texture, mouse_shape, 0, state.scale * 2, WHITE);
         EndTextureMode();
 
         state.mouse_last = state.mouse_current;
