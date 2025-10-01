@@ -148,7 +148,6 @@ GUI_Theme GUI_MakeDefaultTheme(unsigned char opacity)
 #define COLOR_CHANGE        0.05
 #define FOCUS_AVAILABLE     -1
 #define FOCUS_LOCKED        0
-#define GUI_DEF_WINFOCUS    0
 #define GUI_DEF_CTRFOCUS    0
 #define GUI_MAX_OPEN_WINS   16
 
@@ -232,7 +231,6 @@ GUI_Window GUI_MakeEmptyWindow(void)
 struct {
     float           scale;
 
-    int             window_focus_id;
     bool            window_focus_moving;
 
     int             control_focus_id;
@@ -253,8 +251,6 @@ GUI_State GUI_MakeDefaultState()
 {
     GUI_State state = {
         1.0f,
-
-        GUI_DEF_WINFOCUS,
         false,
         GUI_DEF_CTRFOCUS,
         GUI_Focus_Available,
@@ -415,11 +411,13 @@ bool GUI_Button(char* text, Rectangle shape, Texture2D* icon, GUI_ThemeColors co
         }
     }
     
-    float icon_w = GUI_CalcDefaultIconSize();
+    float icon_w = icon != NULL ? GUI_CalcDefaultIconSize() : 0;
+    if (icon_w > 0) {
+        GUI_Icon(icon, 
+            (Vector2) { shape.x + theme.border * state->scale, shape.y + theme.border * state->scale }, 
+            icon_w, 1.0f, WHITE);
+    }
     GUI_DrawButton(text, shape, status, theme, colors, state->scale, icon_w, &setup->font_setup);
-    GUI_Icon(icon, 
-        (Vector2) { shape.x + theme.border * state->scale, shape.y + theme.border * state->scale }, 
-        icon_w, 1.0f, WHITE);
 
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
@@ -813,23 +811,19 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     bool collide_title      = CheckCollisionPointRec(state->mouse_current, shape_title);
     bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool window_focusable   = state->focus_state_current == GUI_Focus_Available && state->window_focus_moving == 0;
+    bool window_focused     = state->z_index[0] == window->id;
 
     // Focus ?
     if (collide && interaction_starts && window_focusable) {
-        bool already_focused            = state->window_focus_id == window->id;
-        if (already_focused) {
+        if (window_focused) {
             state->focus_state_current  = GUI_Focus_CanOverride;
             state->window_focus_moving  = collide_title;
-        } else {
-            state->window_focus_id      = window->id;
-            state->window_focus_moving  = collide_title;
-            state->focus_state_current  = GUI_Focus_CanOverride;
         }
     }
     
 
     // Active
-    if (state->window_focus_id == window->id){
+    if (window_focused){
         // Movement
         bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         bool moving             = interacting && state->window_focus_moving;
@@ -850,9 +844,9 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     shape_title     = GUI_WindowTitle(window->shape);
 
     // Draw
-    GUI_ElementStatus status = state->window_focus_id == window->id     ? EGUI_Status_Focused :
-                               collide_title                            ? EGUI_Status_Collide :
-                                                                          EGUI_Status_Default;
+    GUI_ElementStatus status = window_focused   ? EGUI_Status_Focused :
+                               collide_title    ? EGUI_Status_Collide :
+                                                  EGUI_Status_Default;
     GUI_DrawWindow(window->title, window->shape, shape_title, status, theme, &setup->font_setup, window->colors, state->scale, false);    
 }
 
@@ -873,7 +867,16 @@ GUI_Window* GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors
     return 0;
 }
 
-
+GUI_Window* GUI_GetWindow(int id, GUI_State* state)
+{
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &state->window_s[i];
+        if (window->id == id) {
+            return window;
+        }
+    }
+    return NULL;
+}
 
 void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 {
@@ -925,6 +928,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
     if (interacting) {
         // Find ID
         int interacted_id = 0;
+        int current_zindex = -1;
         for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
             int id = state->z_index[j];
             if (id == 0) continue;
@@ -934,31 +938,22 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
                 if (window->id != id) continue;
                 if (CheckCollisionPointRec(state->mouse_current, window->shape)) {
                     interacted_id = window->id;
+                    current_zindex = j;
                     break;
                 }
             }
+            if (interacted_id > 0) break;
         }
 
         if (interacted_id > 0) {
-            // Move all elements to the right
-            for (int j = GUI_MAX_OPEN_WINS - 1; j > 0; --j) {
+            // Move all elements to the right starting at current_zindex
+            bool found_id = false;
+            for (int j = current_zindex; j > 0; --j) {
                 state->z_index[j] = state->z_index[j - 1];
             }
             
             // Add this one
             state->z_index[0] = interacted_id;
-        }
-    }
-
-    // Clean duplicates
-    for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
-        int id = state->z_index[j];
-        if (id == 0) continue;
-
-        for (int k = GUI_MAX_OPEN_WINS - 1; k > j; --k) {
-            if (state->z_index[k] == id) {
-                state->z_index[k] = 0; 
-            }
         }
     }
 

@@ -305,6 +305,24 @@ void WIN_layouts(GUI_Window* window, void* data)
     GUI_EndWindowContents();
 }
 
+void WIN_winman(GUI_Window* window, void* data)
+{
+    Game_WindowState* win_state = (Game_WindowState*)data;
+    GUI_State* state = GUI_GetState();
+    GUI_Setup* setup = GUI_GetSetup();
+    float default_height = state->default_height;
+
+    Rectangle window_workspace =
+    GUI_BeginWindowContents(window);
+        GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
+        for (int z = 0; z < GUI_MAX_OPEN_WINS; ++z) {
+            if (state->z_index[z] == 0) continue;
+            GUI_Window* win = GUI_GetWindow(state->z_index[z], state);
+            GUI_Button(win->title, RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors);
+        }
+    GUI_EndWindowContents();
+}
+
 const char* BuildTimeFormatted()
 {
     static char buffer[16];
@@ -420,11 +438,22 @@ int main(void) {
                     win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_layouts);
                 
                 if (win_layouts != NULL) {
-                    float win_third             = window_limits.width / 3.0;
-                    win_layouts->shape.x         = win_third;
-                    win_layouts->shape.y         = window_limits.y;
+                    float win_third             = window_limits.width / 3.0;                    
                     win_layouts->shape.width     = win_third;
                     win_layouts->shape.height    = window_limits.height;
+                }
+            }
+            {
+                static GUI_Window* win_man = NULL;
+                if (win_man == NULL)
+                    win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_winman);
+                
+                if (win_man != NULL) {
+                    float win_third          = window_limits.width / 3.0;
+                    win_man->shape.x         = win_third * 2;
+                    win_man->shape.y         = window_limits.y;
+                    win_man->shape.width     = win_third;
+                    win_man->shape.height    = window_limits.height;
                 }
             }
 
@@ -463,7 +492,6 @@ int main(void) {
             }
         #endif
             
-            DrawText(TextFormat("focus_win: %d", state.window_focus_id), 10, 70, 20, BLACK);
             DrawTextureEx(use_pointer ? pointer_texture : cursor_texture, mouse_shape, 0, state.scale * 2, WHITE);
         EndTextureMode();
 
