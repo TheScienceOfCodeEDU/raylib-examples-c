@@ -1,4 +1,6 @@
 #define UNITY_BUILD 1
+#include <stdio.h>
+#include <stdlib.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "env.h"

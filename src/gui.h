@@ -229,6 +229,16 @@ GUI_State GUI_MakeDefaultState()
 static struct {
     GUI_State* state;
     GUI_Setup* setup;
+    
+    // LAYOUT DATA
+    // Vertical
+    int    vertical_count;
+    float  vertical_size;
+
+    // Horizontal
+    int    horizontal_count;
+    float  horizontal_size;
+
 } GUI_CTX = { 0 };
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup)
 {
@@ -544,113 +554,54 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
 #define ADD_COUNT       1
 #define ONLY_GET_COUNT  2
 #define DEFAULT_SIZE    0.0
-//
-// Vertical trackers
-// TODO@dc: rewrite with something simpler:
-            /*static struct {
-                GUI_State* state;
-            } gui_ctx = { 0 };
-
-            void GUI_TrackState(GUI_State* state) {
-                gui_ctx.state = state;
-            }
-
-            GUI_State* GUI_GetState(void) {
-                return gui_ctx.state;
-            }*/
-int GUI_TrackVerticalCount(int action)
-{
-    static int count = 0;
-
-    switch (action) {
-    case ADD_COUNT:
-        return count++;
-    case ONLY_GET_COUNT:
-        return count;
-    default:
-        count = 0;
-        return count;
-    }
-}
-float GUI_TrackVerticalSize(float value)
-{
-    static float size = 0.0;
-    if (value != DEFAULT_SIZE)
-        size = value;
-    return size;
-}
-
-// 
-// Horizontal trackers
-int GUI_TrackHorizontalCount(int action)
-{
-    static int count = 0;
-
-    switch (action) {
-    case ADD_COUNT:
-        return count++;
-    case ONLY_GET_COUNT:
-        return count;
-    default:
-        count = 0;
-        return count;
-    }
-}
-float GUI_TrackHorizontalSize(float value)
-{
-    static float size = DEFAULT_SIZE;
-    if (value != DEFAULT_SIZE)
-        size = value;
-    return size;
-}
 
 // NOTE: Only allow stateful operations that require Begin (like a reset)
 //       If an end is required, that could create hard to debug problems.
 void GUI_BeginVertical(float size)
 {
-    GUI_TrackVerticalCount(RESET_COUNT);
-    GUI_TrackVerticalSize(size);
+    GUI_CTX.vertical_count = 0;
+    GUI_CTX.vertical_size  = size;
 }
-Rectangle GUI_NextVertical()
+Rectangle GUI_NextVertical(void)
 {
-    float horizontal_size = GUI_TrackHorizontalSize(DEFAULT_SIZE);
-    if (horizontal_size == DEFAULT_SIZE) horizontal_size = (float)GetScreenWidth();
+    float horizontal_size = GUI_CTX.horizontal_size != DEFAULT_SIZE ? GUI_CTX.horizontal_size 
+                                                                    : (float)GetScreenWidth();
+    float vertical_size = GUI_CTX.vertical_size;
 
-    float size = GUI_TrackVerticalSize(DEFAULT_SIZE);
     Rectangle shape = {
-        /* X */ horizontal_size * GUI_TrackHorizontalCount(ONLY_GET_COUNT),
-        /* Y */ size * GUI_TrackVerticalCount(ADD_COUNT),  
-        /* W */ horizontal_size, 
-        /* H */ size };
+        /* X */ horizontal_size * GUI_CTX.horizontal_count,
+        /* Y */ vertical_size * GUI_CTX.vertical_count++,
+        /* W */ horizontal_size,
+        /* H */ vertical_size
+    };
     return shape;
 }
 float GUI_GetAvailableHorizontal(Rectangle window_workspace)
 {
-    return window_workspace.width - (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
+    return window_workspace.width - (GUI_CTX.horizontal_size * GUI_CTX.horizontal_count);
 }
 void GUI_BeginHorizontal(float size)
 {
-    GUI_TrackHorizontalCount(RESET_COUNT);
-    GUI_TrackHorizontalSize(size);
+    GUI_CTX.horizontal_count = 0;
+    GUI_CTX.horizontal_size = size;
 }
-Rectangle GUI_NextHorizontal()
+Rectangle GUI_NextHorizontal(void)
 {
-    float vertical_size = GUI_TrackVerticalSize(DEFAULT_SIZE);
-    if (vertical_size == DEFAULT_SIZE) vertical_size = (float)GetScreenHeight();
+    float vertical_size = GUI_CTX.vertical_size != DEFAULT_SIZE ? GUI_CTX.vertical_size 
+                                                                : (float)GetScreenHeight();
+    float horizontal_size = GUI_CTX.horizontal_size;
 
-    float size = GUI_TrackHorizontalSize(DEFAULT_SIZE);
     Rectangle shape = { 
-        /* X */ size * GUI_TrackHorizontalCount(ADD_COUNT),
-        /* Y */ vertical_size * GUI_TrackVerticalCount(ONLY_GET_COUNT),
-        /* W */ size,
-        /* H */ vertical_size };
+        /* X */ horizontal_size * GUI_CTX.horizontal_count++,
+        /* Y */ vertical_size * GUI_CTX.vertical_count,
+        /* W */ horizontal_size,
+        /* H */ vertical_size
+    };
     return shape;
 }
 Rectangle GUI_NextHorizontals(int quantity)
 {
-    //TODO@dc: assert(quantity > 1);
-    float original  = GUI_TrackHorizontalSize(DEFAULT_SIZE);
-    float real_size = GUI_TrackHorizontalSize(DEFAULT_SIZE) * quantity;
+    GUI_Assert(quantity > 1);
     
     // Push value for next element
     Rectangle first = GUI_NextHorizontal();
@@ -669,10 +620,8 @@ Rectangle GUI_NextHorizontals(int quantity)
 }
 Rectangle GUI_NextVerticals(int quantity)
 {
-    //TODO@dc: assert(quantity > 1);
-    float original = GUI_TrackVerticalSize(DEFAULT_SIZE);
-    float real_size = GUI_TrackVerticalSize(DEFAULT_SIZE) * quantity;
-
+    GUI_Assert(quantity > 1);
+    
     // Push value for next element
     Rectangle first = GUI_NextVertical();
     Rectangle last = {0};
@@ -691,8 +640,8 @@ Rectangle GUI_NextVerticals(int quantity)
 
 Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
 {
-    float used_w = (GUI_TrackHorizontalSize(DEFAULT_SIZE)) * GUI_TrackHorizontalCount(ONLY_GET_COUNT);
-    float used_h = (GUI_TrackVerticalSize(DEFAULT_SIZE)) * GUI_TrackVerticalCount(ONLY_GET_COUNT);
+    float used_w = GUI_CTX.horizontal_size * GUI_CTX.horizontal_count;
+    float used_h = GUI_CTX.vertical_size   * GUI_CTX.vertical_count;
     Rectangle result = {
         workspace.x + used_w,
         workspace.y + used_h,
@@ -703,13 +652,13 @@ Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
 }
 void GUI_ResetLayout()
 {
-    GUI_TrackHorizontalCount(RESET_COUNT);
-    GUI_TrackVerticalCount(RESET_COUNT);
+    GUI_CTX.horizontal_count = 0;
+    GUI_CTX.vertical_count   = 0;
 }
 void GUI_BeginBlock(float width, float height, Rectangle* workspace)
 {
     // Add jump if necessary after ONLY horizontal blocks
-    if (GUI_TrackHorizontalCount(ONLY_GET_COUNT) > 0 && GUI_TrackVerticalCount(ONLY_GET_COUNT) == 0) {
+    if (GUI_CTX.horizontal_count > 0 && GUI_CTX.vertical_count == 0) {
         GUI_NextVertical();
     }
 
@@ -723,7 +672,7 @@ void GUI_BeginBlock(float width, float height, Rectangle* workspace)
     }
 
     // Adjust to get y-available space
-    if (GUI_TrackVerticalCount(ONLY_GET_COUNT) != 0) {
+    if (GUI_CTX.vertical_count != 0) {
         *workspace = GUI_WorkspaceAvailable(*workspace);
     }
 
@@ -738,7 +687,7 @@ void GUI_BeginBlock(float width, float height, Rectangle* workspace)
 }
 void GUI_BeginDuplicateBlock(Rectangle* workspace)
 {
-    GUI_BeginBlock(GUI_TrackHorizontalSize(DEFAULT_SIZE), GUI_TrackVerticalSize(DEFAULT_SIZE), workspace);
+    GUI_BeginBlock(GUI_CTX.horizontal_size, GUI_CTX.vertical_size, workspace);
 }
 
 //
