@@ -1,6 +1,7 @@
 #define UNITY_BUILD 1
 #include <time.h> 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "raylib.h"
 #include "raymath.h"
@@ -315,10 +316,11 @@ void WIN_winman(GUI_Window* window, void* data)
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
         GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
+
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(win->title, RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors)) {
+            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors)) {
                 state->force_z_index = win->id;
             }
         }
@@ -367,8 +369,8 @@ int main(void) {
     // PREPARE GUI
     // Create render texture for the GUI
     RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
-    GUI_State state             = GUI_MakeDefaultState();
-    GUI_Setup setup             = GUI_MakeDefaultSetup(255);
+    GUI_State state             = GUI_MakeStateDefault();
+    GUI_Setup setup             = GUI_MakeSetupDefault(255);
     bool use_pointer            = true;
     Texture2D cursor_texture    = LoadTexture("ico/cursor.png");
     Texture2D pointer_texture   = LoadTexture("ico/pointer.png");
