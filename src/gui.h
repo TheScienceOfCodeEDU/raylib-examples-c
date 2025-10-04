@@ -331,19 +331,33 @@ float GUI_CalcDefaultIconSize()
     return state->default_height - setup->theme.border * 2 * state->scale;
 }
 
-void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border)
+void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
 {
-    // Draw top border (horizontal line)    
-    DrawRectangle(shape.x, shape.y, shape.width, border, dark);
+    if (!remove_corner) {
+        // Draw top border (horizontal line)    
+        DrawRectangle(shape.x, shape.y, shape.width, border, dark);
 
-    // Draw left border (vertical line)
-    DrawRectangle(shape.x, shape.y, border, shape.height, dark);
+        // Draw left border (vertical line)
+        DrawRectangle(shape.x, shape.y, border, shape.height, dark);
 
-    // Draw bottom border (horizontal line)
-    DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
+        // Draw bottom border (horizontal line)
+        DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
 
-    // Draw right border (vertical line)
-    DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
+        // Draw right border (vertical line)
+        DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
+    } else {
+        // Top border (horizontal line, leaving gaps at corners)
+        DrawRectangle(shape.x + border, shape.y, shape.width - 2 * border, border, dark);
+
+        // Left border (vertical line, leaving gaps at corners)
+        DrawRectangle(shape.x, shape.y + border, border, shape.height - 2 * border, dark);
+
+        // Bottom border
+        DrawRectangle(shape.x + border, shape.y + shape.height - border, shape.width - 2 * border, border, light);
+
+        // Right border
+        DrawRectangle(shape.x + shape.width - border, shape.y + border, border, shape.height - 2 * border, light);
+    }
 }
 
 void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale)
@@ -382,7 +396,7 @@ void GUI_DrawButton(const char* text, Rectangle shape,  GUI_ElementStatus status
                                                        colors.bg_color_3;
 
     DrawRectangleRec(shape, bg_color);
-    GUI_DrawBorders(shape, b_color_a, b_color_b, theme.border * scale);
+    GUI_DrawBorders(shape, b_color_a, b_color_b, theme.border * scale, false);
 
     
     GUI_DrawAdjustedTextEx(text, 
@@ -455,9 +469,9 @@ void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStat
     
 
     if (status == EGUI_Status_Focused) 
-        GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -COLOR_CHANGE), ColorBrightness(colors.bg_color_0, COLOR_CHANGE), theme.border * scale);
+        GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -COLOR_CHANGE), ColorBrightness(colors.bg_color_0, COLOR_CHANGE), theme.border * scale, false);
     else
-        GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+        GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, theme.border * scale, false);
 
     GUI_DrawAdjustedTextEx(value, 
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
@@ -598,9 +612,9 @@ void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, 
     
 
     if (status == EGUI_Status_Focused) 
-        GUI_DrawBorders(shape, ColorBrightness(b1, -COLOR_CHANGE), ColorBrightness(b2, COLOR_CHANGE), theme.border * scale);
+        GUI_DrawBorders(shape, ColorBrightness(b1, -COLOR_CHANGE), ColorBrightness(b2, COLOR_CHANGE), theme.border * scale, false);
     else
-        GUI_DrawBorders(shape, b1, b2, theme.border * scale);
+        GUI_DrawBorders(shape, b1, b2, theme.border * scale, false);
 
     GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
         (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale},
@@ -797,21 +811,24 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup* font_setup, GUI_ThemeColors colors, float scale, bool icon)
 {
+    // Shadow
+    DrawRectangleRec(MoveRect(shape, (Vector2){scale, scale}), ColorAlpha(BLACK, 0.1));
+
     // Background
-    DrawRectangleRec(shape, colors.bg_color_1);
-    GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, theme.border * scale);
+    DrawRectangleRec((Rectangle){shape.x + theme.border * scale, shape.y + theme.border * scale, shape.width - theme.border * scale, shape.height - 2 * theme.border * scale}, colors.bg_color_1);
+    GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, theme.border * scale, true);
 
     if (status == EGUI_Status_Default) {
         DrawRectangleRec(shapeTitle, colors.bg_color_3);
-        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
+        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale, false);
     } if (status == EGUI_Status_Focused) {
         DrawRectangleRec(shapeTitle, ColorBrightness(colors.bg_color_3, -COLOR_CHANGE));
-        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
-        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-COLOR_CHANGE), theme.border * scale);
+        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale, false);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-COLOR_CHANGE), theme.border * scale, true);
     } if (status == EGUI_Status_Collide) {
         DrawRectangleRec(shapeTitle, ColorBrightness(colors.bg_color_3, COLOR_CHANGE));
-        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale);
-        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, COLOR_CHANGE), theme.border * scale);
+        GUI_DrawBorders(shapeTitle, colors.bg_color_2, colors.bg_color_0, theme.border * scale, false);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, COLOR_CHANGE), theme.border * scale, true);
     }
 
     BeginScissorModeRect(AddRect(shapeTitle, 0, 0, -theme.border * scale, -theme.border * scale));
