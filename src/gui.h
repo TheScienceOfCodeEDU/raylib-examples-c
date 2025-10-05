@@ -189,16 +189,66 @@ GUI_FontSetup GUI_MakeFontSetupDefault() {
     return result;
 }
 
+
 struct {
-    GUI_FontSetup   font_setup;
-    GUI_Theme       theme;
-    GUI_Icons       icons;
+    Texture2D   pointer_texture;
+    Vector2     pointer_delta_normalized;
+} typedef GUI_PointerSetup;
+
+enum {
+    EGUI_Pointer_Default,
+    EGUI_Pointer_AGS,
+    EGUI_Pointer_Text,
+    EGUI_Pointer_Count
+} typedef EGUI_Pointer;
+
+struct {
+    GUI_FontSetup       font_setup;
+    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
+    GUI_Theme           theme;
+    GUI_Icons           icons;
 } typedef GUI_Setup;
+
+GUI_PointerSetup GUI_MakePointerSetup(Texture2D texture, Vector2 delta_normalized)
+{
+    return (GUI_PointerSetup) {
+        .pointer_texture = texture,
+        .pointer_delta_normalized = delta_normalized
+    };
+}
+
+GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
+{
+    GUI_PointerSetup setup = { 0 };
+
+    switch (pointer_type)
+    {
+        case EGUI_Pointer_Default:
+            setup.pointer_texture = LoadTexture("ico/pointer.png");
+            setup.pointer_delta_normalized = (Vector2){ 0.0f, 0.0f };
+            break;
+
+        case EGUI_Pointer_AGS:
+            setup.pointer_texture = LoadTexture("ico/cursor.png");
+            setup.pointer_delta_normalized = (Vector2){ 0.5f, 0.5f };
+            break;
+
+        case EGUI_Pointer_Text:
+            setup.pointer_texture = LoadTexture("ico/pointer_txt.png");
+            setup.pointer_delta_normalized = (Vector2){ 0.5f, 0.5f };
+            break;
+    }
+
+    return setup;
+}
 
 GUI_Setup GUI_MakeSetupDefault(float opacity)
 {
     GUI_Setup setup = {
         GUI_MakeFontSetupDefault(),
+        GUI_MakePointerSetupForType(EGUI_Pointer_Default),
+        GUI_MakePointerSetupForType(EGUI_Pointer_AGS),
+        GUI_MakePointerSetupForType(EGUI_Pointer_Text),
         GUI_MakeThemeDefault(255),
         GUI_LoadIcons()
     };
@@ -237,6 +287,7 @@ struct {
     int             control_focus_id;
     GUI_Focus       focus_state_current;
 
+    EGUI_Pointer    current_pointer;
     Vector2         mouse_last;
     Vector2         mouse_current;
 
@@ -247,6 +298,8 @@ struct {
 
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
+
+    int             textbox_cursors[GUI_MAX_TEXTBOXES];
 } typedef GUI_State;
 
 GUI_State GUI_MakeStateDefault()
@@ -257,15 +310,17 @@ GUI_State GUI_MakeStateDefault()
         GUI_DEF_CTRFOCUS,
         GUI_Focus_Available,
 
+        EGUI_Pointer_Default,
         (Vector2){ 0.0, 0.0},
         (Vector2){ 0.0, 0.0},
         0,
     };
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
-        state.window_s[i]   = GUI_MakeEmptyWindow();
-        state.z_index[i]    = 0;
-        state.force_z_index = 0;
+        state.window_s[i] = GUI_MakeEmptyWindow();
     }
+    state.force_z_index = 0;
+    memset(state.z_index, 0, sizeof(state.z_index));
+    memset(state.textbox_cursors, 0, sizeof(state.textbox_cursors));
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
@@ -297,6 +352,15 @@ GUI_State* GUI_GetState()
 GUI_Setup* GUI_GetSetup()
 {
     return GUI_CTX.setup;
+}
+
+GUI_PointerSetup* GUI_GetPointerSetup()
+{
+    GUI_Setup* setup = GUI_GetSetup();
+    GUI_State* state = GUI_GetState();
+
+    EGUI_Pointer pointer = state->current_pointer;
+    return &setup->pointer_setups[pointer];
 }
 
 Font GUI_GetFont(GUI_FontSetup* setup)
@@ -509,16 +573,19 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors)
     static bool blink_state     = 0;
 
     // Cursor per Id
-    static int cursor_pos[GUI_MAX_TEXTBOXES] = {0};
-    int *cursor = &cursor_pos[id % GUI_MAX_TEXTBOXES];
+    int *cursor = &state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
     // Conditions
     bool collide        = CheckCollisionPointRec(state->mouse_current, shape);
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
+    if (collide) {
+        state->current_pointer      = EGUI_Pointer_Text;
+    }
+
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && FocusOverridable(state->focus_state_current)) {
+    if (receives_focus && FocusOverridable(state->focus_state_current)) {        
         state->control_focus_id     = id;
         state->focus_state_current  = GUI_Focus_Granted;
         blink_state                 = 1;
@@ -811,9 +878,6 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup* font_setup, GUI_ThemeColors colors, float scale, bool icon)
 {
-    // Shadow
-    DrawRectangleRec(MoveRect(shape, (Vector2){scale, scale}), ColorAlpha(BLACK, 0.1));
-
     // Background
     DrawRectangleRec((Rectangle){shape.x + theme.border * scale, shape.y + theme.border * scale, shape.width - theme.border * scale, shape.height - 2 * theme.border * scale}, colors.bg_color_1);
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, theme.border * scale, true);

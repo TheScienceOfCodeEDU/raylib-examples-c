@@ -371,9 +371,7 @@ int main(void) {
     RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
     GUI_State state             = GUI_MakeStateDefault();
     GUI_Setup setup             = GUI_MakeSetupDefault(255);
-    bool use_pointer            = true;
-    Texture2D cursor_texture    = LoadTexture("ico/cursor.png");
-    Texture2D pointer_texture   = LoadTexture("ico/pointer.png");
+    
     Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&state, &setup);
 
@@ -389,8 +387,14 @@ int main(void) {
         //
 
         // UI
+        static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
         state.default_height        = GUI_CalcDefaultScaledHeight(setup, state);
         state.focus_state_current   = GUI_Focus_Available;
+        state.current_pointer       = pointer_style;
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
+        }
         
         Rectangle mouse_limits = (Rectangle) {
             0,
@@ -400,12 +404,6 @@ int main(void) {
         };
         state.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
 
-        Vector2 mouse_shape = (Vector2){
-            use_pointer ? state.mouse_current.x
-                        : state.mouse_current.x - (pointer_texture.width * state.scale * 0.5f),
-            use_pointer ? state.mouse_current.y
-                        : state.mouse_current.y - (pointer_texture.height * state.scale * 0.5f)
-        };
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             state.control_focus_id = 0;
@@ -498,7 +496,14 @@ int main(void) {
             }
         #endif
             
-            DrawTextureEx(use_pointer ? pointer_texture : cursor_texture, mouse_shape, 0, state.scale * 2, WHITE);
+            GUI_PointerSetup* pointer_setup     = GUI_GetPointerSetup();
+            Texture pointer_texture             = pointer_setup->pointer_texture;     
+
+            Vector2 mouse_shape = (Vector2){
+                state.mouse_current.x - (pointer_texture.width * state.scale * pointer_setup->pointer_delta_normalized.x),
+                state.mouse_current.y - (pointer_texture.height * state.scale * pointer_setup->pointer_delta_normalized.y)
+            };
+            DrawTextureEx(pointer_texture, mouse_shape, 0, state.scale * 2, WHITE);
         EndTextureMode();
 
         state.mouse_last = state.mouse_current;
@@ -553,8 +558,10 @@ int main(void) {
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            DrawTextureRec(wallpaper, GetSourceRec(wallpaper), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
-            DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
+            if (win_state.checkbox_value == 1) {
+                DrawTextureRec(wallpaper, GetSourceRec(wallpaper), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
+                DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
+            }
 
             // Game world
             BeginMode2D(*camera);
