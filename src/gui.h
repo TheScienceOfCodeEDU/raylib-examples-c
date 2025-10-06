@@ -193,6 +193,8 @@ GUI_FontSetup GUI_MakeFontSetupDefault() {
 struct {
     Texture2D   pointer_texture;
     Vector2     pointer_delta_normalized;
+    float       pointer_scale;
+    float       pointer_alpha;
 } typedef GUI_PointerSetup;
 
 enum {
@@ -223,20 +225,28 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
 
     switch (pointer_type)
     {
-        case EGUI_Pointer_Default:
-            setup.pointer_texture = LoadTexture("ico/pointer.png");
-            setup.pointer_delta_normalized = (Vector2){ 0.0f, 0.0f };
-            break;
-
         case EGUI_Pointer_AGS:
-            setup.pointer_texture = LoadTexture("ico/cursor.png");
-            setup.pointer_delta_normalized = (Vector2){ 0.5f, 0.5f };
+            setup.pointer_texture           = LoadTexture("ico/cursor.png");
+            setup.pointer_delta_normalized  = (Vector2){ 0.5f, 0.5f };
+            setup.pointer_scale             = 2.0f;
+            setup.pointer_alpha             = 1.0;
             break;
 
         case EGUI_Pointer_Text:
-            setup.pointer_texture = LoadTexture("ico/pointer_txt.png");
-            setup.pointer_delta_normalized = (Vector2){ 0.5f, 0.5f };
+            setup.pointer_texture           = LoadTexture("ico/pointer_txt.png");
+            setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.5f };
+            setup.pointer_scale             = 2.0f;
+            setup.pointer_alpha             = 0.75;
             break;
+
+        case EGUI_Pointer_Default:
+        default:
+            setup.pointer_texture           = LoadTexture("ico/pointer.png");
+            setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
+            setup.pointer_scale             = 2.0f;
+            setup.pointer_alpha             = 1.0;
+            break;
+
     }
 
     return setup;
@@ -361,6 +371,21 @@ GUI_PointerSetup* GUI_GetPointerSetup()
 
     EGUI_Pointer pointer = state->current_pointer;
     return &setup->pointer_setups[pointer];
+}
+
+void GUI_DrawPointer()
+{
+    GUI_State* state                    = GUI_GetState();
+    GUI_PointerSetup* pointer_setup     = GUI_GetPointerSetup();
+    Texture pointer_texture             = pointer_setup->pointer_texture;     
+
+    Vector2 mouse_shape = (Vector2){
+        state->mouse_current.x -
+            (pointer_texture.width * state->scale * pointer_setup->pointer_scale * pointer_setup->pointer_delta_normalized.x),
+        state->mouse_current.y - 
+            (pointer_texture.height * state->scale * pointer_setup->pointer_scale * pointer_setup->pointer_delta_normalized.y)
+    };
+    DrawTextureEx(pointer_texture, mouse_shape, 0, state->scale * pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
 }
 
 Font GUI_GetFont(GUI_FontSetup* setup)

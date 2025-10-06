@@ -495,15 +495,7 @@ int main(void) {
                 
             }
         #endif
-            
-            GUI_PointerSetup* pointer_setup     = GUI_GetPointerSetup();
-            Texture pointer_texture             = pointer_setup->pointer_texture;     
-
-            Vector2 mouse_shape = (Vector2){
-                state.mouse_current.x - (pointer_texture.width * state.scale * pointer_setup->pointer_delta_normalized.x),
-                state.mouse_current.y - (pointer_texture.height * state.scale * pointer_setup->pointer_delta_normalized.y)
-            };
-            DrawTextureEx(pointer_texture, mouse_shape, 0, state.scale * 2, WHITE);
+            GUI_DrawPointer();
         EndTextureMode();
 
         state.mouse_last = state.mouse_current;
