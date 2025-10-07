@@ -404,7 +404,7 @@ int main(void) {
 
         // UI
         static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
-        state.default_height        = GUI_CalcDefaultScaledHeight();
+        state.default_height        = GUI_CalcDefaultHeightScaled();
         state.focus_state_current   = GUI_Focus_Available;
         state.current_pointer       = pointer_style;
 
