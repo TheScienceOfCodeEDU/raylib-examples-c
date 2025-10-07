@@ -338,6 +338,8 @@ typedef struct {
 GUI_State GUI_MakeStateDefault()
 {
     GUI_State state = {
+        .scale                  = 1.0f,
+        .window_focus_moving    = false,
         .control_focus_id       = GUI_DEF_CTRFOCUS,
         .focus_state_current    = GUI_Focus_Available,
 
