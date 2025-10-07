@@ -96,11 +96,11 @@ struct {
 GUI_ThemeColors GUI_MakeThemeColors(float hue)
 {
     GUI_ThemeColors colors = {
-        GetThemeColorFromHue(hue, 0.0f),
-        GetThemeColorFromHue(hue, 0.25f),
-        GetThemeColorFromHue(hue, 0.5f),
-        GetThemeColorFromHue(hue, 0.75f),
-        GetThemeColorFromHue(hue, 1.0f)
+        .tx_color   = GetThemeColorFromHue(hue, 0.0f),
+        .bg_color_0 = GetThemeColorFromHue(hue, 0.25f),
+        .bg_color_1 = GetThemeColorFromHue(hue, 0.5f),
+        .bg_color_2 = GetThemeColorFromHue(hue, 0.75f),
+        .bg_color_3 = GetThemeColorFromHue(hue, 1.0f)
     };
     return colors;
 }
@@ -117,8 +117,7 @@ struct {
 
 GUI_Theme GUI_MakeThemeDefault(unsigned char opacity)
 {
-    GUI_Theme theme = {
-        /*// Background colors for another theme...
+    /*// Background colors for another theme...
         (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
         (Color) { 116, 100, 67, opacity },  // bg_color_1: Medium brown with variable opacity
         (Color) { 58, 49, 35, opacity },    // bg_color_2: Very dark brown with variable opacity
@@ -132,15 +131,14 @@ GUI_Theme GUI_MakeThemeDefault(unsigned char opacity)
         (Color) { 33, 33, 33, 200 },       // b_color_0: Very dark gray, semi-opaque
         (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque*/
 
-        // Misc
-        (Vector2) { 8, 8 },                // padding
-        2.0f,                              // border
+    GUI_Theme theme = {
+        .padding = (Vector2) { 4, 12 },
+        .border = 2.0f,
 
         // Theme colors
-        GUI_MakeThemeColors(180.0f),
-        GUI_MakeThemeColors(3.0f)/*
-        TODO@dc
-        Make_ThemeColors()*/
+        .gray   = GUI_MakeThemeColors(180.0f),
+        .red    = GUI_MakeThemeColors(3.0f),
+        .green  = GUI_MakeThemeColors(97.0f)
     };
 
     return theme;
@@ -255,12 +253,14 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
 GUI_Setup GUI_MakeSetupDefault(float opacity)
 {
     GUI_Setup setup = {
-        GUI_MakeFontSetupDefault(),
-        GUI_MakePointerSetupForType(EGUI_Pointer_Default),
-        GUI_MakePointerSetupForType(EGUI_Pointer_AGS),
-        GUI_MakePointerSetupForType(EGUI_Pointer_Text),
-        GUI_MakeThemeDefault(255),
-        GUI_LoadIcons()
+        .font_setup = GUI_MakeFontSetupDefault(),
+        .pointer_setups = {
+            GUI_MakePointerSetupForType(EGUI_Pointer_Default),
+            GUI_MakePointerSetupForType(EGUI_Pointer_AGS),
+            GUI_MakePointerSetupForType(EGUI_Pointer_Text)
+        },
+        .theme = GUI_MakeThemeDefault(opacity),
+        .icons = GUI_LoadIcons()
     };
     return setup;
 }
@@ -451,16 +451,16 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
 
 void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale)
 {
-    GUI_FontSetup* setup = &GUI_GetSetup()->font_setup;
-    Font font = GUI_GetFont(setup);
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setup;
+    Font font               = GUI_GetFont(setup);
     DrawTextEx(font, text, Vector2Add(position, Vector2Scale(setup->font_delta, setup->font_scale)), font.baseSize * setup->font_scale * scale, setup->font_spacing, tint);
 }
 
 Vector2 GUI_MeasureAdjustedText(const char* text)
 {
-    GUI_State* state = GUI_GetState();
-    GUI_FontSetup* setup = &GUI_GetSetup()->font_setup;
-    Font font = GUI_GetFont(setup);
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setup;
+    GUI_State* state        = GUI_GetState();
+    Font font               = GUI_GetFont(setup);
     
     Vector2 result = {
         MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).x + setup->blink_delta.x * state->scale,
@@ -489,7 +489,7 @@ void GUI_DrawButton(const char* text, Rectangle shape,  GUI_ElementStatus status
 
     
     GUI_DrawAdjustedTextEx(text, 
-        (Vector2){ shape.x + icon_w + theme.padding.x * 2 + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
+        (Vector2){ shape.x + icon_w + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
         colors.tx_color, scale);
 }
 
