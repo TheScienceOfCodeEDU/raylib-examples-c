@@ -128,6 +128,7 @@ GUI_ThemeColors GUI_MakeThemeColors(float hue)
 struct {
     Vector2 padding;        // Internal padding
     float border;           // Border thickness
+    float default_height;
 
     GUI_ThemeColors gray;
     GUI_ThemeColors red;
@@ -152,8 +153,9 @@ GUI_Theme GUI_MakeThemeDefault(unsigned char opacity)
         (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque*/
 
     GUI_Theme theme = {
-        .padding = (Vector2) { 8, 6 },
-        .border = 2.0f,
+        .padding        = (Vector2) { 8, 6 },
+        .border         = 2.0f,
+        .default_height = 32,
 
         // Theme colors
         .gray   = GUI_MakeThemeColors(180.0f),
@@ -313,11 +315,9 @@ GUI_Window GUI_MakeEmptyWindow(void)
     };
     return window;
 }
-struct {
+typedef struct {
     float           scale;
-
     bool            window_focus_moving;
-
     int             control_focus_id;
     GUI_Focus       focus_state_current;
 
@@ -327,38 +327,37 @@ struct {
 
     float           default_height;
 
-    struct
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
-
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
 
     int             textbox_cursors[GUI_MAX_TEXTBOXES];
-} typedef GUI_State;
+} GUI_State;
+
 
 GUI_State GUI_MakeStateDefault()
 {
     GUI_State state = {
-        1.0f,
-        false,
-        GUI_DEF_CTRFOCUS,
-        GUI_Focus_Available,
+        .control_focus_id       = GUI_DEF_CTRFOCUS,
+        .focus_state_current    = GUI_Focus_Available,
 
-        EGUI_Pointer_Default,
-        (Vector2){ 0.0, 0.0},
-        (Vector2){ 0.0, 0.0},
-        0,
+        .current_pointer        = EGUI_Pointer_Default,
+        .mouse_last             = (Vector2){ 0.0f, 0.0f },
+        .mouse_current          = (Vector2){ 0.0f, 0.0f },
+
+        .default_height         = 0.0f,
     };
+
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
         state.window_s[i] = GUI_MakeEmptyWindow();
     }
+
     state.force_z_index = 0;
     memset(state.z_index, 0, sizeof(state.z_index));
     memset(state.textbox_cursors, 0, sizeof(state.textbox_cursors));
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
-
 
 static struct {
     GUI_State* state;
@@ -429,7 +428,7 @@ float GUI_CalcDefaultScaledHeight()
 {
     GUI_Setup* setup = GUI_GetSetup();
     GUI_State* state = GUI_GetState();
-    return (setup->font_setup.font_height + setup->theme.border) * state->scale + setup->theme.padding.y * 2;
+    return setup->theme.default_height * state->scale;
 }
 
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
@@ -514,7 +513,7 @@ void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale,
     if (DEV_DEBUG_GUI) {
         DrawRectangleRec((Rectangle) { position.x, position.y, height, height }, ORANGE);
     }
-    DrawTextureEx(*texture2d, Vector2Add(position, setup->icon_setup.icon_delta), 0, truncated, tint);
+    DrawTextureEx(*texture2d, Vector2Add(position, setup->icon_setup.icon_delta), 0, texture_scale, tint);
 }
 
 float GUI_GetIconWidth(Texture2D* icon)
