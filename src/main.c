@@ -143,15 +143,16 @@ PLAYER_Actions PLAYER_MakeActions()
 
 void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 {
-    GUI_Setup* setup = GUI_GetSetup();
+    GUI_Setup *setup = GUI_GetSetup();
+    GUI_Icons icons = setup->icon_setup.icons;
     int buttons = 3;
     float screen_w = target.width;
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &setup->icons.New, setup->theme.red);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &setup->icons.Open, setup->theme.gray);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &setup->icons.Save, setup->theme.gray);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons.New, setup->theme.red);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons.Open, setup->theme.gray);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons.Error, setup->theme.gray);
 }
 
 
@@ -324,6 +325,25 @@ void WIN_winman(GUI_Window* window, void* data)
                 state->force_z_index = win->id;
             }
         }
+
+        GUI_Window *active = GUI_GetWindow(state->z_index[0], state);
+        Rectangle t_shape = GUI_WindowTitle(active->shape);
+        Rectangle w_shape = active->shape;
+
+        GUI_Label("title_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors);
+
+        GUI_Label(
+            TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y),
+            RelativeToRect(GUI_NextVertical(), window_workspace),
+            window->colors
+        );
+
+        GUI_Label(
+            TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height),
+            RelativeToRect(GUI_NextVertical(), window_workspace),
+            window->colors
+        );
+
     GUI_EndWindowContents();
 }
 
@@ -371,7 +391,7 @@ int main(void) {
     RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
     GUI_State state             = GUI_MakeStateDefault();
     GUI_Setup setup             = GUI_MakeSetupDefault(255);
-    
+    GUI_Icons icons             = setup.icon_setup.icons;
     Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&state, &setup);
 
@@ -388,7 +408,7 @@ int main(void) {
 
         // UI
         static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
-        state.default_height        = GUI_CalcDefaultScaledHeight(setup, state);
+        state.default_height        = GUI_CalcDefaultScaledHeight();
         state.focus_state_current   = GUI_Focus_Available;
         state.current_pointer       = pointer_style;
 
@@ -428,7 +448,7 @@ int main(void) {
             {
                 static GUI_Window* win_window = NULL;
                 if (win_window == NULL && !first_render)
-                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_window);
+                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_window);
                 
                 if (win_window != NULL) {
                     const int ELEMENTS = 4;                
@@ -438,7 +458,7 @@ int main(void) {
             {
                 static GUI_Window* win_layouts = NULL;
                 if (win_layouts == NULL && !first_render) {
-                    win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_layouts);
+                    win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_layouts);
                     win_layouts->shape.x         = win_third;
                     win_layouts->shape.y         = state.default_height;
                 }
@@ -451,7 +471,7 @@ int main(void) {
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL && !first_render)
-                    win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, WIN_winman);
+                    win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, WIN_winman);
                 
                 if (win_man != NULL) {
                     win_man->shape.x         = win_third * 2;
