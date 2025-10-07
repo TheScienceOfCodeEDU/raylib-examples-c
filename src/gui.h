@@ -23,9 +23,9 @@
 // Returns:
 //   A Raylib Color struct with RGB values (0-255) and full alpha (255).
 Color GetThemeColorFromHue(float hue, float t) {
-    // Clamp t to [0, 1]
+    // Clamp t to [0, 1.25] allowing "extra darkness"
     if (t < 0.0f) t = 0.0f;
-    if (t > 1.0f) t = 1.0f;
+    if (t > 1.25f) t = 1.25f;
 
     // Interpolate saturation (S) and value (V)
     // S ranges from 0.13 (light) to 0.24 (dark)
@@ -63,13 +63,13 @@ Color GetThemeColorFromHue(float hue, float t) {
     return (Color){r, g, b, 255}; // Full alpha
 }
 
-struct {
+typedef struct {
     Texture2D New;
     Texture2D Open;
     Texture2D Save;
     Texture2D Setup;
     Texture2D Error;
-} typedef GUI_Icons;
+} GUI_Icons;
 
 GUI_Icons GUI_LoadIcons()
 {
@@ -83,40 +83,48 @@ GUI_Icons GUI_LoadIcons()
     return icons;
 }
 
-struct {
+typedef struct {
     float       icon_size;
     Vector2     icon_delta; 
     GUI_Icons   icons;
-} typedef GUI_IconSetup;
+} GUI_IconSetup;
 
 GUI_IconSetup GUI_MakeIconSetupDefault()
 {
     GUI_IconSetup setup = {
-        .icon_size  = 29,
+        .icon_size  = 32,
         .icon_delta = (Vector2){0, 0},
         .icons      = GUI_LoadIcons()
     };
     return setup;
 }
 
-enum {
+typedef enum {
     EGUI_Status_Default,
     EGUI_Status_Collide,
     EGUI_Status_Focused
-} typedef GUI_ElementStatus;
+} GUI_ElementStatus;
 
-struct {
-    Color tx_color;
+typedef enum {
+    EGUI_Content_Default,
+    EGUI_Content_GUI,
+    EGUI_Content_Count
+} EGUI_Content;
+
+typedef struct {
+    Color tx_color_0;
+    Color tx_color_1;
     Color bg_color_0;
     Color bg_color_1;
     Color bg_color_2;
     Color bg_color_3;
-} typedef GUI_ThemeColors;
+} GUI_ThemeColors;
 
 GUI_ThemeColors GUI_MakeThemeColors(float hue)
 {
     GUI_ThemeColors colors = {
-        .tx_color   = GetThemeColorFromHue(hue, 0.0f),
+        .tx_color_0 = GetThemeColorFromHue(hue, 0.0f),
+        .tx_color_1 = GetThemeColorFromHue(hue, 1.15f), // darker than bg_color_3
         .bg_color_0 = GetThemeColorFromHue(hue, 0.25f),
         .bg_color_1 = GetThemeColorFromHue(hue, 0.5f),
         .bg_color_2 = GetThemeColorFromHue(hue, 0.75f),
@@ -125,7 +133,7 @@ GUI_ThemeColors GUI_MakeThemeColors(float hue)
     return colors;
 }
 
-struct {
+typedef struct {
     Vector2 padding;        // Internal padding
     float border;           // Border thickness
     float default_height;
@@ -133,10 +141,10 @@ struct {
     GUI_ThemeColors gray;
     GUI_ThemeColors red;
     GUI_ThemeColors green;
-} typedef GUI_Theme;
+} GUI_Theme;
 
 
-GUI_Theme GUI_MakeThemeDefault(unsigned char opacity)
+GUI_Theme GUI_MakeThemeDefault()
 {
     /*// Background colors for another theme...
         (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
@@ -153,9 +161,9 @@ GUI_Theme GUI_MakeThemeDefault(unsigned char opacity)
         (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque*/
 
     GUI_Theme theme = {
-        .padding        = (Vector2) { 8, 6 },
+        .padding        = (Vector2) { 6, 8 },
         .border         = 2.0f,
-        .default_height = 32,
+        .default_height = 36,
 
         // Theme colors
         .gray   = GUI_MakeThemeColors(180.0f),
@@ -172,11 +180,11 @@ GUI_Theme GUI_MakeThemeDefault(unsigned char opacity)
 #define GUI_DEF_CTRFOCUS    0
 #define GUI_MAX_OPEN_WINS   16
 
-enum {
+typedef enum {
     GUI_Focus_Available,
     GUI_Focus_CanOverride,
     GUI_Focus_Granted
-} typedef GUI_Focus;
+} GUI_Focus;
 
 // NOTE: Always that this kind of conditions are gonna be used,
 //       define a function near the type instead of using it everywhere.
@@ -186,8 +194,7 @@ bool FocusOverridable(GUI_Focus focus)
     return focus <= GUI_Focus_CanOverride;
 }
 
-struct {
-    float           font_height;
+typedef struct {
     float           font_scale;
     Vector2         font_delta;             // Delta adjustement
     Font            font_custom;
@@ -195,43 +202,59 @@ struct {
     float           font_spacing;           
     Vector2         blink_size;             // Size of the blinking cursor
     Vector2         blink_delta;            // Blink adjustment
-} typedef GUI_FontSetup;
+} GUI_FontSetup;
 
-GUI_FontSetup GUI_MakeFontSetupDefault() {
-    GUI_FontSetup result = {
-        .font_height        = 20.f,
-        .font_scale         = 2.0f,
-        .font_delta         = (Vector2){ 0.f, -1.0f },
-        .font_custom        = LoadFont("fnt/unifont-17.0.01.otf"),
-        .font_use_custom    = 0,
-        .font_spacing       = 1.0f,
-        .blink_size         = (Vector2){ 2.0f, 10.0f },
-        .blink_delta        = (Vector2){ 1.9f, 0.0f },
-    };
-    return result;
+GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
+    switch (content) {
+    case EGUI_Content_GUI: {
+        GUI_FontSetup result = {
+            .font_scale         = 2.0f,
+            .font_delta         = (Vector2){ 0.f, -1.0f },
+            .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
+            .font_use_custom    = 0,
+            .font_spacing       = 1.0f,
+            .blink_size         = (Vector2){ 2.0f, 10.0f },
+            .blink_delta        = (Vector2){ 1.9f, 0.0f },
+        };
+        return result;
+    }
+    case EGUI_Content_Default:
+    default: {
+        GUI_FontSetup result = {
+            .font_scale         = 2.0f,
+            .font_delta         = (Vector2){ 0.f, 0.0f },
+            .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
+            .font_use_custom    = 0,
+            .font_spacing       = 1.0f,
+            .blink_size         = (Vector2){ 1.0f, 10.0f },
+            .blink_delta        = (Vector2){ -0.0f, 0.0f },
+        };
+        SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
+        return result;
+    }
+    }
 }
 
-
-struct {
+typedef struct {
     Texture2D   pointer_texture;
     Vector2     pointer_delta_normalized;
     float       pointer_scale;
     float       pointer_alpha;
-} typedef GUI_PointerSetup;
+} GUI_PointerSetup;
 
-enum {
+typedef enum {
     EGUI_Pointer_Default,
     EGUI_Pointer_AGS,
     EGUI_Pointer_Text,
     EGUI_Pointer_Count
-} typedef EGUI_Pointer;
+} EGUI_Pointer;
 
-struct {
-    GUI_FontSetup       font_setup;
+typedef struct {
+    GUI_FontSetup       font_setups[EGUI_Content_Count];
     GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
     GUI_Theme           theme;
     GUI_IconSetup       icon_setup;
-} typedef GUI_Setup;
+} GUI_Setup;
 
 GUI_PointerSetup GUI_MakePointerSetup(Texture2D texture, Vector2 delta_normalized)
 {
@@ -274,16 +297,19 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
     return setup;
 }
 
-GUI_Setup GUI_MakeSetupDefault(float opacity)
+GUI_Setup GUI_MakeSetupDefault()
 {
     GUI_Setup setup = {
-        .font_setup = GUI_MakeFontSetupDefault(),
+        .font_setups = {
+            GUI_MakeFontSetupDefault(EGUI_Content_Default),
+            GUI_MakeFontSetupDefault(EGUI_Content_GUI)
+        },
         .pointer_setups = {
             GUI_MakePointerSetupForType(EGUI_Pointer_Default),
             GUI_MakePointerSetupForType(EGUI_Pointer_AGS),
             GUI_MakePointerSetupForType(EGUI_Pointer_Text)
         },
-        .theme      = GUI_MakeThemeDefault(opacity),
+        .theme      = GUI_MakeThemeDefault(),
         .icon_setup = GUI_MakeIconSetupDefault()
     };
     return setup;
@@ -293,7 +319,7 @@ GUI_Setup GUI_MakeSetupDefault(float opacity)
 // WINDOW
 //
 #define MAX_WINDOW_TITLE 16
-struct GUI_Window;
+
 typedef struct GUI_Window {
     int             id;
     Rectangle       shape;
@@ -307,8 +333,8 @@ GUI_Window GUI_MakeEmptyWindow(void)
 {
     GUI_Window window = {
         .id       = 0,
-        .shape    = {0},
-        .colors   = {0},
+        .shape    = (Rectangle){0, 0, 0, 0},
+        .colors   = {{0}},
         .title    = NULL,
         .icon     = NULL,
         .contents = NULL
@@ -316,6 +342,7 @@ GUI_Window GUI_MakeEmptyWindow(void)
     return window;
 }
 typedef struct {
+    RenderTexture2D buffer;
     float           scale;
     bool            window_focus_moving;
     int             control_focus_id;
@@ -335,9 +362,10 @@ typedef struct {
 } GUI_State;
 
 
-GUI_State GUI_MakeStateDefault()
+GUI_State GUI_MakeStateDefault(Vector2 screen_max )
 {
     GUI_State state = {
+        .buffer                 = LoadRenderTexture(screen_max.x, screen_max.y),
         .scale                  = 1.0f,
         .window_focus_moving    = false,
         .control_focus_id       = GUI_DEF_CTRFOCUS,
@@ -389,6 +417,21 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
+GUI_FontSetup* GUI_GetFontSetup(EGUI_Content content)
+{
+    // TODO@dc: Add validations
+    return &GUI_CTX.setup->font_setups[content];
+}
+
+Font GUI_GetFont(EGUI_Content content)
+{
+    GUI_Setup *setup = GUI_GetSetup();
+    if (setup->font_setups[content].font_use_custom)
+        return setup->font_setups[content].font_custom;
+    else
+        return GetFontDefault();
+}
+
 GUI_PointerSetup* GUI_GetPointerSetup()
 {
     GUI_Setup* setup = GUI_GetSetup();
@@ -411,19 +454,6 @@ void GUI_DrawPointer()
             (pointer_texture.height * state->scale * pointer_setup->pointer_scale * pointer_setup->pointer_delta_normalized.y)
     };
     DrawTextureEx(pointer_texture, mouse_shape, 0, state->scale * pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
-}
-
-Font GUI_GetFont(GUI_FontSetup* setup)
-{
-    Font font = setup->font_use_custom ? setup->font_custom : GetFontDefault();
-    return font;
-}
-
-float GUI_CalcShapeAvailableHeight(Rectangle shape)
-{
-    GUI_Setup* setup = GUI_GetSetup();
-    GUI_State* state = GUI_GetState();
-    return (shape.height - setup->theme.padding.y * 2) * state->scale;
 }
 
 float GUI_CalcDefaultScaledHeight()
@@ -462,25 +492,63 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
     }
 }
 
-void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale)
+void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_Content content)
 {
-    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setup;
-    Font font               = GUI_GetFont(setup);
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[content];
+    Font font               = GUI_GetFont(content);
     DrawTextEx(font, text, Vector2Add(position, Vector2Scale(setup->font_delta, setup->font_scale)), font.baseSize * setup->font_scale * scale, setup->font_spacing, tint);
-}
-
-Vector2 GUI_MeasureAdjustedText(const char* text)
+}/*
+void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_Content content)
 {
-    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setup;
+    GUI_State *state     = GUI_GetState();
+    GUI_FontSetup *setup = &GUI_GetSetup()->font_setups[content];
+    Font font            = GUI_GetFont(content);
+
+    // Guardamos el render target actual (el main buffer activo)
+    RenderTexture2D currentTarget = state->buffer;
+
+    // Creamos un buffer temporal solo para este texto
+    Vector2 textSize = MeasureTextEx(font, text, font.baseSize * scale, setup->font_spacing);
+    RenderTexture2D textBuffer = LoadRenderTexture((int)textSize.x + 4, (int)textSize.y + 4);
+
+    // Cambiamos temporalmente al buffer del texto
+    BeginTextureMode(textBuffer);
+        DrawTextEx(font, text, setup->font_delta, font.baseSize * scale, setup->font_spacing, tint);
+    EndTextureMode();
+
+    // Restauramos el render target anterior (el main buffer)
+    BeginTextureMode(currentTarget);
+
+    // Dibujamos el texto escalado sobre el render target original
+    DrawTexturePro(
+        textBuffer.texture,
+        (Rectangle){ 0, 0, (float)textBuffer.texture.width, (float)-textBuffer.texture.height },
+        (Rectangle){
+            position.x,
+            position.y,
+            textBuffer.texture.width * setup->font_scale,
+            textBuffer.texture.height * setup->font_scale
+        },
+        (Vector2){ 0, 0 },
+        0.0f,
+        WHITE
+    );
+
+    UnloadRenderTexture(textBuffer);
+}
+*/
+
+Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Content content)
+{
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[content];
     GUI_State* state        = GUI_GetState();
-    Font font               = GUI_GetFont(setup);
+    Font font               = GUI_GetFont(content);
     
     Vector2 result = {
-        MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).x + setup->blink_delta.x * state->scale,
-        MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).y + setup->blink_delta.y * state->scale
+        MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).x + setup->blink_delta.x * state->scale * setup->font_scale,
+        MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).y + setup->blink_delta.y * state->scale * setup->font_scale
     };
 
-    GUI_Theme* theme = &GUI_GetSetup()->theme;
     return result;
 }
 
@@ -502,8 +570,8 @@ void GUI_DrawButton(const char* text, Rectangle shape,  GUI_ElementStatus status
 
     
     GUI_DrawAdjustedTextEx(text, 
-        (Vector2){ shape.x + icon_w + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        colors.tx_color, scale);
+        (Vector2){ shape.x + icon_w + (theme.padding.x + theme.border) * scale, shape.y + (theme.padding.y + theme.border) * scale}, 
+        colors.tx_color_0, scale, EGUI_Content_GUI);
 }
 
 void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale, Color tint)
@@ -511,7 +579,6 @@ void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale,
     GUI_Setup *setup = GUI_GetSetup();
 
     float texture_scale = scale * (height / texture2d->height);
-    float truncated = floorf(texture_scale * 100.0f) / 100.0f;
     if (DEV_DEBUG_GUI) {
         DrawRectangleRec((Rectangle) { position.x, position.y, height, height }, ORANGE);
     }
@@ -524,7 +591,7 @@ float GUI_GetIconWidth(Texture2D* icon)
     
     GUI_State *state = GUI_GetState();
     GUI_Setup *setup = GUI_GetSetup();
-    return state->default_height - setup->theme.border * 2 * state->scale;
+    return setup->icon_setup.icon_size * state->scale;
 }
 
 bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeColors colors)
@@ -556,8 +623,8 @@ bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeCol
 void GUI_DrawLabel(const char* text, Rectangle shape, GUI_Theme theme, GUI_ThemeColors colors, float scale)
 {
     GUI_DrawAdjustedTextEx(text, 
-        (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        colors.tx_color, scale);
+        (Vector2){ shape.x + (theme.padding.x + theme.border) * scale, shape.y + (theme.padding.y + theme.border) * scale}, 
+        colors.tx_color_0, scale, EGUI_Content_Default);
 }
 
 void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
@@ -568,7 +635,7 @@ void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
     GUI_DrawLabel(text, shape, theme, colors, state->scale);
 }
 
-void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, GUI_ThemeColors colors, float scale, bool blink)
+void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, GUI_ThemeColors colors, float scale, bool blink, EGUI_Content content_type)
 {
     if (status == EGUI_Status_Default) 
         DrawRectangleRec(shape, colors.bg_color_3);
@@ -584,34 +651,33 @@ void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStat
         GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, theme.border * scale, false);
 
     GUI_DrawAdjustedTextEx(value, 
-        (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale}, 
-        colors.tx_color, scale);
+        (Vector2){ shape.x + (theme.padding.x + theme.border) * scale, shape.y + (theme.padding.y + theme.border) * scale}, 
+        colors.tx_color_0, scale, content_type);
 
     if (status == EGUI_Status_Focused && blink) {
-        GUI_State* state = GUI_GetState();
-        GUI_FontSetup* font_setup = &GUI_GetSetup()->font_setup;
-        Vector2 text_size = GUI_MeasureAdjustedText(value);
+        GUI_FontSetup* font_setup = GUI_GetFontSetup(content_type);
+        Vector2 text_size = GUI_MeasureAdjustedText(value, content_type);
         
-        Font font = GUI_GetFont(font_setup);
         char tmp[256] = {0};
         strncpy(tmp, value, *cursor);
 
-        text_size = GUI_MeasureAdjustedText(tmp);
+        text_size = GUI_MeasureAdjustedText(tmp, content_type);
         DrawRectangle(
-            shape.x + theme.padding.x + text_size.x,
-            shape.y + theme.padding.y, 
+            shape.x + (theme.padding.x + theme.border + font_setup->blink_delta.x) * scale + text_size.x,
+            shape.y + (theme.padding.y + theme.border + font_setup->blink_delta.y) * scale, 
             font_setup->blink_size.x * font_setup->font_scale * scale,
             text_size.y, 
-            ColorAlpha(colors.tx_color, 0.95));
+            ColorAlpha(colors.tx_color_0, 0.95));
     }    
 }
 
 void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors)
 {
     // Data
-    GUI_Setup* setup = GUI_GetSetup();
-    GUI_State* state = GUI_GetState();
-    GUI_Theme theme = setup->theme;
+    GUI_Setup* setup            = GUI_GetSetup();
+    GUI_State* state            = GUI_GetState();
+    GUI_Theme theme             = setup->theme;
+    EGUI_Content content_type   = EGUI_Content_Default;
 
     // Blink
     const float blink_speed     = 0.5f;
@@ -643,8 +709,7 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors)
         int cursor_position = 0;
         for (int i = 0; i <= textLength; i++) {
             cursor_position = i; 
-            Font font = GUI_GetFont(&setup->font_setup);
-            int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i)).x + theme.padding.x;
+            int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i), content_type).x + theme.padding.x;
             if (mouse_x < w) break;
         }
         *cursor = cursor_position;
@@ -661,7 +726,7 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors)
             if (key >= 32 && key <= 126 && textLength < 255) { // Printable ASCII characters
                 // Move chars to the right
                 for (int i = textLength; i >= *cursor; i--) {
-                    value[i+1] = value[i];
+                    value[i + 1] = value[i];
                 }
                 value[*cursor] = (char)key;
                 (*cursor)++;
@@ -703,16 +768,16 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors)
                               collide ? EGUI_Status_Collide : 
                                         EGUI_Status_Default;
 
-    GUI_DrawTextBox(value, cursor, shape, status, theme, colors, state->scale, blink_state);
+    GUI_DrawTextBox(value, cursor, shape, status, theme, colors, state->scale, blink_state, content_type);
 }
 
 
 //
 // Check box
 //
-void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup* font_setup, GUI_ThemeColors colors, float scale)
+void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape,  GUI_ElementStatus status, GUI_Theme theme, GUI_ThemeColors colors, float scale)
 {
-    Color tx = value ? colors.tx_color : colors.bg_color_0;
+    Color tx = value ? colors.tx_color_0 : colors.bg_color_0;
     Color bg = value ? colors.bg_color_3 : colors.bg_color_2;
     Color b1 = value ? colors.bg_color_2 : colors.bg_color_0;
     Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
@@ -730,8 +795,8 @@ void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, 
         GUI_DrawBorders(shape, b1, b2, theme.border * scale, false);
 
     GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
-        (Vector2){ shape.x + theme.padding.x + theme.border * scale, shape.y + theme.padding.y + theme.border * scale},
-        tx, scale);
+        (Vector2){ shape.x + (theme.padding.x + theme.border) * scale, shape.y + (theme.padding.y + theme.border) * scale},
+        tx, scale, EGUI_Content_GUI);
 }
 
 void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle shape, GUI_ThemeColors colors)
@@ -765,7 +830,7 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
     GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
                                   collide ? EGUI_Status_Collide : 
                                             EGUI_Status_Default;
-    GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, theme, &setup->font_setup, colors, state->scale);
+    GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, theme, colors, state->scale);
 }
 
 
@@ -922,7 +987,7 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 // WINDOW FUNCTIONS
 //
 
-void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, GUI_FontSetup* font_setup, GUI_ThemeColors colors, float scale, bool icon, float icon_w)
+void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_Theme theme, GUI_ThemeColors colors, float scale, float icon_w)
 {
     // Background
     DrawRectangleRec((Rectangle){shape.x + theme.border * scale, shape.y + theme.border * scale, shape.width - theme.border * scale, shape.height - 2 * theme.border * scale}, colors.bg_color_1);
@@ -943,8 +1008,8 @@ void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_Ele
 
     BeginScissorModeRect(AddRect(shapeTitle, 0, 0, -theme.border * scale, -theme.border * scale));
         GUI_DrawAdjustedTextEx(title,
-            (Vector2) { shapeTitle.x + icon_w + theme.padding.x + theme.border * scale, shapeTitle.y + theme.padding.y + theme.border * scale }, 
-            colors.tx_color, scale);
+            (Vector2) { shapeTitle.x + icon_w + (theme.padding.x + theme.border) * scale, shapeTitle.y + (theme.padding.y + theme.border) * scale }, 
+            colors.tx_color_0, scale, EGUI_Content_GUI);
     EndScissorMode();
 }
 
@@ -1033,7 +1098,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
                                collide_title    ? EGUI_Status_Collide :
                                                   EGUI_Status_Default;
     float icon_w = GUI_GetIconWidth(window->icon);
-    GUI_DrawWindow(window->title, window->shape, shape_title, status, theme, &setup->font_setup, window->colors, state->scale, false, icon_w);
+    GUI_DrawWindow(window->title, window->shape, shape_title, status, theme, window->colors, state->scale, icon_w);
     if (icon_w > 0) {
         GUI_Icon(window->icon, (Vector2) { shape_title.x + theme.border * state->scale, shape_title.y + theme.border * state->scale }, icon_w, 1.0f, WHITE);
     }    
@@ -1143,7 +1208,6 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 
         if (interacted_id > 0 && current_zindex > 0) {
             // Move all elements to the right starting at current_zindex
-            bool found_id = false;
             for (int j = current_zindex; j > 0; --j) {
                 state->z_index[j] = state->z_index[j - 1];
             }

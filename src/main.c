@@ -125,7 +125,7 @@ void DrawRain(int width, int height, float speed, Color color)
     }
 }
 
-struct {
+typedef struct {
     bool reset_characters;
     bool add_character;
     bool toggle_character;
@@ -133,7 +133,7 @@ struct {
     bool move_down;
     bool move_left;
     bool move_right;
-} typedef PLAYER_Actions;
+} PLAYER_Actions;
 
 PLAYER_Actions PLAYER_MakeActions()
 {
@@ -146,7 +146,6 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
     GUI_Setup *setup = GUI_GetSetup();
     GUI_Icons icons = setup->icon_setup.icons;
     int buttons = 3;
-    float screen_w = target.width;
     float button_w = target.width / buttons;
     float button_h = target.height;
 
@@ -160,22 +159,22 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 #define CHARACTERS              4
 #define CHARACTER_MAX_SPEED     6
 
-struct  {
+typedef struct  {
     Rectangle Shape;
     Color Color;
-} typedef Game_Character;
+} Game_Character;
 
-struct {
+typedef struct {
     int current_character;
     int alive_characters;
     Game_Character characters[CHARACTERS];
     Camera2D camera2D;
-} typedef Game_State;
+} Game_State;
 
-struct {
+typedef struct {
     bool checkbox_value;
     char textbox_contents[256];
-} typedef Game_WindowState;
+} Game_WindowState;
 
 Game_State Game_MakeState()
 {
@@ -264,7 +263,6 @@ void WIN_window(GUI_Window* window, void* data)
 
 void WIN_layouts(GUI_Window* window, void* data)
 {
-    Game_WindowState* win_state = (Game_WindowState*)data;
     GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
     float default_height = state->default_height;
@@ -309,7 +307,6 @@ void WIN_layouts(GUI_Window* window, void* data)
 
 void WIN_winman(GUI_Window* window, void* data)
 {
-    Game_WindowState* win_state = (Game_WindowState*)data;
     GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
     float default_height = state->default_height;
@@ -349,7 +346,7 @@ void WIN_winman(GUI_Window* window, void* data)
 
 const char* BuildTimeFormatted()
 {
-    static char buffer[16];
+    static char buffer[32];
 
     // Parse __TIME__ HH:MM:SS
     int h = (__TIME__[0]-'0')*10 + (__TIME__[1]-'0');
@@ -388,9 +385,8 @@ int main(void) {
 
     // PREPARE GUI
     // Create render texture for the GUI
-    RenderTexture2D buffer      = LoadRenderTexture(screen_max.x, screen_max.y);
-    GUI_State state             = GUI_MakeStateDefault();
-    GUI_Setup setup             = GUI_MakeSetupDefault(255);
+    GUI_State state             = GUI_MakeStateDefault(screen_max);
+    GUI_Setup setup             = GUI_MakeSetupDefault();
     GUI_Icons icons             = setup.icon_setup.icons;
     Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&state, &setup);
@@ -436,7 +432,7 @@ int main(void) {
             GetScreenHeight() - state.default_height    // Minus GUI_TopBar size
         };
 
-        BeginTextureMode(buffer);
+        BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
             
             // Top bar
@@ -595,7 +591,7 @@ int main(void) {
             
             // Draw UI Buffer
             {
-                DrawTextureRec(buffer.texture, FlipYRec(GetSourceRec(buffer.texture)), (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
+                DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
             }
         EndDrawing();
 
