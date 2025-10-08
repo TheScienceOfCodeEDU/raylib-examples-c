@@ -29,11 +29,12 @@ bool FocusOverridable(GUI_Focus focus)
     return focus <= GUI_Focus_CanOverride;
 }
 
-// ╔═ WINDOW STRUCTS ═════════════════════════════════════════════╗
-//     PROGRESS : ██████████░  90%               STABILITY : █████████░  90%
-//     STATUS   : Stable
-//     NOTES    : Resize. Close and open.
-// ╚═════════════════════════════════════════════════════════╝
+// - WINDOW STRUCTS -----------------------------------------------------------
+//   PROGRESS : ██████████░  90%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Resize. Close and open.
+// ----------------------------------------------------------------------------
+
 #define MAX_WINDOW_TITLE 16
 
 typedef struct GUI_Window {
@@ -58,11 +59,11 @@ GUI_Window GUI_MakeEmptyWindow(void)
     return window;
 }
 
-// ╔═ GUI STATE ═════════════════════════════════════════════════╗
-//     PROGRESS : ███░░░░░░░░  30%               STABILITY : █████░░░░░  50%
-//     STATUS   : Unstable
-//     NOTES    : Save and restore.
-// ╚═════════════════════════════════════════════════════════╝
+// - GUI STATE ----------------------------------------------------------------
+//   PROGRESS : ███░░░░░░░░  30%     STABILITY : █████░░░░░  50%
+//   STATUS   : Unstable
+//   NOTES    : Save and restore.
+// ----------------------------------------------------------------------------
 
 typedef struct {
     RenderTexture2D buffer;
@@ -82,7 +83,7 @@ typedef struct {
     int             textbox_cursors[GUI_MAX_TEXTBOXES];
 } GUI_State;
 
-GUI_State GUI_MakeStateDefault(Vector2 screen_max )
+GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
     GUI_State state = {
         .buffer                 = LoadRenderTexture(screen_max.x, screen_max.y),
@@ -107,8 +108,11 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max )
     return state;
 }
 
-//  GUI State context
-//
+// - GUI CONTEXT --------------------------------------------------------------
+//   PROGRESS : ██████████░  90%     STABILITY : ███████░░░  90%
+//   STATUS   : Stable
+// ----------------------------------------------------------------------------
+
 static struct {
     GUI_State* state;
     GUI_Setup* setup;
@@ -133,6 +137,7 @@ GUI_State* GUI_GetState()
 {
     return GUI_CTX.state;
 }
+
 GUI_Setup* GUI_GetSetup()
 {
     return GUI_CTX.setup;
