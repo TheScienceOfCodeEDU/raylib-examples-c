@@ -6,11 +6,9 @@
  #include "env.h"
 #endif
 
-// ╔═ ICONS ═══════════════════════════════════════════════════╗
-//     PROGRESS : ██░░░░░░░░  20%               STABILITY : ██████████  100%
-//     STATUS   : Stable (minor tweaks pending)
-//     NOTES    : Pending MOORE icons.
-// ╚═════════════════════════════════════════════════════════╝
+// > ICON SETUP
+//   STABILITY : ███░░░░░░░  30%
+//   NOTES     : Save and restore
 
 typedef struct {
     Texture2D New;
@@ -48,11 +46,9 @@ GUI_IconSetup GUI_MakeIconSetupDefault()
     return setup;
 }
 
-// ╔═ THEMES ══════════════════════════════════════════════════╗
-//     PROGRESS : ██░░░░░░░░  20%               STABILITY : ████░░░░░░  40%
-//     STATUS   : Unstable
-//     NOTES    : Review naming
-// ╚═════════════════════════════════════════════════════════╝
+// > THEME SETUP
+//   STABILITY : ███░░░░░░░  30%
+//   NOTES     : Edit and more themes.
 
 #define COLOR_CHANGE        0.05
 
@@ -166,12 +162,9 @@ GUI_Theme GUI_MakeThemeDefault()
 }
 
 
-
-// ╔═ FONTS ═══════════════════════════════════════════════════╗
-//     PROGRESS : █████░░░░░  50%               STABILITY : █████░░░░░  50%
-//     STATUS   : Unstable
-//     NOTES    : Review naming
-// ╚═════════════════════════════════════════════════════════╝
+// > STATE
+//   STABILITY : █████░░░░░  50%
+//   NOTES     : Review naming
 
 typedef struct {
     float           default_height;
@@ -224,11 +217,10 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
 }
 
 
-// ╔═ POINTERS (MOUSE CURSORS) ══════════════════════════════════════╗
-//     PROGRESS : ███░░░░░░░  30%               STABILITY : █████████░  90%
-//     STATUS   : Stable
-//     NOTES    : Add more pointers
-// ╚═════════════════════════════════════════════════════════╝
+
+// > POINTER SETUP (MOUSE CURSORS)
+//   STABILITY : █████░░░░░  50%
+//   NOTES     : Add more
 
 typedef struct {
     Texture2D   pointer_texture;
@@ -292,11 +284,10 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
     return setup;
 }
 
-// ╔═ SETUP ═══════════════════════════════════════════════════╗
-//     PROGRESS : ███░░░░░░░  30%               STABILITY : █████████░  90%
-//     STATUS   : Stable
-//     NOTES    : Pending save/Restore and cutomize
-// ╚═════════════════════════════════════════════════════════╝
+
+// > STATE
+//   STABILITY : █████░░░░░  50%
+//   NOTES     : Save, restore and edit
 
 GUI_Setup GUI_MakeSetupDefault()
 {

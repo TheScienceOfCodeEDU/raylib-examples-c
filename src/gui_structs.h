@@ -10,6 +10,10 @@
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
 
+// > ENUMS
+//   STABILITY : █████████░  90%
+//   NOTES     : Nothing here
+
 typedef enum {
     EGUI_Status_Default,
     EGUI_Status_Collide,
@@ -29,11 +33,10 @@ bool FocusOverridable(GUI_Focus focus)
     return focus <= GUI_Focus_CanOverride;
 }
 
-// - WINDOW STRUCTS -----------------------------------------------------------
-//   PROGRESS : ██████████░  90%     STABILITY : █████████░  90%
-//   STATUS   : Stable
-//   NOTES    : Resize. Close and open.
-// ----------------------------------------------------------------------------
+
+// > WINDOW STRUCTS
+//   STABILITY : █████████░  90%
+//   NOTES     : Resize. Close and open.
 
 #define MAX_WINDOW_TITLE 16
 
@@ -59,11 +62,9 @@ GUI_Window GUI_MakeEmptyWindow(void)
     return window;
 }
 
-// - GUI STATE ----------------------------------------------------------------
-//   PROGRESS : ███░░░░░░░░  30%     STABILITY : █████░░░░░  50%
-//   STATUS   : Unstable
-//   NOTES    : Save and restore.
-// ----------------------------------------------------------------------------
+// > STATE
+//   STABILITY : ███░░░░░░░  30%
+//   NOTES     : Save and restore
 
 typedef struct {
     RenderTexture2D buffer;
@@ -108,10 +109,9 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     return state;
 }
 
-// - GUI CONTEXT --------------------------------------------------------------
-//   PROGRESS : ██████████░  90%     STABILITY : ███████░░░  90%
-//   STATUS   : Stable
-// ----------------------------------------------------------------------------
+// > STATE > CONTEXT
+//   STABILITY : █████████░  90%
+//   NOTES     : Nothing here
 
 static struct {
     GUI_State* state;
