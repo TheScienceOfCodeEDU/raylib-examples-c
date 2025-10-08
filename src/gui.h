@@ -231,8 +231,8 @@ void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStat
         DrawRectangle(
             shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x,
             shape.y + (border + font_setup->blink_delta.y) * scale, 
-            font_setup->blink_size.x * font_setup->font_scale * scale,
-            text_size.y, 
+            font_setup->blink_size.x * scale,
+            font_setup->blink_size.y * scale, 
             ColorAlpha(colors.tx_color_0, 0.95));
     }    
 }
@@ -335,11 +335,9 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors, E
 }
 
 
-// - CHECKBOX ----------------------------------------------------------------
-//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
-//   STATUS   : Stable
-//   NOTES    : Nothing here
-// ---------------------------------------------------------------------------
+// > LABEL
+//   STABILITY : █████████░  90%
+//   NOTES     : Improve draw
 void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content)
 {
     GUI_State *state            = GUI_GetState();
@@ -403,11 +401,9 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
 }
 
 
-// - LAYOUT-------------------------------------------------------------------
-//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
-//   STATUS   : Stable
-//   NOTES    : Nothing here
-// ---------------------------------------------------------------------------
+// > LAYOUT
+//   STABILITY : █████████░  90%
+//   NOTES     : Simplify default usage
 
 #define RESET_COUNT     0
 #define ADD_COUNT       1
@@ -547,11 +543,9 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
     GUI_BeginBlock(GUI_CTX.horizontal_size, GUI_CTX.vertical_size, workspace);
 }
 
-// - WINDOW ------------------------------------------------------------------
-//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
-//   STATUS   : Stable
-//   NOTES    : Nothing here
-// ---------------------------------------------------------------------------
+// > WINDOW
+//   STABILITY : █████████░  90%
+//   NOTES     : Nothing here
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_ThemeColors colors, float icon_w, EGUI_Content content)
 {
@@ -598,7 +592,7 @@ Rectangle GUI_WindowTitle(Rectangle shape)
         shape.x + border * scale,
         shape.y + border * scale,
         shape.width - (border * scale * 2),
-        default_height
+        GUI_CalcDefaultHeightScaled(EGUI_Content_GUI)
     };
     return shapeTitle;
 }

@@ -245,10 +245,10 @@ void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
 
 void WIN_window(GUI_Window* window, void* data)
 {
-    Game_WindowState* win_state = (Game_WindowState*)data;
-    GUI_Setup* setup = GUI_GetSetup();
-    EGUI_Content content = EGUI_Content_Default;
-    float default_height = GUI_GetFontSetup(content)->default_height;
+    Game_WindowState *win_state = (Game_WindowState*)data;
+    GUI_Setup *setup = GUI_GetSetup();
+    EGUI_Content content = EGUI_Content_Default;    
+    float default_height = GUI_CalcDefaultHeightScaled(content);
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
@@ -269,7 +269,7 @@ void WIN_layouts(GUI_Window* window, void* data)
     (void) data; // Supress unused warning.
     GUI_Setup* setup = GUI_GetSetup();
     EGUI_Content content = EGUI_Content_Default;
-    float default_height = GUI_GetFontSetup(content)->default_height;
+    float default_height = GUI_CalcDefaultHeightScaled(content);
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
@@ -315,7 +315,7 @@ void WIN_winman(GUI_Window* window, void* data)
 
     GUI_State* state = GUI_GetState();
     EGUI_Content content = EGUI_Content_Default;
-    float default_height = GUI_GetFontSetup(content)->default_height;
+    float default_height = GUI_CalcDefaultHeightScaled(content);
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
@@ -433,19 +433,20 @@ int main(void) {
             state.control_focus_id = 0;
         }
 
+        float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_Content_GUI);
         GUI_FontSetup *font_setup = GUI_GetFontSetup(EGUI_Content_GUI);
         Rectangle window_limits = (Rectangle){ 
             0,
-            font_setup->default_height,                       // GUI_TopBar size
+            topbar_height,
             GetScreenWidth(),
-            GetScreenHeight() - font_setup->default_height    // Minus GUI_TopBar size
+            GetScreenHeight() - topbar_height
         };
 
         BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
             
             // Top bar
-            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), font_setup->default_height });
+            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
 
             // Window(s)
             float win_third = window_limits.width / 3.0;

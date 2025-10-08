@@ -191,15 +191,15 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
             .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
             .font_use_custom    = 0,
             .font_spacing       = 1.0f,
-            .blink_size         = (Vector2){ 2.0f, 10.0f },
-            .blink_delta        = (Vector2){ 1.9f, 0.0f },
+            .blink_size         = (Vector2){ 1.0f, 30.0f },
+            .blink_delta        = (Vector2){ 0.0f, 0.0f },
         };
         return result;
     }
     case EGUI_Content_Default:
     default: {
         GUI_FontSetup result = {
-            .default_height     = 36,
+            .default_height     = 30,
             .border             = 2.0f,
 
             .font_scale         = 1.0f,
@@ -207,7 +207,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
             .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
             .font_use_custom    = 1,
             .font_spacing       = 1.0f,
-            .blink_size         = (Vector2){ 1.0f, 10.0f },
+            .blink_size         = (Vector2){ 1.0f, 24.0f },
             .blink_delta        = (Vector2){ -0.0f, 0.0f },
         };
         SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
