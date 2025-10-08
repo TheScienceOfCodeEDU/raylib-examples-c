@@ -149,9 +149,9 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons.New, setup->theme.red);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons.Open, setup->theme.gray);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons.Error, setup->theme.gray);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons.New, setup->theme.red, EGUI_Content_GUI);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons.Open, setup->theme.gray, EGUI_Content_GUI);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons.Error, setup->theme.gray, EGUI_Content_GUI);
 }
 
 
@@ -245,19 +245,20 @@ void WIN_window(GUI_Window* window, void* data)
     Game_WindowState* win_state = (Game_WindowState*)data;
     GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
-    float default_height = state->default_height;
+    EGUI_Content content = EGUI_Content_Default;
+    float default_height = GUI_GetFontSetup(content)->default_height;
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
         GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
         // 1st textbox                
-        GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors);
-        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors);
+        GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
+        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors, content);
         
         // Switch
         GUI_BeginDuplicateBlock(&window_workspace);
-        GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors);
-        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red);
+        GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
+        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red, content);
     GUI_EndWindowContents();
 }
 
@@ -265,14 +266,15 @@ void WIN_layouts(GUI_Window* window, void* data)
 {
     GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
-    float default_height = state->default_height;
+    EGUI_Content content = EGUI_Content_Default;
+    float default_height = GUI_GetFontSetup(content)->default_height;
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
-        GUI_Label("Some sample layouts for imKairos", RelativeToRect(GUI_NextVertical(), window_workspace), setup->theme.gray);
+        GUI_Label("Some sample layouts for imKairos", RelativeToRect(GUI_NextVertical(), window_workspace), setup->theme.gray, EGUI_Content_GUI);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
@@ -309,7 +311,8 @@ void WIN_winman(GUI_Window* window, void* data)
 {
     GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
-    float default_height = state->default_height;
+    EGUI_Content content = EGUI_Content_Default;
+    float default_height = GUI_GetFontSetup(content)->default_height;
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window);
@@ -318,7 +321,7 @@ void WIN_winman(GUI_Window* window, void* data)
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors)) {
+            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, EGUI_Content_GUI)) {
                 state->force_z_index = win->id;
             }
         }
@@ -327,18 +330,18 @@ void WIN_winman(GUI_Window* window, void* data)
         Rectangle t_shape = GUI_WindowTitle(active->shape);
         Rectangle w_shape = active->shape;
 
-        GUI_Label("title_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors);
+        GUI_Label("title_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
 
         GUI_Label(
             TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y),
             RelativeToRect(GUI_NextVertical(), window_workspace),
-            window->colors
+            window->colors, EGUI_Content_Default
         );
 
         GUI_Label(
             TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height),
             RelativeToRect(GUI_NextVertical(), window_workspace),
-            window->colors
+            window->colors, EGUI_Content_Default
         );
 
     GUI_EndWindowContents();
@@ -404,7 +407,6 @@ int main(void) {
 
         // UI
         static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
-        state.default_height        = GUI_CalcDefaultHeightScaled();
         state.focus_state_current   = GUI_Focus_Available;
         state.current_pointer       = pointer_style;
 
@@ -425,18 +427,19 @@ int main(void) {
             state.control_focus_id = 0;
         }
 
+        GUI_FontSetup *font_setup = GUI_GetFontSetup(EGUI_Content_GUI);
         Rectangle window_limits = (Rectangle){ 
             0,
-            state.default_height,                       // GUI_TopBar size
+            font_setup->default_height,                       // GUI_TopBar size
             GetScreenWidth(),
-            GetScreenHeight() - state.default_height    // Minus GUI_TopBar size
+            GetScreenHeight() - font_setup->default_height    // Minus GUI_TopBar size
         };
 
         BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
             
             // Top bar
-            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), state.default_height });
+            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), font_setup->default_height });
 
             // Window(s)
             float win_third = window_limits.width / 3.0;
@@ -448,7 +451,7 @@ int main(void) {
                 
                 if (win_window != NULL) {
                     const int ELEMENTS = 4;                
-                    win_window->shape.height =(state.default_height + setup.theme.border * state.scale) * (ELEMENTS + 1);
+                    win_window->shape.height =(font_setup->default_height + 2 * state.scale) * (ELEMENTS + 1);
                 }
             }
             {
@@ -456,7 +459,7 @@ int main(void) {
                 if (win_layouts == NULL && !first_render) {
                     win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_layouts);
                     win_layouts->shape.x         = win_third;
-                    win_layouts->shape.y         = state.default_height;
+                    win_layouts->shape.y         = font_setup->default_height;
                 }
                 
                 if (win_layouts != NULL) {                    
