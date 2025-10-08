@@ -17,9 +17,11 @@
     } while (0)
 
 
-//
-// Pointer
-//
+// - GUI POINTER --------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Performance capped to 60fps.
+// ----------------------------------------------------------------------------
 void GUI_DrawPointer()
 {
     GUI_State* state                    = GUI_GetState();
@@ -36,9 +38,10 @@ void GUI_DrawPointer()
 }
 
 
-//
-// GUI_Utils
-//
+// - GUI UILS --------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+// ----------------------------------------------------------------------------
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
 {
     if (!remove_corner) {
@@ -91,9 +94,11 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Content content)
     return Vector2Add(result, Vector2Scale(setup->font_delta, state->scale));
 }
 
-//
-// ICON
-//
+// - ICON -------------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ----------------------------------------------------------------------------
 void GUI_Icon(Texture2D* texture2d, Vector2 position, float height, float scale, Color tint)
 {
     GUI_Setup *setup = GUI_GetSetup();
@@ -114,9 +119,11 @@ float GUI_GetIconWidth(Texture2D* icon)
     return setup->icon_setup.icon_size * state->scale;
 }
 
-//
-// BUTTON
-//
+// - BUTTON ------------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ---------------------------------------------------------------------------
 void GUI_DrawButton(const char* text, Rectangle shape,  GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content, float icon_w) 
 {
     GUI_State *state            = GUI_GetState();
@@ -171,9 +178,11 @@ bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeCol
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
-//
-// Label
-//
+// - LABEL -------------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ---------------------------------------------------------------------------
 void GUI_DrawLabel(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content)
 {
     GUI_State *state            = GUI_GetState();
@@ -192,9 +201,11 @@ void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_C
     GUI_DrawLabel(text, shape, colors, content);
 }
 
-//
-// TEXTBOX
-//
+// - TEXTBOX -----------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ---------------------------------------------------------------------------
 
 void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_Content content)
 {
@@ -335,9 +346,11 @@ void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors, E
 }
 
 
-//
-// Check box
-//
+// - CHECKBOX ----------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ---------------------------------------------------------------------------
 void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content)
 {
     GUI_State *state            = GUI_GetState();
@@ -401,9 +414,11 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
 }
 
 
-//
-// LAYOUT
-//
+// - LAYOUT-------------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ---------------------------------------------------------------------------
 
 #define RESET_COUNT     0
 #define ADD_COUNT       1
@@ -543,9 +558,11 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
     GUI_BeginBlock(GUI_CTX.horizontal_size, GUI_CTX.vertical_size, workspace);
 }
 
-//
-// WINDOW
-//
+// - WINDOW ------------------------------------------------------------------
+//   PROGRESS : ███████░░░░  60%     STABILITY : █████████░  90%
+//   STATUS   : Stable
+//   NOTES    : Nothing here
+// ---------------------------------------------------------------------------
 
 void GUI_DrawWindow(char* title, Rectangle shape, Rectangle shapeTitle,  GUI_ElementStatus status, GUI_ThemeColors colors, float icon_w, EGUI_Content content)
 {
