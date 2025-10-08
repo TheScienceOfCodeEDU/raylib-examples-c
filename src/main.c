@@ -8,6 +8,9 @@
 #include "env.h"
 #include "str.h"
 #include "rayext.h"
+
+#include "gui_setup.h"
+#include "gui_structs.h"
 #include "gui.h"
 
 // Maximum number of points (static array size)
@@ -243,7 +246,6 @@ void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
 void WIN_window(GUI_Window* window, void* data)
 {
     Game_WindowState* win_state = (Game_WindowState*)data;
-    GUI_State* state = GUI_GetState();
     GUI_Setup* setup = GUI_GetSetup();
     EGUI_Content content = EGUI_Content_Default;
     float default_height = GUI_GetFontSetup(content)->default_height;
@@ -264,7 +266,7 @@ void WIN_window(GUI_Window* window, void* data)
 
 void WIN_layouts(GUI_Window* window, void* data)
 {
-    GUI_State* state = GUI_GetState();
+    (void) data; // Supress unused warning.
     GUI_Setup* setup = GUI_GetSetup();
     EGUI_Content content = EGUI_Content_Default;
     float default_height = GUI_GetFontSetup(content)->default_height;
@@ -309,8 +311,9 @@ void WIN_layouts(GUI_Window* window, void* data)
 
 void WIN_winman(GUI_Window* window, void* data)
 {
+    (void) data; // Supress unused warning.
+
     GUI_State* state = GUI_GetState();
-    GUI_Setup* setup = GUI_GetSetup();
     EGUI_Content content = EGUI_Content_Default;
     float default_height = GUI_GetFontSetup(content)->default_height;
 
@@ -332,16 +335,19 @@ void WIN_winman(GUI_Window* window, void* data)
 
         GUI_Label("title_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
 
-        GUI_Label(
-            TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y),
-            RelativeToRect(GUI_NextVertical(), window_workspace),
-            window->colors, EGUI_Content_Default
+        GUI_Label(TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y), 
+            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+
+        GUI_Label(TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height),
+            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default
         );
 
-        GUI_Label(
-            TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height),
-            RelativeToRect(GUI_NextVertical(), window_workspace),
-            window->colors, EGUI_Content_Default
+        GUI_Label("window_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+        GUI_Label(TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y), 
+            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+
+        GUI_Label(TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height),
+            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default
         );
 
     GUI_EndWindowContents();
