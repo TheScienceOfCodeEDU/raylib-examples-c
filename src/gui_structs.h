@@ -166,3 +166,10 @@ GUI_PointerSetup* GUI_GetPointerSetup()
     EGUI_Pointer pointer = state->current_pointer;
     return &setup->pointer_setups[pointer];
 }
+
+float GUI_CalcDefaultHeightScaled(EGUI_Content content)
+{
+    GUI_Setup* setup = GUI_GetSetup();
+    GUI_State* state = GUI_GetState();
+    return setup->font_setups[content].default_height * state->scale;
+}
