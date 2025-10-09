@@ -127,15 +127,31 @@ void GUI_DrawFace(Vector2 position, float height)
     GUI_Assert(height > 0);
 
     GUI_Icons *icons = GUI_GetIcons();
-    float texture_scale = GUI_Icon(&icons->Face, position, height, WHITE);
-
-    GUI_Assert(texture_scale > 0);
-
     GUI_State *state = GUI_GetState();
     Vector2 mouse = state->mouse_current;
 
     // Center of the face
     Vector2 center = (Vector2){ position.x + height / 2.0f, position.y + height / 2.0f };
+
+    // --- Distance-based color ---
+    float dx = mouse.x - center.x;
+    float dy = mouse.y - center.y;
+    float dist = sqrtf(dx * dx + dy * dy);
+
+    float max_dist = height * 4;
+
+    // Clamp and normalizing
+    float t = 1.0f - fminf(dist / max_dist, 1.0f);
+
+    // Interpolation white - red
+    Color color = (Color){
+        255,
+        (unsigned char)(255 * (1.0f - t)),
+        (unsigned char)(255 * (1.0f - t)),
+        255
+    };
+    float texture_scale = GUI_Icon(&icons->Face, position, height, color);
+    GUI_Assert(texture_scale > 0);    
 
     // Determine quadrant relative to center
     int px = 0, py = 0;
