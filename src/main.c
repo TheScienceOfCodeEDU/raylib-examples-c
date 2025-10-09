@@ -147,14 +147,14 @@ PLAYER_Actions PLAYER_MakeActions()
 void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 {
     GUI_Setup *setup = GUI_GetSetup();
-    GUI_Icons icons = setup->icon_setup.icons;
+    GUI_Icons *icons = GUI_GetIcons();
     int buttons = 3;
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons.New, setup->theme.red, EGUI_Content_GUI);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons.Open, setup->theme.gray, EGUI_Content_GUI);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons.Error, setup->theme.gray, EGUI_Content_GUI);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red, EGUI_Content_GUI);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray, EGUI_Content_GUI);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray, EGUI_Content_GUI);
 }
 
 
@@ -313,7 +313,7 @@ void WIN_winman(GUI_Window* window, void* data)
 {
     (void) data; // Supress unused warning.
 
-    GUI_State* state = GUI_GetState();
+    GUI_State *state = GUI_GetState();
     EGUI_Content content = EGUI_Content_Default;
     float default_height = GUI_CalcDefaultHeightScaled(content);
 
@@ -324,7 +324,7 @@ void WIN_winman(GUI_Window* window, void* data)
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, EGUI_Content_GUI)) {
+            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, content)) {
                 state->force_z_index = win->id;
             }
         }
@@ -350,6 +350,12 @@ void WIN_winman(GUI_Window* window, void* data)
             RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default
         );
 
+        Rectangle next = RelativeToRect(GUI_NextVertical(), window_workspace);
+        GUI_DrawFace((Vector2){ next.x, next.y }, 16);
+        next = RelativeToRect(GUI_NextVertical(), window_workspace);
+        GUI_DrawFace((Vector2){ next.x, next.y }, 32);
+        next = RelativeToRect(GUI_NextVertical(), window_workspace);
+        GUI_DrawFace((Vector2){ next.x, next.y }, 64);
     GUI_EndWindowContents();
 }
 

@@ -143,6 +143,12 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
+GUI_Icons* GUI_GetIcons()
+{
+    GUI_Setup *setup = GUI_GetSetup();
+    return &setup->icon_setup.icons;
+}
+
 GUI_FontSetup* GUI_GetFontSetup(EGUI_Content content)
 {
     // TODO@dc: Add validations
