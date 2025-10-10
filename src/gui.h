@@ -43,29 +43,26 @@ void GUI_DrawPointer()
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
 {
     if (!remove_corner) {
-        // Draw top border (horizontal line)    
+        // Top
         DrawRectangle(shape.x, shape.y, shape.width, border, dark);
-
-        // Draw left border (vertical line)
+        // Left
         DrawRectangle(shape.x, shape.y, border, shape.height, dark);
-
-        // Draw bottom border (horizontal line)
+        // Bottom
         DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
-
-        // Draw right border (vertical line)
+        // Right
         DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
     } else {
-        // Top border (horizontal line, leaving gaps at corners)
+        // ─── Top (with corner gaps) ──────────────────────────────
         DrawRectangle(shape.x + border, shape.y, shape.width - 2 * border, border, dark);
 
-        // Left border (vertical line, leaving gaps at corners)
-        DrawRectangle(shape.x, shape.y + border, border, shape.height - 2 * border, dark);
+        // │ Left (start after top gap)
+        DrawRectangle(shape.x, shape.y + border, border, shape.height - border, dark);
 
-        // Bottom border
-        DrawRectangle(shape.x + border, shape.y + shape.height - border, shape.width - 2 * border, border, light);
+        // │ Right (start after top gap)
+        DrawRectangle(shape.x + shape.width - border, shape.y + border, border, shape.height - border, light);
 
-        // Right border
-        DrawRectangle(shape.x + shape.width - border, shape.y + border, border, shape.height - 2 * border, light);
+        // └ Bottom (full width)
+        DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
     }
 }
 
