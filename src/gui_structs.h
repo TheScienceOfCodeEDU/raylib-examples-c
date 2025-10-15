@@ -136,6 +136,8 @@ GUI_Temp GUI_MakeTempDefault()
         .vertical_size          = 0.0f,
         .horizontal_count       = 0,
         .horizontal_size        = 0.0f
+
+
     };
     return temp;
 }
@@ -197,10 +199,10 @@ GUI_PointerSetup* GUI_GetPointerSetup()
     return &setup->pointer_setups[pointer];
 }
 
-GUI_Window* GUI_GetWindow(int id, GUI_State* state)
+GUI_Window* GUI_GetWindow(int id)
 {
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-        GUI_Window* window = &state->window_s[i];
+        GUI_Window* window = &GUI_CTX.state->window_s[i];
         if (window->id == id) {
             return window;
         }
@@ -210,8 +212,7 @@ GUI_Window* GUI_GetWindow(int id, GUI_State* state)
 
 GUI_Window* GUI_GetWindowByZindex(int z_index)
 {
-    GUI_State *state = GUI_GetState();
-    return GUI_GetWindow(state->z_index[z_index], state);
+    return GUI_GetWindow(GUI_CTX.state->z_index[z_index]);
 }
 
 float GUI_CalcDefaultHeightScaled(EGUI_Content content)

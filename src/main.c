@@ -153,9 +153,9 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red, EGUI_Content_GUI, NULL);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray, EGUI_Content_GUI, NULL);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray, EGUI_Content_GUI, NULL);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red, EGUI_Content_GUI);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray, EGUI_Content_GUI);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray, EGUI_Content_GUI);
 }
 
 
@@ -255,13 +255,13 @@ void WIN_window(GUI_Window* window, void* data)
     GUI_BeginWindowContents(window, default_height * 2, true);
         GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
         // 1st textbox                
-        GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
-        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors, content, window);
+        GUI_Label("Hello", GUI_NextHorizontal(), window->colors, content, window_workspace);
+        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors, content);
         
         // Switch
         GUI_BeginDuplicateBlock(&window_workspace);
-        GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
-        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red, content, window);
+        GUI_Label("Switch", GUI_NextHorizontal(), window->colors, content, window_workspace);
+        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red, content);
     GUI_EndWindowContents();
 }
 
@@ -277,7 +277,7 @@ void WIN_layouts(GUI_Window* window, void* data)
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
-        GUI_Label("Some sample layouts for imKairos", RelativeToRect(GUI_NextVertical(), window_workspace), setup->theme.gray, EGUI_Content_GUI);
+        GUI_Label("Some sample layouts for imKairos", GUI_NextVertical(), setup->theme.gray, EGUI_Content_GUI, window_workspace);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
@@ -325,31 +325,31 @@ void WIN_winman(GUI_Window* window, void* data)
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, content, window)) {
+            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, content)) {
                 state->force_z_index = win->id;
             }
         }
 
-        GUI_Window *active = GUI_GetWindow(state->z_index[0], state);
+        GUI_Window *active = GUI_GetWindow(state->z_index[0]);
         Rectangle t_shape = GUI_WindowTitle(active->shape);
         Rectangle w_shape = active->shape;
 
-        GUI_Label(TextFormat("scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->scroll_offset, active->content_height), RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
-        GUI_Label("title_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+        GUI_Label(TextFormat("scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->scroll_offset, active->content_height), GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace);
+        GUI_Label("title_shape", GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace);
 
         GUI_Label(TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y), 
-            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+            GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace);
 
         GUI_Label(TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height),
-            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default
+            GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace
         );
 
-        GUI_Label("window_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+        GUI_Label("window_shape", GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace);
         GUI_Label(TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y), 
-            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
+            GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace);
 
         GUI_Label(TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height),
-            RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default
+            GUI_NextVertical(), window->colors, EGUI_Content_Default, window_workspace
         );
 
         Rectangle next = RelativeToRect(GUI_NextVertical(), window_workspace);

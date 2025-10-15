@@ -74,7 +74,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 
     // Inside a window
     // Focused window data
-    GUI_Window *focused_window  = GUI_GetWindow(focused_window_id, state);
+    GUI_Window *focused_window  = GUI_GetWindow(focused_window_id);
     bool collide_focused        = CheckCollisionPointRec(mouse, focused_window->shape);
 
     // Vertical scroll data
@@ -288,11 +288,11 @@ void GUI_DrawButton(
 
 bool GUI_Button(
     const char* text, Rectangle shape, Texture2D* icon,
-    GUI_ThemeColors colors, EGUI_Content content, GUI_Window *window)
+    GUI_ThemeColors colors, EGUI_Content content)
 {
     GUI_ElementStatus status = EGUI_Status_Default;
 
-    bool collide            = GUI_CheckCollisionPointerControl(shape, window);
+    bool collide            = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
     bool moving_window      = GUI_CTX.temp.window_focus_moving == 0;
     bool focusable          = collide && moving_window;
     if (focusable) {
@@ -326,8 +326,11 @@ void GUI_DrawLabel(
         colors.tx_color_0, scale, EGUI_Content_Default);
 }
 
-void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content)
+void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content, Rectangle workspace)
 {
+    if (GUI_CTX.temp.current_window_idx != 0) {
+        shape = RelativeToRect(shape, workspace);
+    }
     GUI_DrawLabel(text, shape, colors, content);
 }
 
@@ -382,7 +385,7 @@ void GUI_DrawTextBox(
 
 void GUI_TextBox(
     int id, char *value, Rectangle shape, 
-    GUI_ThemeColors colors, EGUI_Content content, GUI_Window *window)
+    GUI_ThemeColors colors, EGUI_Content content)
 {
     // Data
     GUI_State* state            = GUI_GetState();
@@ -396,7 +399,7 @@ void GUI_TextBox(
     int *cursor = &state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
     // Conditions
-    bool collide        = GUI_CheckCollisionPointerControl(shape, window);
+    bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
     if (collide) {
@@ -518,10 +521,10 @@ void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, 
 
 void GUI_CheckBox(
     int id, bool *value, char *on_txt, char *off_txt, Rectangle shape,
-    GUI_ThemeColors colors, EGUI_Content content, GUI_Window *window)
+    GUI_ThemeColors colors, EGUI_Content content)
 {
     // Conditions
-    bool collide        = GUI_CheckCollisionPointerControl(shape, window);
+    bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();
 
     // Focus
@@ -905,7 +908,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
             int id = state->z_index[j];
             if (id == 0) continue;
 
-            GUI_Window* window = GUI_GetWindow(id, state);
+            GUI_Window* window = GUI_GetWindow(id);
             if (window == NULL) continue;
 
             bool find_window    = interacted_id > 0 && interacted_id == window->id;
@@ -934,7 +937,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
         int id = state->z_index[j];
         if (id == 0) continue;
 
-        GUI_Window *window = GUI_GetWindow(id, state);
+        GUI_Window *window = GUI_GetWindow(id);
         if (GUI_CheckCollisionPointerWindow(window->id, window->shape)) {
             GUI_CTX.temp.window_coll_id = window->id;
         }
@@ -962,9 +965,9 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_
     
     // Vertical scroll    
     GUI_Assert(enable_scroll == false || height > window_workspace.height);
-    window->content_height      = height;
-    GUI_CTX.temp.current_window_idx  = window->id;
-    GUI_CTX.temp.current_scroll      = -window->scroll_offset;
+    window->content_height              = height;
+    GUI_CTX.temp.current_window_idx     = window->id;
+    GUI_CTX.temp.current_scroll         = -window->scroll_offset;
     
     // Begin window stuff
     GUI_ResetLayout();
@@ -985,5 +988,5 @@ void GUI_EndWindowContents()
     // Vertical scroll
     // Reset
     GUI_CTX.temp.current_window_idx = 0;
-    GUI_CTX.temp.current_scroll = 0;
+    GUI_CTX.temp.current_scroll     = 0;
 }
