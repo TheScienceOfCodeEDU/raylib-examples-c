@@ -220,3 +220,46 @@ float GUI_CalcDefaultHeightScaled(EGUI_Content content)
     GUI_State* state = GUI_GetState();
     return setup->font_setups[content].default_height * state->scale;
 }
+
+// > WINDOW UTILS
+//   STABILITY : █████████░  90%
+//   NOTES     : Nothing here
+Rectangle GUI_WindowTitle(Rectangle shape)
+{
+    GUI_State* state            = GUI_GetState();
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_Content_GUI);
+
+    float border            = font_setup->border;
+    float scale             = state->scale;
+
+    Rectangle shapeTitle = {
+        shape.x + border * scale,
+        shape.y + border * scale,
+        shape.width - (border * scale * 2),
+        GUI_CalcDefaultHeightScaled(EGUI_Content_GUI)
+    };
+    return shapeTitle;
+}
+
+Rectangle GUI_WindowWorkspace(Rectangle shape)
+{
+    GUI_State* state = GUI_GetState();
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_Content_GUI);
+
+    float border    = font_setup->border;
+    float scale     = state->scale;
+
+    Rectangle shape_title = GUI_WindowTitle(shape);
+    Rectangle shape_workspace = {
+        shape_title.x,
+        shape_title.y + shape_title.height + (shape_title.y - shape.y),
+        shape.width - (shape_title.x - shape.x ) * 2,
+        shape.height - shape_title.height - (shape_title.y - shape.y) - border * scale * 2
+    };
+
+    if (DEV_DEBUG_GUI) {
+        DrawRectangleRec(shape_title, ColorAlpha(ORANGE, 0.5));
+        DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
+    }
+    return shape_workspace;
+}

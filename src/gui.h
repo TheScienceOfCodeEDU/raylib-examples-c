@@ -30,14 +30,30 @@ void GUI_DrawPointer()
     DrawTextureEx(pointer_texture, mouse_shape, 0, pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
 }
 
+bool GUI_WindowCollide(int window_id)
+{
+    return GUI_CTX.temp.window_coll_id != 0 && GUI_CTX.temp.window_coll_id != window_id;
+}
+
+
 bool GUI_CheckCollisionPointerWindow(int window_id, Rectangle shape)
 {
     // This is not the window!
-    if (GUI_CTX.temp.window_coll_id != 0 &&  GUI_CTX.temp.window_coll_id != window_id) {
+    if (GUI_WindowCollide(window_id)) {
         return false;
     }
 
     return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape);
+}
+
+bool GUI_CheckCollisionPointerWindowTitle(int window_id, Rectangle shape_title)
+{
+    // This is not the window!... or we are moving
+    if (GUI_WindowCollide(window_id) || GUI_CTX.temp.window_focus_moving) {
+        return false;
+    }
+
+    return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape_title);
 }
 
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
@@ -52,7 +68,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     }
 
     // This is not the window!
-    if (GUI_CTX.temp.window_coll_id != 0 &&  GUI_CTX.temp.window_coll_id != window->id) {
+    if (GUI_WindowCollide(window->id)) {
         return false;
     }
 
@@ -64,9 +80,10 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp.current_scroll };
     bool collide_scolled        = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
+    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window->shape));
     
     // Collide checks    
-    bool collide                = collide_scolled;
+    bool collide                = collide_scolled && collide_workspace;
     bool result                 = collide && (focused_window_id == window->id || !collide_focused);
 
     return result;
@@ -148,6 +165,8 @@ void GUI_EndDraw()
 {
     GUI_CTX.temp.mouse_last = GUI_CTX.temp.mouse_current;
 }
+
+
 
 // > ICON
 //   STABILITY : █████████░  90%
@@ -670,46 +689,6 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 
-Rectangle GUI_WindowTitle(Rectangle shape)
-{
-    GUI_State* state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_Content_GUI);
-
-    float border            = font_setup->border;
-    float scale             = state->scale;
-
-    Rectangle shapeTitle = {
-        shape.x + border * scale,
-        shape.y + border * scale,
-        shape.width - (border * scale * 2),
-        GUI_CalcDefaultHeightScaled(EGUI_Content_GUI)
-    };
-    return shapeTitle;
-}
-
-Rectangle GUI_WindowWorkspace(Rectangle shape)
-{
-    GUI_State* state = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_Content_GUI);
-
-    float border    = font_setup->border;
-    float scale     = state->scale;
-
-    Rectangle shape_title = GUI_WindowTitle(shape);
-    Rectangle shape_workspace = {
-        shape_title.x,
-        shape_title.y + shape_title.height + (shape_title.y - shape.y),
-        shape.width - (shape_title.x - shape.x ) * 2,
-        shape.height - shape_title.height - (shape_title.y - shape.y) - border * scale * 2
-    };
-
-    if (DEV_DEBUG_GUI) {
-        DrawRectangleRec(shape_title, ColorAlpha(ORANGE, 0.5));
-        DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
-    }
-    return shape_workspace;
-}
-
 void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content content)
 {
     GUI_State *state            = GUI_GetState();
@@ -780,7 +759,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Conditions
     bool collide            = GUI_CheckCollisionPointerWindow(window->id, window->shape);
-    bool collide_title      = GUI_CheckCollisionPointerWindow(window->id, shape_title);
+    bool collide_title      = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
     bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool window_focusable   = GUI_CTX.temp.focus_state_current == GUI_Focus_Available && GUI_CTX.temp.window_focus_moving == 0;
     bool window_focused     = state->z_index[0] == window->id;
