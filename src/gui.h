@@ -326,17 +326,17 @@ void GUI_DrawLabel(
         colors.tx_color_0, scale, font_type);
 }
 
-#define RELATIVE_TO_WINDOW(shape, workspace) \
+#define RELATIVE_TO_WINDOW(shape) \
     do { \
         if (GUI_CTX.temp.current_window_idx != 0) { \
-            shape = RelativeToRect(shape, workspace); \
+            shape = RelativeToRect(shape, GUI_CTX.temp.current_workspace); \
         } \
     } while (0)
 
 
-void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_FontType font_type, Rectangle workspace)
+void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
-    RELATIVE_TO_WINDOW(shape, workspace);
+    RELATIVE_TO_WINDOW(shape);
     GUI_DrawLabel(text, shape, colors, font_type);
 }
 
@@ -390,10 +390,10 @@ void GUI_DrawTextBox(
 }
 
 void GUI_TextBox(
-    int id, char *value, Rectangle shape, Rectangle workspace,
+    int id, char *value, Rectangle shape,
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
-    RELATIVE_TO_WINDOW(shape, workspace);
+    RELATIVE_TO_WINDOW(shape);
 
     // Data
     GUI_State* state            = GUI_GetState();
@@ -533,6 +533,8 @@ void GUI_CheckBox(
     int id, bool *value, char *on_txt, char *off_txt, Rectangle shape,
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
+    RELATIVE_TO_WINDOW(shape);
+
     // Conditions
     bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();
@@ -672,7 +674,7 @@ void GUI_ResetLayout()
     GUI_CTX.temp.horizontal_count = 0;
     GUI_CTX.temp.vertical_count   = 0;
 }
-void GUI_BeginBlock(float width, float height, Rectangle* workspace)
+void GUI_BeginBlock(float width, float height)
 {
     // Add jump if necessary after ONLY horizontal blocks
     if (GUI_CTX.temp.horizontal_count > 0 && GUI_CTX.temp.vertical_count == 0) {
@@ -683,28 +685,34 @@ void GUI_BeginBlock(float width, float height, Rectangle* workspace)
     if (width > 0.0) {
         GUI_BeginHorizontal(width);
     } else if (width < 0.0) {
-        GUI_BeginHorizontal(workspace->width + width); // width is already negative
+        GUI_BeginHorizontal(GUI_CTX.temp.current_workspace.width + width); // width is already negative
     } else {
-        GUI_BeginHorizontal(workspace->width);
+        GUI_BeginHorizontal(GUI_CTX.temp.current_workspace.width);
     }
 
     // Adjust to get y-available space
     if (GUI_CTX.temp.vertical_count != 0) {
-        *workspace = GUI_WorkspaceAvailable(*workspace);
+        GUI_CTX.temp.current_workspace = GUI_WorkspaceAvailable(GUI_CTX.temp.current_workspace);
     }
 
     // Vertical
     if (height > 0.0) {
         GUI_BeginVertical(height);
     } else if (height < 0.0) {
-        GUI_BeginVertical(workspace->height + height); // height is already negative
+        GUI_BeginVertical(GUI_CTX.temp.current_workspace.height + height); // height is already negative
     } else {
-        GUI_BeginVertical(workspace->height);
+        GUI_BeginVertical(GUI_CTX.temp.current_workspace.height);
     }
 }
-void GUI_BeginDuplicateBlock(Rectangle* workspace)
+void GUI_BeginDuplicateBlock()
 {
-    GUI_BeginBlock(GUI_CTX.temp.horizontal_size, GUI_CTX.temp.vertical_size, workspace);
+    GUI_BeginBlock(GUI_CTX.temp.horizontal_size, GUI_CTX.temp.vertical_size);
+}
+
+Rectangle GUI_Relative(Rectangle shape)
+{
+    RELATIVE_TO_WINDOW(shape);
+    return shape;
 }
 
 // > WINDOW
@@ -977,6 +985,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_
     window->content_height              = height;
     GUI_CTX.temp.current_window_idx     = window->id;
     GUI_CTX.temp.current_scroll         = -window->scroll_offset;
+    GUI_CTX.temp.current_workspace      = window_workspace;
     
     // Begin window stuff
     GUI_ResetLayout();
@@ -998,4 +1007,5 @@ void GUI_EndWindowContents()
     // Reset
     GUI_CTX.temp.current_window_idx = 0;
     GUI_CTX.temp.current_scroll     = 0;
+    GUI_CTX.temp.current_workspace  = (Rectangle){ 0, 0, 0, 0 };
 }

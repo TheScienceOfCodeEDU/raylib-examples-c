@@ -253,15 +253,15 @@ void WIN_window(GUI_Window* window, void* data)
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window, default_height * 2, true);
-        GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
+        GUI_BeginBlock(window_workspace.width / 3, default_height);
         // 1st textbox                
-        GUI_Label("Hello", GUI_NextHorizontal(), window->colors, font_type, window_workspace);
-        GUI_TextBox(2, win_state->textbox_contents, GUI_NextHorizontals(2), window_workspace, window->colors, font_type);
+        GUI_Label("Hello", GUI_NextHorizontal(), window->colors, font_type);
+        GUI_TextBox(2, win_state->textbox_contents, GUI_NextHorizontals(2), window->colors, font_type);
         
         // Switch
-        GUI_BeginDuplicateBlock(&window_workspace);
-        GUI_Label("Switch", GUI_NextHorizontal(), window->colors, font_type, window_workspace);
-        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red, font_type);
+        GUI_BeginDuplicateBlock();
+        GUI_Label("Switch", GUI_NextHorizontal(), window->colors, font_type);
+        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", GUI_NextHorizontals(2), setup->theme.red, font_type);
     GUI_EndWindowContents();
 }
 
@@ -276,37 +276,37 @@ void WIN_layouts(GUI_Window* window, void* data)
     GUI_BeginWindowContents(window, 0, false);
 
         // First block
-        GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
-        GUI_Label("Some sample layouts for imKairos", GUI_NextVertical(), setup->theme.gray, EGUI_FontType_GUI, window_workspace);
+        GUI_BeginBlock(window_workspace.width, default_height);
+        GUI_Label("Some sample layouts for imKairos", GUI_NextVertical(), setup->theme.gray, EGUI_FontType_GUI);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
-        DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BROWN);                    
-        DrawDebugRect(RelativeToRect(GUI_NextVertical(), window_workspace), BEIGE);
+        DrawDebugRect(GUI_Relative(GUI_NextVertical()), BROWN);                    
+        DrawDebugRect(GUI_Relative(GUI_NextVertical()), BEIGE);
 
         // 1/3rd and 2/3rds blocks
-        GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), YELLOW);                    
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontals(2), window_workspace), GREEN);
+        GUI_BeginBlock(window_workspace.width / 3, default_height);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), YELLOW);                    
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), GREEN);
 
         // Second block
         // 3 horizontals of 1/3 of the available space
-        GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), DARKGRAY);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), GRAY);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), LIGHTGRAY);
+        GUI_BeginBlock(window_workspace.width / 3, default_height);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), DARKGRAY);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), GRAY);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), LIGHTGRAY);
         
         // Prepare for a new block with 5 elements per row
-        GUI_BeginBlock(window_workspace.width / 5, -default_height, &window_workspace);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLACK);
+        GUI_BeginBlock(window_workspace.width / 5, -default_height);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
         
-        GUI_BeginBlock(window_workspace.width / 2, default_height, &window_workspace);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), RED);
-        DrawDebugRect(RelativeToRect(GUI_NextHorizontal(), window_workspace), BLUE);
+        GUI_BeginBlock(window_workspace.width / 2, default_height);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), RED);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLUE);
     GUI_EndWindowContents();
 }
 
@@ -320,7 +320,7 @@ void WIN_winman(GUI_Window* window, void* data)
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window, 0, false);
-        GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
+        GUI_BeginBlock(window_workspace.width, default_height);
 
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
@@ -334,22 +334,22 @@ void WIN_winman(GUI_Window* window, void* data)
         Rectangle t_shape = GUI_WindowTitle(active->shape);
         Rectangle w_shape = active->shape;
 
-        GUI_Label(TextFormat("scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->scroll_offset, active->content_height), GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace);
-        GUI_Label("title_shape", GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace);
+        GUI_Label(TextFormat("scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->scroll_offset, active->content_height), GUI_NextVertical(), window->colors, EGUI_FontType_Default);
+        GUI_Label("title_shape", GUI_NextVertical(), window->colors, EGUI_FontType_Default);
 
         GUI_Label(TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y), 
-            GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace);
+            GUI_NextVertical(), window->colors, EGUI_FontType_Default);
 
         GUI_Label(TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height),
-            GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace
+            GUI_NextVertical(), window->colors, EGUI_FontType_Default
         );
 
-        GUI_Label("window_shape", GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace);
+        GUI_Label("window_shape", GUI_NextVertical(), window->colors, EGUI_FontType_Default);
         GUI_Label(TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y), 
-            GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace);
+            GUI_NextVertical(), window->colors, EGUI_FontType_Default);
 
         GUI_Label(TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height),
-            GUI_NextVertical(), window->colors, EGUI_FontType_Default, window_workspace
+            GUI_NextVertical(), window->colors, EGUI_FontType_Default
         );
 
         Rectangle next = RelativeToRect(GUI_NextVertical(), window_workspace);

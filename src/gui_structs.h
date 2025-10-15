@@ -109,6 +109,7 @@ typedef struct {
     // Active window
     int             current_window_idx;
     float           current_scroll;
+    Rectangle       current_workspace;
 
     // Layout temporary data
     int             vertical_count;
@@ -131,6 +132,7 @@ GUI_Temp GUI_MakeTempDefault()
 
         .current_window_idx     = 0,
         .current_scroll         = 0,
+        .current_workspace      = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
 
         .vertical_count         = 0,
         .vertical_size          = 0.0f,
