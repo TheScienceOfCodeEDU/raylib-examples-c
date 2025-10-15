@@ -110,6 +110,7 @@ typedef struct {
     int             current_window_idx;
     float           current_scroll;
     Rectangle       current_workspace;
+    EGUI_FontType   current_font_type;
 
     // Layout temporary data
     int             vertical_count;
@@ -133,6 +134,7 @@ GUI_Temp GUI_MakeTempDefault()
         .current_window_idx     = 0,
         .current_scroll         = 0,
         .current_workspace      = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .current_font_type      = EGUI_FontType_Default,
 
         .vertical_count         = 0,
         .vertical_size          = 0.0f,
@@ -265,4 +267,24 @@ Rectangle GUI_WindowWorkspace(Rectangle shape)
         DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
     }
     return shape_workspace;
+}
+
+#define RELATIVE_TO_WINDOW(shape) \
+    do { \
+        if (GUI_CTX.temp.current_window_idx != 0) { \
+            shape = RelativeToRect(shape, GUI_CTX.temp.current_workspace); \
+        } \
+    } while (0)
+
+#define FONT_TYPE_FROM_CONTEXT() \
+    EGUI_FontType font_type = GUI_CTX.temp.current_font_type
+
+void GUI_BeginFontType(EGUI_FontType font_type)
+{
+    GUI_CTX.temp.current_font_type = font_type;
+}
+
+void GUI_EndFontType()
+{
+    GUI_CTX.temp.current_font_type = EGUI_FontType_Default;
 }

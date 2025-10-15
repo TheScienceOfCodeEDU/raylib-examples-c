@@ -288,8 +288,11 @@ void GUI_DrawButton(
 
 bool GUI_Button(
     const char* text, Rectangle shape, Texture2D* icon,
-    GUI_ThemeColors colors, EGUI_FontType font_type)
+    GUI_ThemeColors colors)
 {
+    RELATIVE_TO_WINDOW(shape);
+    FONT_TYPE_FROM_CONTEXT();
+
     GUI_ElementStatus status = EGUI_Status_Default;
 
     bool collide            = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
@@ -326,18 +329,10 @@ void GUI_DrawLabel(
         colors.tx_color_0, scale, font_type);
 }
 
-#define RELATIVE_TO_WINDOW(shape) \
-    do { \
-        if (GUI_CTX.temp.current_window_idx != 0) { \
-            shape = RelativeToRect(shape, GUI_CTX.temp.current_workspace); \
-        } \
-    } while (0)
-
-
-void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_FontType font_type)
+void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
 {
     RELATIVE_TO_WINDOW(shape);
-    GUI_DrawLabel(text, shape, colors, font_type);
+    GUI_DrawLabel(text, shape, colors, GUI_CTX.temp.current_font_type);
 }
 
 // > TEXTBOX
@@ -391,12 +386,13 @@ void GUI_DrawTextBox(
 
 void GUI_TextBox(
     int id, char *value, Rectangle shape,
-    GUI_ThemeColors colors, EGUI_FontType font_type)
+    GUI_ThemeColors colors)
 {
     RELATIVE_TO_WINDOW(shape);
+    FONT_TYPE_FROM_CONTEXT();    
 
     // Data
-    GUI_State* state            = GUI_GetState();
+    GUI_State* state            = GUI_GetState();    
     
     // Blink
     const float blink_speed     = 0.5f;
@@ -531,9 +527,10 @@ void GUI_DrawCheckBox(
 
 void GUI_CheckBox(
     int id, bool *value, char *on_txt, char *off_txt, Rectangle shape,
-    GUI_ThemeColors colors, EGUI_FontType font_type)
+    GUI_ThemeColors colors)
 {
     RELATIVE_TO_WINDOW(shape);
+    FONT_TYPE_FROM_CONTEXT();
 
     // Conditions
     bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
@@ -975,7 +972,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
     }
 }
 
-Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_scroll)
+Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_scroll, EGUI_FontType font_type)
 {
     // Data
     Rectangle window_workspace = GUI_WindowWorkspace(window->shape);
@@ -986,6 +983,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_
     GUI_CTX.temp.current_window_idx     = window->id;
     GUI_CTX.temp.current_scroll         = -window->scroll_offset;
     GUI_CTX.temp.current_workspace      = window_workspace;
+    GUI_CTX.temp.current_font_type      = font_type;
     
     // Begin window stuff
     GUI_ResetLayout();
@@ -1008,4 +1006,5 @@ void GUI_EndWindowContents()
     GUI_CTX.temp.current_window_idx = 0;
     GUI_CTX.temp.current_scroll     = 0;
     GUI_CTX.temp.current_workspace  = (Rectangle){ 0, 0, 0, 0 };
+    GUI_CTX.temp.current_font_type  = EGUI_FontType_Default;
 }
