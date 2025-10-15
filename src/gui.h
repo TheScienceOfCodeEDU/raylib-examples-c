@@ -2,6 +2,7 @@
  #include <string.h>
  #include <stdio.h>
  #include "rayext.h"
+ #include "rlgl.h"
  #include "str.h"
  #include "env.h"
  #include "gui_setup.h"
@@ -34,6 +35,15 @@ void GUI_DrawPointer()
             (pointer_texture.height * state->scale * pointer_setup->pointer_scale * pointer_setup->pointer_delta_normalized.y)
     };
     DrawTextureEx(pointer_texture, mouse_shape, 0, state->scale * pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
+}
+
+bool GUI_CheckCollisionPointerControl(Rectangle shape)
+{
+    GUI_State* state = GUI_GetState();
+
+    // Vertical scroll
+    Vector2 current_scroll = (Vector2) { 0, state->current_scroll };
+    return CheckCollisionPointRec(state->mouse_current, MoveRect(shape, current_scroll));
 }
 
 
@@ -88,6 +98,8 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Content content)
 
     return Vector2Add(result, Vector2Scale(setup->font_delta, state->scale));
 }
+
+
 
 // > ICON
 //   STABILITY : █████████░  90%
@@ -210,7 +222,7 @@ bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeCol
     GUI_State* state = GUI_GetState();
     GUI_ElementStatus status = EGUI_Status_Default;
 
-    bool collide            = CheckCollisionPointRec(state->mouse_current, shape);
+    bool collide            = GUI_CheckCollisionPointerControl(shape);
     bool moving_window      = state->window_focus_moving == 0;
     bool focusable          = collide && moving_window;
     if (focusable) {
@@ -309,7 +321,7 @@ void GUI_TextBox(
     int *cursor = &state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
     // Conditions
-    bool collide        = CheckCollisionPointRec(state->mouse_current, shape);
+    bool collide        = GUI_CheckCollisionPointerControl(shape);
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
     if (collide) {
@@ -432,7 +444,7 @@ void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle sh
     GUI_State* state = GUI_GetState();
     
     // Conditions
-    bool collide        = CheckCollisionPointRec(state->mouse_current, shape);
+    bool collide        = GUI_CheckCollisionPointerControl(shape);
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();
 
     // Focus
@@ -559,6 +571,10 @@ Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
         workspace.width - used_w,
         workspace.height - used_h
     };
+
+    // Vertical scroll
+    if (result.height < GUI_CTX.vertical_size)
+        result.height = GUI_CTX.vertical_size;
     return result;
 }
 void GUI_ResetLayout()
@@ -689,6 +705,22 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content 
     if (status == EGUI_Status_Focused && icon_w > 0) {
         GUI_DrawFace((Vector2) { shape_title.x + border * scale, shape_title.y + border * scale }, icon_w);
     }
+
+    // Vertical scroll
+    // Scrollbar
+    Rectangle workspace = GUI_WindowWorkspace(shape);
+    if (window->content_height > workspace.height) {
+        float ratio =  workspace.height / window->content_height;
+        float bar_h = ratio *  workspace.height;
+        float bar_y = shape.y + shape_title.height + (window->scroll_offset / window->content_height) *  workspace.height;
+
+        DrawRectangleRec((Rectangle){
+            shape.x + shape.width,
+            bar_y,
+            border * scale,
+            bar_h
+        }, colors.tx_color_1);
+    }
 }
 
 void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
@@ -733,6 +765,19 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     // Limit
     window->shape   = LimitRect(window->shape, limits);
     shape_title     = GUI_WindowTitle(window->shape);
+
+    // Vertical scroll
+    Rectangle workspace = GUI_WindowWorkspace(window->shape);
+    if (window->content_height <= 0) {
+        window->content_height = workspace.height;
+    }
+    if (collide) {
+        float wheel = GetMouseWheelMove();
+        if (wheel != 0.0f) {
+            window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
+            window->scroll_offset = Clamp(window->scroll_offset, 0, window->content_height - workspace.height);
+        }
+    }
 
     // Draw
     GUI_ElementStatus status = window_focused   ? EGUI_Status_Focused :
@@ -869,15 +914,37 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
     }
 }
 
-Rectangle GUI_BeginWindowContents(GUI_Window* window)
+Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_scroll)
 {
+    // Data
+    GUI_State *state = GUI_GetState();
     Rectangle window_workspace = GUI_WindowWorkspace(window->shape);
+    
+    // Vertical scroll    
+    GUI_Assert(enable_scroll == false || height > window_workspace.height);
+    window->content_height = height;
+    state->current_scroll = -window->scroll_offset;
+    
+    // Begin window stuff
     GUI_ResetLayout();
     BeginScissorModeRect(window_workspace);
+        // Vertical scroll    
+        rlPushMatrix();
+        rlTranslatef(0, -window->scroll_offset, 0);
+
     return window_workspace;
 }
 
 void GUI_EndWindowContents()
 {
+    // Data
+    GUI_State *state = GUI_GetState();
+
+    // Close window stuff
+        rlPopMatrix();
     EndScissorMode();
+
+    // Vertical scroll
+    // Reset
+    state->current_scroll = 0;
 }

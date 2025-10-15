@@ -9,6 +9,7 @@
 
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
+#define GUI_SCROLL_SPEED    4
 
 // > ENUMS
 //   STABILITY : █████████░  90%
@@ -46,18 +47,22 @@ typedef struct GUI_Window {
     GUI_ThemeColors colors;
     char            *title;
     Texture2D       *icon;
+    float           scroll_offset;
+    float           content_height;
     void (*contents) (struct GUI_Window*, void*);
 } GUI_Window;
 
 GUI_Window GUI_MakeEmptyWindow(void)
 {
     GUI_Window window = {
-        .id       = 0,
-        .shape    = (Rectangle){0, 0, 0, 0},
-        .colors   = {{0}},
-        .title    = NULL,
-        .icon     = NULL,
-        .contents = NULL
+        .id             = 0,
+        .shape          = (Rectangle){0, 0, 0, 0},
+        .colors         = {{0}},
+        .title          = NULL,
+        .icon           = NULL,
+        .scroll_offset  = 0.0f,
+        .content_height = 0.0f,
+        .contents       = NULL
     };
     return window;
 }
@@ -80,6 +85,7 @@ typedef struct {
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
+    float           current_scroll;
 
     int             textbox_cursors[GUI_MAX_TEXTBOXES];
 } GUI_State;
@@ -105,6 +111,7 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     state.force_z_index = 0;
     memset(state.z_index, 0, sizeof(state.z_index));
     memset(state.textbox_cursors, 0, sizeof(state.textbox_cursors));
+    state.current_scroll = 0;
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
