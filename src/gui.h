@@ -119,20 +119,20 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
     }
 }
 
-void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_Content content)
+void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type)
 {   
-    GUI_FontSetup *setup    = GUI_GetFontSetup(content);
+    GUI_FontSetup *setup    = GUI_GetFontSetup(font_type);
     GUI_State *state        = GUI_GetState();
-    Font font               = GUI_GetFont(content);
+    Font font               = GUI_GetFont(font_type);
 
     DrawTextEx(font, text, Vector2Add(position, Vector2Scale(setup->font_delta, state->scale)), font.baseSize * setup->font_scale * scale, setup->font_spacing, tint);
 }
 
-Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Content content)
+Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 {
-    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[content];
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
     GUI_State* state        = GUI_GetState();
-    Font font               = GUI_GetFont(content);
+    Font font               = GUI_GetFont(font_type);
     
     Vector2 result = {
         MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).x + setup->blink_delta.x * state->scale * setup->font_scale,
@@ -250,10 +250,10 @@ void GUI_DrawFace(Vector2 position, float height)
 //   NOTES     : Nothing here
 void GUI_DrawButton(
     const char *text, Rectangle shape, Texture2D *icon,
-    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content) 
+    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type) 
 {
     GUI_State *state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
     float border    = font_setup->border;
@@ -279,7 +279,7 @@ void GUI_DrawButton(
 
     GUI_DrawAdjustedTextEx(text, 
         (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
-        colors.tx_color_0, scale, content);
+        colors.tx_color_0, scale, font_type);
 
     if (icon_w > 0) {
         GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
@@ -288,7 +288,7 @@ void GUI_DrawButton(
 
 bool GUI_Button(
     const char* text, Rectangle shape, Texture2D* icon,
-    GUI_ThemeColors colors, EGUI_Content content)
+    GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_ElementStatus status = EGUI_Status_Default;
 
@@ -303,7 +303,7 @@ bool GUI_Button(
         }
     }
     
-    GUI_DrawButton(text, shape, icon, status, colors, content);
+    GUI_DrawButton(text, shape, icon, status, colors, font_type);
     
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
@@ -313,25 +313,25 @@ bool GUI_Button(
 //   NOTES     : Nothing here
 void GUI_DrawLabel(
     const char* text, Rectangle shape,
-    GUI_ThemeColors colors, EGUI_Content content)
+    GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State *state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
 
     float border    = font_setup->border;
     float scale     = state->scale;
 
     GUI_DrawAdjustedTextEx(text, 
         (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale}, 
-        colors.tx_color_0, scale, EGUI_Content_Default);
+        colors.tx_color_0, scale, font_type);
 }
 
-void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content, Rectangle workspace)
+void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_FontType font_type, Rectangle workspace)
 {
     if (GUI_CTX.temp.current_window_idx != 0) {
         shape = RelativeToRect(shape, workspace);
     }
-    GUI_DrawLabel(text, shape, colors, content);
+    GUI_DrawLabel(text, shape, colors, font_type);
 }
 
 // > TEXTBOX
@@ -339,10 +339,10 @@ void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_C
 //   NOTES     : Nothing here
 void GUI_DrawTextBox(
     char* value, int *cursor, Rectangle shape,
-    GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_Content content)
+    GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
-    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(content);
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
     float border        = font_setup->border;
@@ -365,15 +365,15 @@ void GUI_DrawTextBox(
 
     GUI_DrawAdjustedTextEx(value, 
         (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale}, 
-        colors.tx_color_0, scale, content);
+        colors.tx_color_0, scale, font_type);
 
     if (status == EGUI_Status_Focused && blink) {
-        Vector2 text_size = GUI_MeasureAdjustedText(value, content);
+        Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
         
         char tmp[256] = {0};
         strncpy(tmp, value, *cursor);
 
-        text_size = GUI_MeasureAdjustedText(tmp, content);
+        text_size = GUI_MeasureAdjustedText(tmp, font_type);
         DrawRectangle(
             shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x,
             shape.y + (border + font_setup->blink_delta.y) * scale, 
@@ -385,7 +385,7 @@ void GUI_DrawTextBox(
 
 void GUI_TextBox(
     int id, char *value, Rectangle shape, 
-    GUI_ThemeColors colors, EGUI_Content content)
+    GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     // Data
     GUI_State* state            = GUI_GetState();
@@ -420,7 +420,7 @@ void GUI_TextBox(
         int cursor_position = 0;
         for (int i = 0; i <= textLength; i++) {
             cursor_position = i; 
-            int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i), content).x;
+            int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i), font_type).x;
             if (mouse_x < w) break;
         }
         *cursor = cursor_position;
@@ -479,17 +479,19 @@ void GUI_TextBox(
                               collide ? EGUI_Status_Collide : 
                                         EGUI_Status_Default;
 
-    GUI_DrawTextBox(value, cursor, shape, status, colors, blink_state, content);
+    GUI_DrawTextBox(value, cursor, shape, status, colors, blink_state, font_type);
 }
 
 
 // > LABEL
 //   STABILITY : █████████░  90%
 //   NOTES     : Improve draw
-void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content)
+void GUI_DrawCheckBox(
+    bool value, char *on_txt, char *off_txt, Rectangle shape,
+    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
-    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(content);
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
     float border        = font_setup->border;
@@ -516,12 +518,12 @@ void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, 
 
     GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
         (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
-        tx, scale, EGUI_Content_GUI);
+        tx, scale, EGUI_FontType_GUI);
 }
 
 void GUI_CheckBox(
     int id, bool *value, char *on_txt, char *off_txt, Rectangle shape,
-    GUI_ThemeColors colors, EGUI_Content content)
+    GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     // Conditions
     bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
@@ -547,7 +549,7 @@ void GUI_CheckBox(
     GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
                                   collide ? EGUI_Status_Collide : 
                                             EGUI_Status_Default;
-    GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, colors, content);
+    GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, colors, font_type);
 }
 
 
@@ -701,10 +703,10 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 
-void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content content)
+void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
-    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(content);
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
 
     Rectangle        shape          = window->shape;
     Rectangle        shape_title    = GUI_WindowTitle(window->shape);
@@ -739,7 +741,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content 
     BeginScissorModeRect(AddRect(shape_title, 0, 0, -border * scale, -border * scale));
         GUI_DrawAdjustedTextEx(window->title,
             (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale }, 
-            colors.tx_color_0, scale, EGUI_Content_GUI);
+            colors.tx_color_0, scale, EGUI_FontType_GUI);
     EndScissorMode();
 
     Vector2 icon_position = { shape_title.x + border * scale, shape_title.y + border * scale };
@@ -755,7 +757,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content 
     Rectangle workspace = GUI_WindowWorkspace(shape);
     if (window->content_height > workspace.height) {
         float ratio =  workspace.height / window->content_height;
-        float bar_h = ratio *  workspace.height;
+        float bar_h = ratio * workspace.height;
         float bar_y = shape.y + shape_title.height + (window->scroll_offset / window->content_height) *  workspace.height;
 
         DrawRectangleRec((Rectangle){
@@ -769,7 +771,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content 
 
 void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 {
-    EGUI_Content content = EGUI_Content_GUI;
+    EGUI_FontType font_type = EGUI_FontType_GUI;
     GUI_State* state = GUI_GetState();
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
 
@@ -826,7 +828,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     GUI_ElementStatus status = window_focused   ? EGUI_Status_Focused :
                                collide_title    ? EGUI_Status_Collide :
                                                   EGUI_Status_Default;
-    GUI_DrawWindow(window, status, content);
+    GUI_DrawWindow(window, status, font_type);
 }
 
 GUI_Window* GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors colors, Texture2D *icon, void (*contents)(GUI_Window*, void*)) {

@@ -176,17 +176,17 @@ GUI_Icons* GUI_GetIcons()
     return &setup->icon_setup.icons;
 }
 
-GUI_FontSetup* GUI_GetFontSetup(EGUI_Content content)
+GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type)
 {
     // TODO@dc: Add validations
-    return &GUI_CTX.setup->font_setups[content];
+    return &GUI_CTX.setup->font_setups[font_type];
 }
 
-Font GUI_GetFont(EGUI_Content content)
+Font GUI_GetFont(EGUI_FontType font_type)
 {
     GUI_Setup *setup = GUI_GetSetup();
-    if (setup->font_setups[content].font_use_custom)
-        return setup->font_setups[content].font_custom;
+    if (setup->font_setups[font_type].font_use_custom)
+        return setup->font_setups[font_type].font_custom;
     else
         return GetFontDefault();
 }
@@ -215,11 +215,11 @@ GUI_Window* GUI_GetWindowByZindex(int z_index)
     return GUI_GetWindow(GUI_CTX.state->z_index[z_index]);
 }
 
-float GUI_CalcDefaultHeightScaled(EGUI_Content content)
+float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
 {
     GUI_Setup* setup = GUI_GetSetup();
     GUI_State* state = GUI_GetState();
-    return setup->font_setups[content].default_height * state->scale;
+    return setup->font_setups[font_type].default_height * state->scale;
 }
 
 // > WINDOW UTILS
@@ -228,7 +228,7 @@ float GUI_CalcDefaultHeightScaled(EGUI_Content content)
 Rectangle GUI_WindowTitle(Rectangle shape)
 {
     GUI_State* state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_Content_GUI);
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_FontType_GUI);
 
     float border            = font_setup->border;
     float scale             = state->scale;
@@ -237,7 +237,7 @@ Rectangle GUI_WindowTitle(Rectangle shape)
         shape.x + border * scale,
         shape.y + border * scale,
         shape.width - (border * scale * 2),
-        GUI_CalcDefaultHeightScaled(EGUI_Content_GUI)
+        GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI)
     };
     return shapeTitle;
 }
@@ -245,7 +245,7 @@ Rectangle GUI_WindowTitle(Rectangle shape)
 Rectangle GUI_WindowWorkspace(Rectangle shape)
 {
     GUI_State* state = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_Content_GUI);
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_FontType_GUI);
 
     float border    = font_setup->border;
     float scale     = state->scale;

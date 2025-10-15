@@ -53,10 +53,10 @@ GUI_IconSetup GUI_MakeIconSetupDefault()
 //   NOTES     : Edit and more themes.
 
 typedef enum {
-    EGUI_Content_Default,
-    EGUI_Content_GUI,
-    EGUI_Content_Count
-} EGUI_Content;
+    EGUI_FontType_Default,
+    EGUI_FontType_GUI,
+    EGUI_FontType_Count
+} EGUI_FontType;
 
 
 typedef struct {
@@ -184,9 +184,9 @@ typedef struct {
     float           blink_alpha;
 } GUI_FontSetup;
 
-GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
+GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) {
     switch (content) {
-    case EGUI_Content_GUI: {
+    case EGUI_FontType_GUI: {
         GUI_FontSetup result = {
             .default_height     = 36,
             .border             = 2.0f,
@@ -202,7 +202,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
         };
         return result;
     }
-    case EGUI_Content_Default:
+    case EGUI_FontType_Default:
     default: {
         GUI_FontSetup result = {
             .default_height     = 30,
@@ -244,7 +244,7 @@ typedef enum {
 } EGUI_Pointer;
 
 typedef struct {
-    GUI_FontSetup       font_setups[EGUI_Content_Count];
+    GUI_FontSetup       font_setups[EGUI_FontType_Count];
     GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
     GUI_Theme           theme;
     GUI_IconSetup       icon_setup;
@@ -300,8 +300,8 @@ GUI_Setup GUI_MakeSetupDefault()
 {
     GUI_Setup setup = {
         .font_setups = {
-            GUI_MakeFontSetupDefault(EGUI_Content_Default),
-            GUI_MakeFontSetupDefault(EGUI_Content_GUI)
+            GUI_MakeFontSetupDefault(EGUI_FontType_Default),
+            GUI_MakeFontSetupDefault(EGUI_FontType_GUI)
         },
         .pointer_setups = {
             GUI_MakePointerSetupForType(EGUI_Pointer_Default),
