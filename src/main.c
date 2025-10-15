@@ -256,7 +256,7 @@ void WIN_window(GUI_Window* window, void* data)
         GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
         // 1st textbox                
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors, font_type, window_workspace);
-        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors, font_type);
+        GUI_TextBox(2, win_state->textbox_contents, GUI_NextHorizontals(2), window_workspace, window->colors, font_type);
         
         // Switch
         GUI_BeginDuplicateBlock(&window_workspace);

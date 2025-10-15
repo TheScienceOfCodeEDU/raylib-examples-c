@@ -326,11 +326,17 @@ void GUI_DrawLabel(
         colors.tx_color_0, scale, font_type);
 }
 
+#define RELATIVE_TO_WINDOW(shape, workspace) \
+    do { \
+        if (GUI_CTX.temp.current_window_idx != 0) { \
+            shape = RelativeToRect(shape, workspace); \
+        } \
+    } while (0)
+
+
 void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_FontType font_type, Rectangle workspace)
 {
-    if (GUI_CTX.temp.current_window_idx != 0) {
-        shape = RelativeToRect(shape, workspace);
-    }
+    RELATIVE_TO_WINDOW(shape, workspace);
     GUI_DrawLabel(text, shape, colors, font_type);
 }
 
@@ -384,9 +390,11 @@ void GUI_DrawTextBox(
 }
 
 void GUI_TextBox(
-    int id, char *value, Rectangle shape, 
+    int id, char *value, Rectangle shape, Rectangle workspace,
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
+    RELATIVE_TO_WINDOW(shape, workspace);
+
     // Data
     GUI_State* state            = GUI_GetState();
     
@@ -772,7 +780,6 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
 void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 {
     EGUI_FontType font_type = EGUI_FontType_GUI;
-    GUI_State* state = GUI_GetState();
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
 
     // Conditions
@@ -780,7 +787,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     bool collide_title      = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
     bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool window_focusable   = GUI_CTX.temp.focus_state_current == GUI_Focus_Available && GUI_CTX.temp.window_focus_moving == 0;
-    bool window_focused     = state->z_index[0] == window->id;
+    bool window_focused     = GUI_CTX.state->z_index[0] == window->id;
 
     // Focus ?
     if (collide && interaction_starts && window_focusable) {
