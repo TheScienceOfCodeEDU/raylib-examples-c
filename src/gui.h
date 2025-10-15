@@ -1003,7 +1003,7 @@ void GUI_EndWindowContents()
 
     // Vertical scroll
     // Reset
-    GUI_CTX.temp.current_window_idx = 0;
+    GUI_CTX.temp.current_window_idx = GUI_NO_WIN;
     GUI_CTX.temp.current_scroll     = 0;
     GUI_CTX.temp.current_workspace  = (Rectangle){ 0, 0, 0, 0 };
     GUI_CTX.temp.current_font_type  = EGUI_FontType_Default;

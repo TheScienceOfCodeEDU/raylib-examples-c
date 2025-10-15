@@ -5,6 +5,7 @@
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
 #define GUI_SCROLL_SPEED    4
+#define GUI_NO_WIN          -1
 
 // > ENUMS
 //   STABILITY : █████████░  90%
@@ -131,7 +132,7 @@ GUI_Temp GUI_MakeTempDefault()
         .mouse_last             = (Vector2){ 0.0f, 0.0f },
         .mouse_current          = (Vector2){ 0.0f, 0.0f },
 
-        .current_window_idx     = 0,
+        .current_window_idx     = GUI_NO_WIN,
         .current_scroll         = 0,
         .current_workspace      = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .current_font_type      = EGUI_FontType_Default,
@@ -205,6 +206,10 @@ GUI_PointerSetup* GUI_GetPointerSetup()
 
 GUI_Window* GUI_GetWindow(int id)
 {
+    if (id == GUI_NO_WIN) {
+        return NULL;
+    }
+
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
         GUI_Window* window = &GUI_CTX.state->window_s[i];
         if (window->id == id) {
@@ -271,7 +276,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape)
 
 #define RELATIVE_TO_WINDOW(shape) \
     do { \
-        if (GUI_CTX.temp.current_window_idx != 0) { \
+        if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { \
             shape = RelativeToRect(shape, GUI_CTX.temp.current_workspace); \
         } \
     } while (0)

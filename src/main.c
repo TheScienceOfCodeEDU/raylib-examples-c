@@ -154,8 +154,8 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
     float button_h = target.height;
 
     GUI_BeginFontType(EGUI_FontType_GUI);
-        actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red);
-        actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray);
+        actions->reset_characters    = GUI_Button("Reset",  (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red);
+        actions->add_character       = GUI_Button("Add",    (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray);
         actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray);
     GUI_EndFontType();
 }
