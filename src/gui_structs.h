@@ -69,20 +69,10 @@ GUI_Window GUI_MakeEmptyWindow(void)
 typedef struct {
     RenderTexture2D buffer;
     float           scale;
-    // TODO@dc: move temp values to context
-    bool            window_focus_moving;
-    int             control_focus_id;
-    GUI_Focus       focus_state_current;
-
-    // TODO@dc: move temp values to context
-    EGUI_Pointer    current_pointer;
-    Vector2         mouse_last;
-    Vector2         mouse_current;
 
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
-
     int             textbox_cursors[GUI_MAX_TEXTBOXES];
 } GUI_State;
 
@@ -90,14 +80,7 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
     GUI_State state = {
         .buffer                 = LoadRenderTexture(screen_max.x, screen_max.y),
-        .scale                  = 1.0f,
-        .window_focus_moving    = false,
-        .control_focus_id       = 0,
-        .focus_state_current    = GUI_Focus_Available,
-
-        .current_pointer        = EGUI_Pointer_Default,
-        .mouse_last             = (Vector2){ 0.0f, 0.0f },
-        .mouse_current          = (Vector2){ 0.0f, 0.0f }
+        .scale                  = 1.0f
     };
 
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
@@ -111,33 +94,66 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     return state;
 }
 
+typedef struct {
+    // Window runtime
+    bool            window_focus_moving;
+    int             control_focus_id;
+    GUI_Focus       focus_state_current;
+
+    // Pointer runtime
+    EGUI_Pointer    current_pointer;
+    Vector2         mouse_last;
+    Vector2         mouse_current;
+
+    // Active window
+    int             current_window_idx;
+    float           current_scroll;
+
+    // Layout temporary data
+    int             vertical_count;
+    float           vertical_size;
+    int             horizontal_count;
+    float           horizontal_size;
+} GUI_Temp;
+
+GUI_Temp GUI_MakeTempDefault()
+{
+    GUI_Temp temp = {
+        .window_focus_moving    = false,
+        .control_focus_id       = 0,
+        .focus_state_current    = GUI_Focus_Available,
+
+        .current_pointer        = EGUI_Pointer_Default,
+        .mouse_last             = (Vector2){ 0.0f, 0.0f },
+        .mouse_current          = (Vector2){ 0.0f, 0.0f },
+
+        .current_window_idx     = 0,
+        .current_scroll         = 0,
+
+        .vertical_count         = 0,
+        .vertical_size          = 0.0f,
+        .horizontal_count       = 0,
+        .horizontal_size        = 0.0f
+    };
+    return temp;
+}
+
+
 // > STATE > CONTEXT
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 
 static struct {
-    GUI_State* state;
-    GUI_Setup* setup;
-
-    // TEMP DATA (Overwritten by frame)
-    // Window
-    int     current_window_idx;
-    float   current_scroll;
-
-    // LAYOUT TEMP DATA
-    // Vertical
-    int     vertical_count;
-    float   vertical_size;
-
-    // Horizontal
-    int     horizontal_count;
-    float   horizontal_size;
+    GUI_State*  state;
+    GUI_Setup*  setup;
+    GUI_Temp    temp;
 } GUI_CTX = { 0 };
 
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup)
 {
     GUI_CTX.setup = setup;
     GUI_CTX.state = state;
+    GUI_CTX.temp  = GUI_MakeTempDefault();
 }
 
 GUI_State* GUI_GetState()
@@ -174,9 +190,8 @@ Font GUI_GetFont(EGUI_Content content)
 GUI_PointerSetup* GUI_GetPointerSetup()
 {
     GUI_Setup* setup = GUI_GetSetup();
-    GUI_State* state = GUI_GetState();
-
-    EGUI_Pointer pointer = state->current_pointer;
+    
+    EGUI_Pointer pointer = GUI_CTX.temp.current_pointer;
     return &setup->pointer_setups[pointer];
 }
 

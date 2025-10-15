@@ -421,25 +421,11 @@ int main(void) {
 
         // UI
         static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
-        state.focus_state_current   = GUI_Focus_Available;
-        state.current_pointer       = pointer_style;
-
         if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
             pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
         }
-        
-        Rectangle mouse_limits = (Rectangle) {
-            0,
-            0,
-            GetScreenWidth(),
-            GetScreenHeight()
-        };
-        state.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
 
-
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            state.control_focus_id = 0;
-        }
+        GUI_BeginDraw(pointer_style);
 
         float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_Content_GUI);
         GUI_FontSetup *font_setup = GUI_GetFontSetup(EGUI_Content_GUI);
@@ -527,7 +513,7 @@ int main(void) {
             GUI_DrawPointer();
         EndTextureMode();
 
-        state.mouse_last = state.mouse_current;
+        GUI_EndDraw();
         
         // Keyboard
         player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
