@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "raylib.h"
+#include "rlgl.h"
 #include "raymath.h"
 #include "env.h"
 #include "str.h"
@@ -251,7 +252,7 @@ void WIN_window(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(content);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window);
+    GUI_BeginWindowContents(window, default_height * 2, true);
         GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
         // 1st textbox                
         GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
@@ -272,7 +273,7 @@ void WIN_layouts(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(content);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window);
+    GUI_BeginWindowContents(window, 0, false);
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
@@ -318,7 +319,7 @@ void WIN_winman(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(content);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window);
+    GUI_BeginWindowContents(window, 0, false);
         GUI_BeginBlock(window_workspace.width, default_height, &window_workspace);
 
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
@@ -333,6 +334,7 @@ void WIN_winman(GUI_Window* window, void* data)
         Rectangle t_shape = GUI_WindowTitle(active->shape);
         Rectangle w_shape = active->shape;
 
+        GUI_Label(TextFormat("scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->scroll_offset, active->content_height), RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
         GUI_Label("title_shape", RelativeToRect(GUI_NextVertical(), window_workspace), window->colors, EGUI_Content_Default);
 
         GUI_Label(TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y), 
@@ -460,12 +462,7 @@ int main(void) {
             {
                 static GUI_Window* win_window = NULL;
                 if (win_window == NULL && !first_render)
-                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_window);
-                
-                if (win_window != NULL) {
-                    const int ELEMENTS = 4;                
-                    win_window->shape.height =(font_setup->default_height + 2 * state.scale) * (ELEMENTS + 1);
-                }
+                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 80 }, setup.theme.gray, NULL, WIN_window);
             }
             {
                 static GUI_Window* win_layouts = NULL;
