@@ -17,6 +17,8 @@ typedef enum {
     EGUI_Status_Focused
 } GUI_ElementStatus;
 
+/*
+EXAMPLE: Enum order matters
 typedef enum {
     GUI_Focus_Available,
     GUI_Focus_CanOverride,
@@ -29,6 +31,7 @@ bool FocusOverridable(GUI_Focus focus)
 {
     return focus <= GUI_Focus_CanOverride;
 }
+*/
 
 
 // > WINDOW STRUCTS
@@ -100,7 +103,6 @@ typedef struct {
     bool            window_focus_moving;
     int             control_focus_id;
     int             window_coll_id;
-    GUI_Focus       focus_state_current;
 
     // Pointer runtime
     EGUI_Pointer    current_pointer;
@@ -126,7 +128,6 @@ GUI_Temp GUI_MakeTempDefault()
         .window_focus_moving    = false,
         .control_focus_id       = 0,
         .window_coll_id         = 0,
-        .focus_state_current    = GUI_Focus_Available,
 
         .current_pointer        = EGUI_Pointer_Default,
         .mouse_last             = (Vector2){ 0.0f, 0.0f },

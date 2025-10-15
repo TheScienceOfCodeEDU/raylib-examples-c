@@ -144,7 +144,6 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 
 void GUI_BeginDraw(EGUI_Pointer pointer_style)
 {
-    GUI_CTX.temp.focus_state_current    = GUI_Focus_Available;
     GUI_CTX.temp.current_pointer        = pointer_style;
 
     Rectangle mouse_limits = (Rectangle) {
@@ -391,20 +390,18 @@ void GUI_TextBox(
     RELATIVE_TO_WINDOW(shape);
     FONT_TYPE_FROM_CONTEXT();    
 
-    // Data
-    GUI_State* state            = GUI_GetState();    
-    
-    // Blink
+     // Blink
     const float blink_speed     = 0.5f;
     static float blink_timer    = 0.0f;
     static bool blink_state     = 0;
 
     // Cursor per Id
-    int *cursor = &state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
+    int *cursor = &GUI_CTX.state
+    ->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
     // Conditions
     bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
-    bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT)  || IsKeyEnterPressed();
 
     if (collide) {
         GUI_CTX.temp.current_pointer = EGUI_Pointer_Text;
@@ -412,9 +409,8 @@ void GUI_TextBox(
 
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && FocusOverridable(GUI_CTX.temp.focus_state_current)) {        
+    if (receives_focus) {        
         GUI_CTX.temp.control_focus_id      = id;
-        GUI_CTX.temp.focus_state_current   = GUI_Focus_Granted;
         blink_state                         = 1;
         blink_timer                         = 0;
 
@@ -487,7 +483,7 @@ void GUI_TextBox(
 }
 
 
-// > LABEL
+// > CHECKBOX
 //   STABILITY : █████████░  90%
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
@@ -538,9 +534,8 @@ void GUI_CheckBox(
 
     // Focus
     bool receives_focus = collide && interacting;
-    if (receives_focus && FocusOverridable(GUI_Focus_CanOverride)) {
+    if (receives_focus) {
         GUI_CTX.temp.control_focus_id       = id;
-        GUI_CTX.temp.focus_state_current    = GUI_Focus_Granted;
     }
     
     // Update focused control
@@ -791,13 +786,12 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     bool collide            = GUI_CheckCollisionPointerWindow(window->id, window->shape);
     bool collide_title      = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
     bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool window_focusable   = GUI_CTX.temp.focus_state_current == GUI_Focus_Available && GUI_CTX.temp.window_focus_moving == 0;
+    bool window_focusable   = GUI_CTX.temp.window_focus_moving == 0;
     bool window_focused     = GUI_CTX.state->z_index[0] == window->id;
 
     // Focus ?
     if (collide && interaction_starts && window_focusable) {
-        if (window_focused) {
-            GUI_CTX.temp.focus_state_current  = GUI_Focus_CanOverride;
+        if (window_focused) {            
             GUI_CTX.temp.window_focus_moving  = collide_title;
         }
     }
