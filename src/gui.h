@@ -42,7 +42,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape)
     GUI_State* state = GUI_GetState();
 
     // Vertical scroll
-    Vector2 current_scroll = (Vector2) { 0, state->current_scroll };
+    Vector2 current_scroll = (Vector2) { 0, GUI_CTX.current_scroll };
     return CheckCollisionPointRec(state->mouse_current, MoveRect(shape, current_scroll));
 }
 
@@ -804,17 +804,6 @@ GUI_Window* GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors
     return 0;
 }
 
-GUI_Window* GUI_GetWindow(int id, GUI_State* state)
-{
-    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-        GUI_Window* window = &state->window_s[i];
-        if (window->id == id) {
-            return window;
-        }
-    }
-    return NULL;
-}
-
 void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 {
     GUI_State* state = GUI_GetState();
@@ -922,8 +911,9 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_
     
     // Vertical scroll    
     GUI_Assert(enable_scroll == false || height > window_workspace.height);
-    window->content_height = height;
-    state->current_scroll = -window->scroll_offset;
+    window->content_height      = height;
+    GUI_CTX.current_window_idx  = window->id;
+    GUI_CTX.current_scroll      = -window->scroll_offset;
     
     // Begin window stuff
     GUI_ResetLayout();
@@ -937,14 +927,12 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_
 
 void GUI_EndWindowContents()
 {
-    // Data
-    GUI_State *state = GUI_GetState();
-
     // Close window stuff
         rlPopMatrix();
     EndScissorMode();
 
     // Vertical scroll
     // Reset
-    state->current_scroll = 0;
+    GUI_CTX.current_window_idx = 0;
+    GUI_CTX.current_scroll = 0;
 }

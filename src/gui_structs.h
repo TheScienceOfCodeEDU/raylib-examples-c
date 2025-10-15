@@ -74,10 +74,12 @@ GUI_Window GUI_MakeEmptyWindow(void)
 typedef struct {
     RenderTexture2D buffer;
     float           scale;
+    // TODO@dc: move temp values to context
     bool            window_focus_moving;
     int             control_focus_id;
     GUI_Focus       focus_state_current;
 
+    // TODO@dc: move temp values to context
     EGUI_Pointer    current_pointer;
     Vector2         mouse_last;
     Vector2         mouse_current;
@@ -85,7 +87,6 @@ typedef struct {
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
-    float           current_scroll;
 
     int             textbox_cursors[GUI_MAX_TEXTBOXES];
 } GUI_State;
@@ -111,7 +112,6 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     state.force_z_index = 0;
     memset(state.z_index, 0, sizeof(state.z_index));
     memset(state.textbox_cursors, 0, sizeof(state.textbox_cursors));
-    state.current_scroll = 0;
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
@@ -124,14 +124,19 @@ static struct {
     GUI_State* state;
     GUI_Setup* setup;
 
-    // LAYOUT DATA
+    // TEMP DATA (Overwritten by frame)
+    // Window
+    int     current_window_idx;
+    float   current_scroll;
+
+    // LAYOUT TEMP DATA
     // Vertical
-    int    vertical_count;
-    float  vertical_size;
+    int     vertical_count;
+    float   vertical_size;
 
     // Horizontal
-    int    horizontal_count;
-    float  horizontal_size;
+    int     horizontal_count;
+    float   horizontal_size;
 } GUI_CTX = { 0 };
 
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup)
@@ -178,6 +183,23 @@ GUI_PointerSetup* GUI_GetPointerSetup()
 
     EGUI_Pointer pointer = state->current_pointer;
     return &setup->pointer_setups[pointer];
+}
+
+GUI_Window* GUI_GetWindow(int id, GUI_State* state)
+{
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &state->window_s[i];
+        if (window->id == id) {
+            return window;
+        }
+    }
+    return NULL;
+}
+
+GUI_Window* GUI_GetWindowByZindex(int z_index)
+{
+    GUI_State *state = GUI_GetState();
+    return GUI_GetWindow(state->z_index[z_index], state);
 }
 
 float GUI_CalcDefaultHeightScaled(EGUI_Content content)
