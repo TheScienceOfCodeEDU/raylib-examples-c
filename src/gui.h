@@ -254,13 +254,16 @@ void GUI_DrawButton(
 {
     GUI_State *state            = GUI_GetState();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
+    GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
     float border    = font_setup->border;
     float scale     = state->scale;
+    float color_change  = theme->color_change;
+    float bg_alpha      = theme->bg_alpha;
 
     Color bg_color =    status == EGUI_Status_Focused  ? colors.bg_color_3 :
                         status == EGUI_Status_Focused  ? colors.bg_color_3 :
-                        status == EGUI_Status_Collide  ? ColorBrightness(colors.bg_color_2, COLOR_CHANGE) :
+                        status == EGUI_Status_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
                                                          colors.bg_color_2;
 
     Color b_color_a =   status == EGUI_Status_Focused  ? colors.bg_color_3 :
@@ -269,7 +272,7 @@ void GUI_DrawButton(
     Color b_color_b =   status == EGUI_Status_Focused  ? colors.bg_color_2 :
                                                          colors.bg_color_3;
 
-    DrawRectangleRec(shape, bg_color);
+    DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
     GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
 
     float icon_w = icon == NULL ? 0 : GUI_GetIconWidth();
@@ -335,22 +338,25 @@ void GUI_DrawTextBox(
     char* value, int *cursor, Rectangle shape,
     GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_Content content)
 {
-    GUI_State *state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
+    GUI_State       *state          = GUI_GetState();
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(content);
+    GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
-    float border    = font_setup->border;
-    float scale     = state->scale;
+    float border        = font_setup->border;
+    float scale         = state->scale;
+    float color_change  = theme->color_change;
+    float bg_alpha      = theme->bg_alpha;
 
     if (status == EGUI_Status_Default) 
-        DrawRectangleRec(shape, colors.bg_color_2);
+        DrawRectangleRec(shape, ColorAlpha(colors.bg_color_2, bg_alpha));
     else if (status == EGUI_Status_Collide) 
-        DrawRectangleRec(shape, ColorBrightness(colors.bg_color_3, COLOR_CHANGE));
+        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_3, color_change), bg_alpha));
     else if (status == EGUI_Status_Focused) 
-        DrawRectangleRec(shape, ColorBrightness(colors.bg_color_2, -COLOR_CHANGE));
+        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_2, -color_change), bg_alpha));
     
 
     if (status == EGUI_Status_Focused) 
-        GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -COLOR_CHANGE), ColorBrightness(colors.bg_color_0, COLOR_CHANGE), border * scale, false);
+        GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
     else
         GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
 
@@ -370,8 +376,8 @@ void GUI_DrawTextBox(
             shape.y + (border + font_setup->blink_delta.y) * scale, 
             font_setup->blink_size.x * scale,
             font_setup->blink_size.y * scale, 
-            ColorAlpha(colors.tx_color_0, 0.95));
-    }    
+            ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
+    }
 }
 
 void GUI_TextBox(
@@ -479,26 +485,29 @@ void GUI_TextBox(
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content)
 {
-    GUI_State *state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
+    GUI_State       *state          = GUI_GetState();
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(content);
+    GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
-    float border    = font_setup->border;
-    float scale     = state->scale;
+    float border        = font_setup->border;
+    float scale         = state->scale;
+    float color_change  = theme->color_change;
+    float bg_alpha      = theme->bg_alpha;
 
     Color tx = value ? colors.tx_color_0 : colors.bg_color_0;
     Color bg = value ? colors.bg_color_3 : colors.bg_color_2;
     Color b1 = value ? colors.bg_color_2 : colors.bg_color_0;
     Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
     if (status == EGUI_Status_Default) 
-        DrawRectangleRec(shape, bg);
+        DrawRectangleRec(shape, ColorAlpha(bg, bg_alpha));
     else if (status == EGUI_Status_Collide) 
-        DrawRectangleRec(shape, ColorBrightness(bg, COLOR_CHANGE));
+        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, color_change), bg_alpha));
     else if (status == EGUI_Status_Focused) 
-        DrawRectangleRec(shape, ColorBrightness(bg, -COLOR_CHANGE));
+        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, -color_change), bg_alpha));
     
 
     if (status == EGUI_Status_Focused) 
-        GUI_DrawBorders(shape, ColorBrightness(b1, -COLOR_CHANGE), ColorBrightness(b2, COLOR_CHANGE), border * scale, false);
+        GUI_DrawBorders(shape, ColorBrightness(b1, -color_change), ColorBrightness(b2, color_change), border * scale, false);
     else
         GUI_DrawBorders(shape, b1, b2, border * scale, false);
 
@@ -691,30 +700,34 @@ void GUI_BeginDuplicateBlock(Rectangle* workspace)
 
 void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content content)
 {
-    GUI_State *state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
+    GUI_State       *state          = GUI_GetState();
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(content);
 
-    Rectangle shape             = window->shape;
-    Rectangle shape_title       = GUI_WindowTitle(window->shape);
-    GUI_ThemeColors colors      = window->colors;
-    float border                = font_setup->border;
-    float scale                 = state->scale;
+    Rectangle        shape          = window->shape;
+    Rectangle        shape_title    = GUI_WindowTitle(window->shape);
+    GUI_ThemeColors  colors         = window->colors;
+    GUI_Theme        *theme         = &GUI_CTX.setup->theme;
+
+    float border        = font_setup->border;
+    float scale         = state->scale;
+    float color_change  = theme->color_change;
+    float bg_alpha      = theme->bg_alpha;
 
     // Background
-    DrawRectangleRec((Rectangle){shape.x + border * scale, shape.y + border * scale, shape.width - border * scale, shape.height - 2 * border * scale}, colors.bg_color_1);
+    DrawRectangleRec((Rectangle){shape.x + border * scale, shape.y + border * scale, shape.width - border * scale, shape.height - 2 * border * scale}, ColorAlpha(colors.bg_color_1, bg_alpha));
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, border * scale, true);
 
     if (status == EGUI_Status_Default) {
-        DrawRectangleRec(shape_title, colors.bg_color_2);
+        DrawRectangleRec(shape_title, ColorAlpha(colors.bg_color_2, bg_alpha));
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
     } if (status == EGUI_Status_Focused) {
-        DrawRectangleRec(shape_title, ColorBrightness(colors.bg_color_3, -COLOR_CHANGE));
+        DrawRectangleRec(shape_title, ColorAlpha(ColorBrightness(colors.bg_color_3, -color_change), bg_alpha));
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
-        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-COLOR_CHANGE), border * scale, true);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-color_change), border * scale, true);
     } if (status == EGUI_Status_Collide) {
-        DrawRectangleRec(shape_title, ColorBrightness(colors.bg_color_3, COLOR_CHANGE));
+        DrawRectangleRec(shape_title, ColorAlpha(ColorBrightness(colors.bg_color_3, color_change), bg_alpha));
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
-        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, COLOR_CHANGE), border * scale, true);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, color_change), border * scale, true);
     }
 
     bool reserve_icon_space = window->icon != NULL || status == EGUI_Status_Focused;

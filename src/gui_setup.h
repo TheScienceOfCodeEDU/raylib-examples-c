@@ -52,8 +52,6 @@ GUI_IconSetup GUI_MakeIconSetupDefault()
 //   STABILITY : ███░░░░░░░  30%
 //   NOTES     : Edit and more themes.
 
-#define COLOR_CHANGE        0.05
-
 typedef enum {
     EGUI_Content_Default,
     EGUI_Content_GUI,
@@ -131,9 +129,11 @@ GUI_ThemeColors GUI_MakeThemeColors(float hue)
 }
 
 typedef struct {
-    GUI_ThemeColors gray;
-    GUI_ThemeColors red;
-    GUI_ThemeColors green;
+    GUI_ThemeColors     gray;
+    GUI_ThemeColors     red;
+    GUI_ThemeColors     green;
+    float               bg_alpha;
+    float               color_change;
 } GUI_Theme;
 
 
@@ -155,9 +155,11 @@ GUI_Theme GUI_MakeThemeDefault()
 
     GUI_Theme theme = {
         // Theme colors
-        .gray   = GUI_MakeThemeColors(180.0f),
-        .red    = GUI_MakeThemeColors(3.0f),
-        .green  = GUI_MakeThemeColors(97.0f)
+        .gray           = GUI_MakeThemeColors(180.0f),
+        .red            = GUI_MakeThemeColors(3.0f),
+        .green          = GUI_MakeThemeColors(97.0f),
+        .bg_alpha       = 0.85,
+        .color_change   = 0.05
     };
 
     return theme;
@@ -179,6 +181,7 @@ typedef struct {
     float           font_spacing;           
     Vector2         blink_size;             // Size of the blinking cursor
     Vector2         blink_delta;            // Blink adjustment
+    float           blink_alpha;
 } GUI_FontSetup;
 
 GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
@@ -195,6 +198,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
             .font_spacing       = 1.0f,
             .blink_size         = (Vector2){ 1.0f, 30.0f },
             .blink_delta        = (Vector2){ 0.0f, 0.0f },
+            .blink_alpha        = 0.95f
         };
         return result;
     }
@@ -211,6 +215,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_Content content) {
             .font_spacing       = 1.0f,
             .blink_size         = (Vector2){ 1.0f, 24.0f },
             .blink_delta        = (Vector2){ -0.0f, 0.0f },
+            .blink_alpha        = 0.95f
         };
         SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
         return result;
