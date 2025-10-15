@@ -250,7 +250,9 @@ void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_C
 // > TEXTBOX
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
-void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_Content content)
+void GUI_DrawTextBox(
+    char* value, int *cursor, Rectangle shape,
+    GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_Content content)
 {
     GUI_State *state            = GUI_GetState();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
@@ -259,7 +261,7 @@ void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStat
     float scale     = state->scale;
 
     if (status == EGUI_Status_Default) 
-        DrawRectangleRec(shape, colors.bg_color_3);
+        DrawRectangleRec(shape, colors.bg_color_2);
     else if (status == EGUI_Status_Collide) 
         DrawRectangleRec(shape, ColorBrightness(colors.bg_color_3, COLOR_CHANGE));
     else if (status == EGUI_Status_Focused) 
@@ -291,7 +293,9 @@ void GUI_DrawTextBox(char* value, int *cursor, Rectangle shape,  GUI_ElementStat
     }    
 }
 
-void GUI_TextBox(int id, char* value, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content)
+void GUI_TextBox(
+    int id, char* value, Rectangle shape, 
+    GUI_ThemeColors colors, EGUI_Content content)
 {
     // Data
     GUI_State* state            = GUI_GetState();
@@ -657,7 +661,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_Content 
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, border * scale, true);
 
     if (status == EGUI_Status_Default) {
-        DrawRectangleRec(shape_title, colors.bg_color_3);
+        DrawRectangleRec(shape_title, colors.bg_color_2);
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
     } if (status == EGUI_Status_Focused) {
         DrawRectangleRec(shape_title, ColorBrightness(colors.bg_color_3, -COLOR_CHANGE));
