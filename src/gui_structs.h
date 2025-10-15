@@ -98,6 +98,7 @@ typedef struct {
     // Window runtime
     bool            window_focus_moving;
     int             control_focus_id;
+    int             window_coll_id;
     GUI_Focus       focus_state_current;
 
     // Pointer runtime
@@ -121,6 +122,7 @@ GUI_Temp GUI_MakeTempDefault()
     GUI_Temp temp = {
         .window_focus_moving    = false,
         .control_focus_id       = 0,
+        .window_coll_id         = 0,
         .focus_state_current    = GUI_Focus_Available,
 
         .current_pointer        = EGUI_Pointer_Default,

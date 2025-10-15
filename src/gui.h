@@ -30,13 +30,46 @@ void GUI_DrawPointer()
     DrawTextureEx(pointer_texture, mouse_shape, 0, pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
 }
 
+bool GUI_CheckCollisionPointerWindow(int window_id, Rectangle shape)
+{
+    // This is not the window!
+    if (GUI_CTX.temp.window_coll_id != 0 &&  GUI_CTX.temp.window_coll_id != window_id) {
+        return false;
+    }
+
+    return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape);
+}
+
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
-    // Vertical scroll
-    Vector2 current_scroll  = (Vector2) { 0, GUI_CTX.temp.current_scroll };
-    bool collide_scolled    = CheckCollisionPointRec(GUI_CTX.temp.mouse_current, MoveRect(shape, current_scroll));
-    bool collide_window     = window == NULL ? true : CheckCollisionPointRec(GUI_CTX.temp.mouse_current, window->shape);
-    return collide_scolled && collide_window;
+    GUI_State *state            = GUI_GetState();
+    int focused_window_id       = state->z_index[0];
+    Vector2 mouse               = GUI_CTX.temp.mouse_current;
+    
+    // Simple collision (outside a window)
+    if (window == NULL || focused_window_id == 0) {
+        return CheckCollisionPointRec(mouse, shape);
+    }
+
+    // This is not the window!
+    if (GUI_CTX.temp.window_coll_id != 0 &&  GUI_CTX.temp.window_coll_id != window->id) {
+        return false;
+    }
+
+    // Inside a window
+    // Focused window data
+    GUI_Window *focused_window  = GUI_GetWindow(focused_window_id, state);
+    bool collide_focused        = CheckCollisionPointRec(mouse, focused_window->shape);
+
+    // Vertical scroll data
+    Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp.current_scroll };
+    bool collide_scolled        = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
+    
+    // Collide checks    
+    bool collide                = collide_scolled;
+    bool result                 = collide && (focused_window_id == window->id || !collide_focused);
+
+    return result;
 }
 
 
@@ -94,8 +127,8 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Content content)
 
 void GUI_BeginDraw(EGUI_Pointer pointer_style)
 {
-    GUI_CTX.temp.focus_state_current   = GUI_Focus_Available;
-    GUI_CTX.temp.current_pointer       = pointer_style;
+    GUI_CTX.temp.focus_state_current    = GUI_Focus_Available;
+    GUI_CTX.temp.current_pointer        = pointer_style;
 
     Rectangle mouse_limits = (Rectangle) {
         0,
@@ -746,8 +779,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
 
     // Conditions
-    bool collide            = CheckCollisionPointRec(GUI_CTX.temp.mouse_current, window->shape);
-    bool collide_title      = CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape_title);
+    bool collide            = GUI_CheckCollisionPointerWindow(window->id, window->shape);
+    bool collide_title      = GUI_CheckCollisionPointerWindow(window->id, shape_title);
     bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool window_focusable   = GUI_CTX.temp.focus_state_current == GUI_Focus_Available && GUI_CTX.temp.window_focus_moving == 0;
     bool window_focused     = state->z_index[0] == window->id;
@@ -759,7 +792,6 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
             GUI_CTX.temp.window_focus_moving  = collide_title;
         }
     }
-    
 
     // Active
     if (window_focused){
@@ -901,6 +933,18 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
             
             // Add this one
             state->z_index[0] = interacted_id;
+        }
+    }
+
+    // Check collisions
+    GUI_CTX.temp.window_coll_id = 0;
+    for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
+        int id = state->z_index[j];
+        if (id == 0) continue;
+
+        GUI_Window *window = GUI_GetWindow(id, state);
+        if (GUI_CheckCollisionPointerWindow(window->id, window->shape)) {
+            GUI_CTX.temp.window_coll_id = window->id;
         }
     }
 
