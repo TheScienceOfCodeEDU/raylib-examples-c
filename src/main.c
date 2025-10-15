@@ -153,9 +153,9 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
     float button_w = target.width / buttons;
     float button_h = target.height;
 
-    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red, EGUI_Content_GUI);
-    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray, EGUI_Content_GUI);
-    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray, EGUI_Content_GUI);
+    actions->reset_characters    = GUI_Button("Reset", (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red, EGUI_Content_GUI, NULL);
+    actions->add_character       = GUI_Button("Add", (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray, EGUI_Content_GUI, NULL);
+    actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray, EGUI_Content_GUI, NULL);
 }
 
 
@@ -256,12 +256,12 @@ void WIN_window(GUI_Window* window, void* data)
         GUI_BeginBlock(window_workspace.width / 3, default_height, &window_workspace);
         // 1st textbox                
         GUI_Label("Hello", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
-        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors, content);
+        GUI_TextBox(2, win_state->textbox_contents, RelativeToRect(GUI_NextHorizontals(2), window_workspace), window->colors, content, window);
         
         // Switch
         GUI_BeginDuplicateBlock(&window_workspace);
         GUI_Label("Switch", RelativeToRect(GUI_NextHorizontal(), window_workspace), window->colors, EGUI_Content_GUI);
-        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red, content);
+        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", RelativeToRect(GUI_NextHorizontals(2), window_workspace), setup->theme.red, content, window);
     GUI_EndWindowContents();
 }
 
@@ -325,7 +325,7 @@ void WIN_winman(GUI_Window* window, void* data)
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, content)) {
+            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), RelativeToRect(GUI_NextVertical(), window_workspace), NULL, window->colors, content, window)) {
                 state->force_z_index = win->id;
             }
         }

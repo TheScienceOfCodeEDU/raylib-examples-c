@@ -1,11 +1,4 @@
 #ifndef UNITY_BUILD
- #include <string.h>
- #include <stdio.h>
- #include "rayext.h"
- #include "rlgl.h"
- #include "str.h"
- #include "env.h"
- #include "gui_setup.h"
  #include "gui_structs.h"
 #endif
 
@@ -37,13 +30,15 @@ void GUI_DrawPointer()
     DrawTextureEx(pointer_texture, mouse_shape, 0, state->scale * pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
 }
 
-bool GUI_CheckCollisionPointerControl(Rectangle shape)
+bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
     GUI_State* state = GUI_GetState();
 
     // Vertical scroll
-    Vector2 current_scroll = (Vector2) { 0, GUI_CTX.current_scroll };
-    return CheckCollisionPointRec(state->mouse_current, MoveRect(shape, current_scroll));
+    Vector2 current_scroll  = (Vector2) { 0, GUI_CTX.current_scroll };
+    bool collide_scolled    = CheckCollisionPointRec(state->mouse_current, MoveRect(shape, current_scroll));
+    bool collide_window     = window == NULL ? true : CheckCollisionPointRec(state->mouse_current, window->shape);
+    return collide_scolled && collide_window;
 }
 
 
@@ -182,7 +177,9 @@ void GUI_DrawFace(Vector2 position, float height)
 // > BUTTON
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
-void GUI_DrawButton(const char *text, Rectangle shape,  GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content, Texture2D *icon) 
+void GUI_DrawButton(
+    const char *text, Rectangle shape, Texture2D *icon,
+    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_Content content) 
 {
     GUI_State *state            = GUI_GetState();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
@@ -215,14 +212,14 @@ void GUI_DrawButton(const char *text, Rectangle shape,  GUI_ElementStatus status
     }
 }
 
-
-
-bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeColors colors, EGUI_Content content)
+bool GUI_Button(
+    const char* text, Rectangle shape, Texture2D* icon,
+    GUI_ThemeColors colors, EGUI_Content content, GUI_Window *window)
 {
     GUI_State* state = GUI_GetState();
     GUI_ElementStatus status = EGUI_Status_Default;
 
-    bool collide            = GUI_CheckCollisionPointerControl(shape);
+    bool collide            = GUI_CheckCollisionPointerControl(shape, window);
     bool moving_window      = state->window_focus_moving == 0;
     bool focusable          = collide && moving_window;
     if (focusable) {
@@ -233,7 +230,7 @@ bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeCol
         }
     }
     
-    GUI_DrawButton(text, shape, status, colors, content, icon);
+    GUI_DrawButton(text, shape, icon, status, colors, content);
     
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
@@ -241,7 +238,9 @@ bool GUI_Button(const char* text, Rectangle shape, Texture2D* icon, GUI_ThemeCol
 // > LABEL
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
-void GUI_DrawLabel(const char* text, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content)
+void GUI_DrawLabel(
+    const char* text, Rectangle shape,
+    GUI_ThemeColors colors, EGUI_Content content)
 {
     GUI_State *state            = GUI_GetState();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(content);
@@ -306,8 +305,8 @@ void GUI_DrawTextBox(
 }
 
 void GUI_TextBox(
-    int id, char* value, Rectangle shape, 
-    GUI_ThemeColors colors, EGUI_Content content)
+    int id, char *value, Rectangle shape, 
+    GUI_ThemeColors colors, EGUI_Content content, GUI_Window *window)
 {
     // Data
     GUI_State* state            = GUI_GetState();
@@ -321,7 +320,7 @@ void GUI_TextBox(
     int *cursor = &state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
     // Conditions
-    bool collide        = GUI_CheckCollisionPointerControl(shape);
+    bool collide        = GUI_CheckCollisionPointerControl(shape, window);
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
     if (collide) {
@@ -438,13 +437,15 @@ void GUI_DrawCheckBox(bool value, char *on_txt, char *off_txt, Rectangle shape, 
         tx, scale, EGUI_Content_GUI);
 }
 
-void GUI_CheckBox(int id, bool *value, char *on_txt, char *off_txt, Rectangle shape, GUI_ThemeColors colors, EGUI_Content content)
+void GUI_CheckBox(
+    int id, bool *value, char *on_txt, char *off_txt, Rectangle shape,
+    GUI_ThemeColors colors, EGUI_Content content, GUI_Window *window)
 {
     // Data
     GUI_State* state = GUI_GetState();
     
     // Conditions
-    bool collide        = GUI_CheckCollisionPointerControl(shape);
+    bool collide        = GUI_CheckCollisionPointerControl(shape, window);
     bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();
 
     // Focus
@@ -906,7 +907,6 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_scroll)
 {
     // Data
-    GUI_State *state = GUI_GetState();
     Rectangle window_workspace = GUI_WindowWorkspace(window->shape);
     
     // Vertical scroll    
