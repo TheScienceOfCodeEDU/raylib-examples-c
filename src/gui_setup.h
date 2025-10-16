@@ -158,7 +158,7 @@ GUI_Theme GUI_MakeThemeDefault()
         .gray           = GUI_MakeThemeColors(180.0f),
         .red            = GUI_MakeThemeColors(3.0f),
         .green          = GUI_MakeThemeColors(97.0f),
-        .bg_alpha       = 0.85,
+        .bg_alpha       = 0.95,
         .color_change   = 0.05
     };
 

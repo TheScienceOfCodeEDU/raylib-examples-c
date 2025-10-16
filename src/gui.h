@@ -351,12 +351,11 @@ void GUI_DrawTextBox(
     float bg_alpha      = theme->bg_alpha;
 
     if (status == EGUI_Status_Default) 
-        DrawRectangleRec(shape, ColorAlpha(colors.bg_color_2, bg_alpha));
+        DrawRectangleRec(shape, ColorAlpha(colors.bg_color_1, bg_alpha));
     else if (status == EGUI_Status_Collide) 
-        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_3, color_change), bg_alpha));
+        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, color_change), bg_alpha));
     else if (status == EGUI_Status_Focused) 
-        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_2, -color_change), bg_alpha));
-    
+        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));    
 
     if (status == EGUI_Status_Focused) 
         GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
