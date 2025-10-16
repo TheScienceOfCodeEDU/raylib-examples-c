@@ -474,9 +474,9 @@ void GUI_TextBox(
         if (blink_timer < 0)            blink_state = 1;
     }
 
-    GUI_ElementStatus status = focused ? EGUI_Status_Focused : 
-                              collide ? EGUI_Status_Collide : 
-                                        EGUI_Status_Default;
+    GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
+                                  collide ? EGUI_Status_Collide : 
+                                            EGUI_Status_Default;
 
     GUI_DrawTextBox(value, cursor, shape, status, colors, blink_state, font_type);
 }
@@ -539,11 +539,9 @@ void GUI_CheckBox(
     
     // Update focused control
     bool focused = GUI_CTX.temp.control_focus_id == id;
-    if (focused) 
-    {        
-        if (interacting)
-        {
-             *value = !(*value); // Toggle the checkbox value
+    if (focused) {        
+        if (interacting) {
+            *value = !(*value); // Toggle the checkbox value
         }
     }
 
