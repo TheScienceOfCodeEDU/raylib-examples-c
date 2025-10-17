@@ -289,8 +289,8 @@ bool GUI_Button(
     const char* text, Rectangle shape, Texture2D* icon,
     GUI_ThemeColors colors)
 {
-    RELATIVE_TO_WINDOW(shape);
-    FONT_TYPE_FROM_CONTEXT();
+    GUI_CONTROL_RELATIVE_TO_WINDOW(shape);
+    GUI_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
     GUI_ElementStatus status = EGUI_Status_Default;
 
@@ -330,7 +330,7 @@ void GUI_DrawLabel(
 
 void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
 {
-    RELATIVE_TO_WINDOW(shape);
+    GUI_CONTROL_RELATIVE_TO_WINDOW(shape);
     GUI_DrawLabel(text, shape, colors, GUI_CTX.temp.current_font_type);
 }
 
@@ -386,8 +386,9 @@ void GUI_TextBox(
     int id, char *value, Rectangle shape,
     GUI_ThemeColors colors)
 {
-    RELATIVE_TO_WINDOW(shape);
-    FONT_TYPE_FROM_CONTEXT();    
+    GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
+    GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
+    GUI_CONTROL_FOCUSED(id, shape, value)
 
      // Blink
     const float blink_speed     = 0.5f;
@@ -395,25 +396,17 @@ void GUI_TextBox(
     static bool blink_state     = 0;
 
     // Cursor per Id
-    int *cursor = &GUI_CTX.state
-    ->textbox_cursors[id % GUI_MAX_TEXTBOXES];
+    int *cursor = &GUI_CTX.state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
-    // Conditions
-    bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
-    bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT)  || IsKeyEnterPressed();
-
-    if (collide) {
+    if (is_pointer_over) {
         GUI_CTX.temp.current_pointer = EGUI_Pointer_Text;
     }
 
-    // Focus
-    bool receives_focus = collide && interacting;
-    if (receives_focus) {        
-        GUI_CTX.temp.control_focus_id      = id;
-        blink_state                         = 1;
-        blink_timer                         = 0;
+    if (just_focused) {
+        blink_state = 1;
+        blink_timer = 0;
 
-        // Locate cursor
+        // Re-locate cursor
         int textLength = StringSize(value);
         int mouse_x = GUI_CTX.temp.mouse_current.x - shape.x;
         int cursor_position = 0;
@@ -425,9 +418,7 @@ void GUI_TextBox(
         *cursor = cursor_position;
     }
 
-    // Update focused control
-    bool focused = GUI_CTX.temp.control_focus_id == id;
-    if (focused) {
+    if (is_focused) {
         int textLength = StringSize(value);
 
         // Handle text input
@@ -474,9 +465,10 @@ void GUI_TextBox(
         if (blink_timer < 0)            blink_state = 1;
     }
 
-    GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
-                                  collide ? EGUI_Status_Collide : 
-                                            EGUI_Status_Default;
+    GUI_ElementStatus status =
+        is_focused      ? EGUI_Status_Focused :
+        is_pointer_over ? EGUI_Status_Collide :
+                          EGUI_Status_Default;
 
     GUI_DrawTextBox(value, cursor, shape, status, colors, blink_state, font_type);
 }
@@ -486,8 +478,9 @@ void GUI_TextBox(
 //   STABILITY : █████████░  90%
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
-    bool value, char *on_txt, char *off_txt, Rectangle shape,
-    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
+    bool value, char *on_txt, char *off_txt, 
+    Rectangle shape, GUI_ElementStatus status, 
+    GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
@@ -521,33 +514,23 @@ void GUI_DrawCheckBox(
 }
 
 void GUI_CheckBox(
-    int id, bool *value, char *on_txt, char *off_txt, Rectangle shape,
-    GUI_ThemeColors colors)
+    int id, bool *value, char *on_txt, char *off_txt, 
+    Rectangle shape, GUI_ThemeColors colors)
 {
-    RELATIVE_TO_WINDOW(shape);
-    FONT_TYPE_FROM_CONTEXT();
+    GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
+    GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
+    GUI_CONTROL_FOCUSED(id, shape, value)
 
-    // Conditions
-    bool collide        = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
-    bool interacting    = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();
-
-    // Focus
-    bool receives_focus = collide && interacting;
-    if (receives_focus) {
-        GUI_CTX.temp.control_focus_id       = id;
-    }
-    
-    // Update focused control
-    bool focused = GUI_CTX.temp.control_focus_id == id;
-    if (focused) {        
-        if (interacting) {
-            *value = !(*value); // Toggle the checkbox value
-        }
+    if (is_focused) {
+        if (is_pointer_active) {
+            *value = !(*value);
+        }           
     }
 
-    GUI_ElementStatus status    = focused ? EGUI_Status_Focused : 
-                                  collide ? EGUI_Status_Collide : 
-                                            EGUI_Status_Default;
+    GUI_ElementStatus status =
+        is_focused      ? EGUI_Status_Focused :
+        is_pointer_over ? EGUI_Status_Collide :
+                          EGUI_Status_Default;
     GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, colors, font_type);
 }
 
@@ -700,7 +683,7 @@ void GUI_BeginDuplicateBlock()
 
 Rectangle GUI_Relative(Rectangle shape)
 {
-    RELATIVE_TO_WINDOW(shape);
+    GUI_CONTROL_RELATIVE_TO_WINDOW(shape);
     return shape;
 }
 

@@ -275,15 +275,34 @@ Rectangle GUI_WindowWorkspace(Rectangle shape)
     return shape_workspace;
 }
 
-#define RELATIVE_TO_WINDOW(shape) \
-    do { \
-        if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { \
+#define GUI_CONTROL_RELATIVE_TO_WINDOW(shape) \
+    if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { \
             shape = RelativeToRect(shape, GUI_CTX.temp.current_workspace); \
-        } \
-    } while (0)
+    };
 
-#define FONT_TYPE_FROM_CONTEXT() \
-    EGUI_FontType font_type = GUI_CTX.temp.current_font_type
+#define GUI_CONTROL_FONT_TYPE_FROM_CONTEXT() \
+    EGUI_FontType font_type = GUI_CTX.temp.current_font_type;
+
+
+#define GUI_CONTROL_FOCUSED(id, shape, value)                                                                          \
+    /* > GUI_CONTROL_FOCUSED                                             */\
+    /*   is_pointer_over    : pointer currently within control bounds    */\
+    /*   is_pointer_active  : user pressed mouse or enter key this frame */\
+    /*   just_focused       : control gained focus on this frame         */\
+    /*   is_focused         : control retains focus state                */\
+    /* Conditions */ \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx)); \
+    bool is_pointer_active  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();                          \
+    \
+    /* Gains focus */                                          \
+    bool just_focused = is_pointer_over && is_pointer_active;  \
+    if (just_focused) {                                        \
+        GUI_CTX.temp.control_focus_id = id;                    \
+    }                                                          \
+    \
+    /* Update focused control */                               \
+    bool is_focused = GUI_CTX.temp.control_focus_id == id;     \
+    
 
 void GUI_BeginFontType(EGUI_FontType font_type)
 {
