@@ -260,20 +260,20 @@ void WIN_window(GUI_Window* window, void* data)
         GUI_BeginBlock(window_workspace.width / 3, default_height);
         // 1st textbox
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(2, win_state->textbox_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
+        GUI_TextBox(win_state->textbox_contents, EGUI_InputText, GUI_NextHorizontals(2), window->colors);
 
         GUI_BeginDuplicateBlock();
         GUI_Label("Int", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(2, win_state->textbox_int_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
+        GUI_TextBox(win_state->textbox_int_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
 
         GUI_BeginDuplicateBlock();
         GUI_Label("Float", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(2, win_state->textbox_float_contents, EGUI_InputFloat, GUI_NextHorizontals(2), window->colors);
-        
+        GUI_TextBox(win_state->textbox_float_contents, EGUI_InputFloat, GUI_NextHorizontals(2), window->colors);
+
         // Switch
         GUI_BeginDuplicateBlock();
         GUI_Label("Switch", GUI_NextHorizontal(), window->colors);
-        GUI_CheckBox(4, &win_state->checkbox_value, "ON", "OFF", GUI_NextHorizontals(2), setup->theme.red);
+        GUI_CheckBox(&win_state->checkbox_value, "ON", "OFF", GUI_NextHorizontals(2), setup->theme.red);
     GUI_EndWindowContents();
 }
 

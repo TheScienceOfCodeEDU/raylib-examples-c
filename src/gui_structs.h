@@ -107,7 +107,7 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 typedef struct {
     // Window runtime
     bool            window_focus_moving;
-    int             control_focus_id;
+    void            *control_focus_ptr;
     int             window_coll_id;
 
     // Pointer runtime
@@ -132,7 +132,7 @@ GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
         .window_focus_moving    = false,
-        .control_focus_id       = 0,
+        .control_focus_ptr      = NULL,
         .window_coll_id         = 0,
 
         .current_pointer        = EGUI_Pointer_Default,
@@ -289,7 +289,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
     EGUI_FontType font_type = GUI_CTX.temp.current_font_type;
 
 
-#define GUI_CONTROL_FOCUSED(id, shape, value)                                                                          \
+#define GUI_CONTROL_FOCUSED(value, shape)                                  \
     /* > GUI_CONTROL_FOCUSED                                             */\
     /*   is_pointer_over    : pointer currently within control bounds    */\
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
@@ -302,11 +302,11 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
     /* Gains focus */                                          \
     bool just_focused = is_pointer_over && is_pointer_active;  \
     if (just_focused) {                                        \
-        GUI_CTX.temp.control_focus_id = id;                    \
+        GUI_CTX.temp.control_focus_ptr = value;                \
     }                                                          \
     \
     /* Focused control */                                      \
-    bool is_focused = GUI_CTX.temp.control_focus_id == id;     \
+    bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
     
 
 void GUI_BeginFontType(EGUI_FontType font_type)
