@@ -82,7 +82,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     bool collide_scolled        = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
     bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window->shape, window->content_height));
     
-    // Collide checks    
+    // Collide checks
     bool collide                = collide_scolled && collide_workspace;
     bool result                 = collide && (focused_window_id == window->id || !collide_focused);
 
@@ -757,16 +757,23 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     // Scrollbar
     Rectangle workspace = GUI_WindowWorkspace(shape, window->content_height);
     if (workspace.height < window->content_height) {
-        float ratio =  workspace.height / window->content_height;
+        float ratio = workspace.height / window->content_height;
         float bar_h = ratio * workspace.height;
-        float bar_y = shape.y + shape_title.height + (window->scroll_offset / window->content_height) *  workspace.height;
+        float bar_y = workspace.y + (window->scroll_offset / window->content_height) * workspace.height;
+
 
         DrawRectangleRec((Rectangle){
-            shape.x + shape.width,
+            workspace.x + workspace.width,
+            workspace.y,
+            border * scale * 3,
+            workspace.height
+        }, colors.bg_color_2);
+        DrawRectangleRec((Rectangle){
+            workspace.x + workspace.width + border * scale,
             bar_y,
             border * scale,
             bar_h
-        }, colors.tx_color_1);
+        }, colors.tx_color_0);
     }
 }
 
@@ -780,17 +787,17 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     bool is_pointer_over_title  = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
     bool is_pointer_active      = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool just_focused           = is_pointer_over && is_pointer_active;
-    bool focused                = GUI_CTX.state->z_index[0] == window->id;
+    bool is_focused             = GUI_CTX.state->z_index[0] == window->id;
 
     // Focus ?
     if (just_focused && GUI_CTX.temp.window_focus_moving == 0) {
-        if (focused) {            
+        if (is_focused) {            
             GUI_CTX.temp.window_focus_moving = is_pointer_over_title;
         }
     }
 
     // Active
-    if (focused){
+    if (is_focused){
         // Movement
         bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         bool moving             = interacting && GUI_CTX.temp.window_focus_moving;
@@ -825,7 +832,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Draw
     GUI_ElementStatus status = 
-        focused                 ? EGUI_Status_Focused :
+        is_focused              ? EGUI_Status_Focused :
         is_pointer_over_title   ? EGUI_Status_Collide :
                                   EGUI_Status_Default;
     GUI_DrawWindow(window, status, font_type);

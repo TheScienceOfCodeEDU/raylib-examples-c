@@ -264,7 +264,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
 
     // Vertical scroll
     if (shape_workspace.height < content_height) {
-        shape_workspace.width -= 20;
+        shape_workspace.width -= border * scale * 3;
     }
 
     if (DEV_DEBUG_GUI) {
