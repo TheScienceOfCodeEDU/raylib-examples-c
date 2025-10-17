@@ -382,8 +382,6 @@ void GUI_DrawTextBox(
     }
 }
 
-
-
 void GUI_TextBox(
     int id, char *value, EGUI_InputType type,
     Rectangle shape, GUI_ThemeColors colors)
@@ -430,25 +428,49 @@ void GUI_TextBox(
         // Handle text input
         int key = GetCharPressed();
         while (key > 0) {
+            // Special cases
+            //
+            if (type == EGUI_InputInt || type == EGUI_InputFloat) {
+                if (key == '-') {
+                    // Remove minus
+                    if (value[0] == '-') {
+                        int len = StringSize(value);
+                        for (int i = 0; i < len; i++)
+                            value[i] = value[i + 1];
+                        (*cursor)--;
+                        if (*cursor < 0) *cursor = 0;
+                    // Add minus
+                    } else {
+                        int len = StringSize(value);
+                        if (len < 254) {
+                            for (int i = len; i >= 0; i--)
+                                value[i + 1] = value[i];
+                            value[0] = '-';
+                            (*cursor)++;
+                        }
+                    }
+
+                    // Already handled, skip.
+                    key = GetCharPressed();
+                    continue;
+                }
+            }
+
+            // Default cases
             bool valid = false;
-
             switch (type) {
-                case EGUI_InputText:
-                    valid = (key >= 32 && key <= 126);
-                    break;
-
-                case EGUI_InputInt:
-                    if ((key >= '0' && key <= '9') ||
-                        (key == '-' && *cursor == 0 && value[0] != '-'))
-                        valid = true;
-                    break;
-
-                case EGUI_InputFloat:
-                    if ((key >= '0' && key <= '9') ||
-                        (key == '-' && *cursor == 0 && value[0] != '-') ||
-                        (key == '.' && strchr(value, '.') == NULL))
-                        valid = true;
-                    break;
+            case EGUI_InputText:
+                valid = (key >= 32 && key <= 126);
+                break;
+            case EGUI_InputInt:
+                if ((key >= '0' && key <= '9')) {
+                    valid = true;
+                }
+                break;
+            case EGUI_InputFloat:
+                if ((key >= '0' && key <= '9') ||
+                    (key == '.' && strchr(value, '.') == NULL)) {
+                    valid = true;
             }
 
             if (valid && textLength < 255) {
@@ -994,13 +1016,12 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
     }
 }
 
-Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_scroll, EGUI_FontType font_type)
+Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, EGUI_FontType font_type)
 {
     // Data
     Rectangle window_workspace = GUI_WindowWorkspace(window->shape, height);
     
     // Vertical scroll    
-    GUI_Assert(enable_scroll == false || height > window_workspace.height);
     window->content_height              = height;
     GUI_CTX.temp.current_window_idx     = window->id;
     GUI_CTX.temp.current_scroll         = -window->scroll_offset;

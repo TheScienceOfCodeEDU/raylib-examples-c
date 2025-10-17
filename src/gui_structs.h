@@ -83,7 +83,7 @@ typedef struct {
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
-    int             textbox_cursors[GUI_MAX_TEXTBOXES];
+    int             textbox_cursors[GUI_MAX_TEXTBOXES]; // TODO@dc: move to a local and a var? cursor and cursor_id to identify changes?
 } GUI_State;
 
 GUI_State GUI_MakeStateDefault(Vector2 screen_max)

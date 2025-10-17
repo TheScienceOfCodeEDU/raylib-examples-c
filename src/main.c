@@ -180,6 +180,8 @@ typedef struct {
 typedef struct {
     bool checkbox_value;
     char textbox_contents[256];
+    char textbox_int_contents[256];
+    char textbox_float_contents[256];
 } Game_WindowState;
 
 Game_State Game_MakeState()
@@ -250,15 +252,23 @@ void WIN_window(GUI_Window* window, void* data)
 {
     Game_WindowState *win_state = (Game_WindowState*)data;
     GUI_Setup *setup = GUI_GetSetup();
-    EGUI_FontType font_type = EGUI_FontType_GUI;    
+    EGUI_FontType font_type = EGUI_FontType_GUI;
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, default_height * 2, true, font_type);
+    GUI_BeginWindowContents(window, default_height * 2, font_type);
         GUI_BeginBlock(window_workspace.width / 3, default_height);
-        // 1st textbox                
+        // 1st textbox
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors);
         GUI_TextBox(2, win_state->textbox_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
+
+        GUI_BeginDuplicateBlock();
+        GUI_Label("Int", GUI_NextHorizontal(), window->colors);
+        GUI_TextBox(2, win_state->textbox_int_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
+
+        GUI_BeginDuplicateBlock();
+        GUI_Label("Float", GUI_NextHorizontal(), window->colors);
+        GUI_TextBox(2, win_state->textbox_float_contents, EGUI_InputFloat, GUI_NextHorizontals(2), window->colors);
         
         // Switch
         GUI_BeginDuplicateBlock();
@@ -275,7 +285,7 @@ void WIN_layouts(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, 0, false, EGUI_FontType_Default);
+    GUI_BeginWindowContents(window, 0, EGUI_FontType_Default);
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height);
@@ -321,7 +331,7 @@ void WIN_winman(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, 0, false, font_type);
+    GUI_BeginWindowContents(window, 0, font_type);
         GUI_BeginBlock(window_workspace.width, default_height);
 
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
@@ -442,7 +452,7 @@ int main(void) {
             {
                 static GUI_Window* win_window = NULL;
                 if (win_window == NULL && !first_render)
-                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 80 }, setup.theme.gray, NULL, WIN_window);
+                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_window);
             }
             {
                 static GUI_Window* win_layouts = NULL;
@@ -536,8 +546,8 @@ int main(void) {
         if (camera->zoom > 3.0f) camera->zoom = 3.0f;
         else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
 
-        if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL))      state.scale += 1.0;
-        if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) state.scale -= 1.0;
+        if (IsKeyPressed(KEY_F12)) state.scale += 1.0;
+        if (IsKeyPressed(KEY_F11)) state.scale -= 1.0;
 
         static float ui_opacity = 255.0;
 
