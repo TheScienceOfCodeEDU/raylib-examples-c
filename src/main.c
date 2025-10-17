@@ -256,7 +256,7 @@ void WIN_window(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, default_height * 2, font_type);
+    GUI_BeginWindowContents(window, default_height * 6, font_type);
         GUI_BeginBlock(window_workspace.width / 3, default_height);
         // 1st textbox
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors);

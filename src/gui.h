@@ -156,7 +156,7 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
 
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        GUI_CTX.temp.control_focus_id = 0;
+        GUI_CTX.temp.control_focus_ptr = NULL;
     }
 }
 
@@ -338,7 +338,7 @@ void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 void GUI_DrawTextBox(
-    char* value, int *cursor, Rectangle shape,
+    char* value, int cursor, Rectangle shape,
     GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
@@ -370,7 +370,7 @@ void GUI_DrawTextBox(
         Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
         
         char tmp[256] = {0};
-        strncpy(tmp, value, *cursor);
+        strncpy(tmp, value, cursor);
 
         text_size = GUI_MeasureAdjustedText(tmp, font_type);
         DrawRectangle(
@@ -383,16 +383,18 @@ void GUI_DrawTextBox(
 }
 
 void GUI_TextBox(
-    int id, char *value, EGUI_InputType type,
+    char *value, EGUI_InputType type,
     Rectangle shape, GUI_ThemeColors colors)
 {
     GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
-    GUI_CONTROL_FOCUSED(id, shape, value)
+    GUI_CONTROL_FOCUSED(value, shape)
 
     // Cursor per Id
-    int *cursor = &GUI_CTX.state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
-
+    //int *cursor = &GUI_CTX.state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
+    static int cursor = 0;
+    static void *last_control_focus_ptr = NULL;
+    
     if (is_pointer_over) {
         GUI_CTX.temp.current_pointer = EGUI_Pointer_Text;
     }
@@ -409,6 +411,11 @@ void GUI_TextBox(
         blink_timer = 0;
 
         // Re-locate cursor
+        if (last_control_focus_ptr != value) {
+            cursor = 0;
+        }
+        last_control_focus_ptr = value;
+
         int textLength  = StringSize(value);
         int mouse_x = GUI_CTX.temp.mouse_current.x - shape.x;
         int cursor_position = 0;
@@ -417,7 +424,7 @@ void GUI_TextBox(
             int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i), font_type).x;
             if (mouse_x < w) break;
         }
-        *cursor = cursor_position;
+        cursor = cursor_position;
     }
 
     // Focused
@@ -437,8 +444,8 @@ void GUI_TextBox(
                         int len = StringSize(value);
                         for (int i = 0; i < len; i++)
                             value[i] = value[i + 1];
-                        (*cursor)--;
-                        if (*cursor < 0) *cursor = 0;
+                        (cursor)--;
+                        if (cursor < 0) cursor = 0;
                     // Add minus
                     } else {
                         int len = StringSize(value);
@@ -446,7 +453,7 @@ void GUI_TextBox(
                             for (int i = len; i >= 0; i--)
                                 value[i + 1] = value[i];
                             value[0] = '-';
-                            (*cursor)++;
+                            (cursor)++;
                         }
                     }
 
@@ -471,44 +478,46 @@ void GUI_TextBox(
                 if ((key >= '0' && key <= '9') ||
                     (key == '.' && strchr(value, '.') == NULL)) {
                     valid = true;
+                }
+                break;
             }
 
             if (valid && textLength < 255) {
                 // Move chars to the right
-                for (int i = textLength; i >= *cursor; i--) {
+                for (int i = textLength; i >= cursor; i--) {
                     value[i + 1] = value[i];
                 }
-                value[*cursor] = (char)key;
-                (*cursor)++;
+                value[cursor] = (char)key;
+                (cursor)++;
                 textLength++;
             }
             key = GetCharPressed();
         }
 
         // Erase
-        if (IsKeyPressed(KEY_BACKSPACE) && *cursor > 0) {
-            for (int i = *cursor - 1; i < textLength; i++) {
+        if (IsKeyPressed(KEY_BACKSPACE) && cursor > 0) {
+            for (int i = cursor - 1; i < textLength; i++) {
                 value[i] = value[i+1];
             }
-            (*cursor)--;
+            (cursor)--;
             textLength--;
         }
-        if (IsKeyPressed(KEY_DELETE) && *cursor < textLength) {
-            for (int i = *cursor; i < textLength; i++) {
+        if (IsKeyPressed(KEY_DELETE) && cursor < textLength) {
+            for (int i = cursor; i < textLength; i++) {
                 value[i] = value[i+1];
             }
             textLength--;
         }
 
         // Cursor movement
-        if (IsKeyPressed(KEY_LEFT) && *cursor > 0)
-            (*cursor)--;
-        if (IsKeyPressed(KEY_RIGHT) && *cursor < textLength)
-            (*cursor)++;
+        if (IsKeyPressed(KEY_LEFT) && cursor > 0)
+            (cursor)--;
+        if (IsKeyPressed(KEY_RIGHT) && cursor < textLength)
+            (cursor)++;
         if (IsKeyPressed(KEY_HOME))
-            *cursor = 0;
+            cursor = 0;
         if (IsKeyPressed(KEY_END))
-            *cursor = textLength;
+            cursor = textLength;
 
         // Blink update
         if (blink_state)
@@ -572,12 +581,12 @@ void GUI_DrawCheckBox(
 }
 
 void GUI_CheckBox(
-    int id, bool *value, char *on_txt, char *off_txt, 
+    bool *value, char *on_txt, char *off_txt, 
     Rectangle shape, GUI_ThemeColors colors)
 {
     GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
-    GUI_CONTROL_FOCUSED(id, shape, value)
+    GUI_CONTROL_FOCUSED(value, shape)
 
     // Focused
     if (is_focused) {
@@ -869,7 +878,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     if (window->content_height <= 0) {
         window->content_height = workspace.height;
     }
-    if (is_pointer_over) {
+    if (is_pointer_over && workspace.height < window->content_height) {
         float wheel = GetMouseWheelMove();
         if (wheel != 0.0f) {
             window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
