@@ -391,7 +391,6 @@ void GUI_TextBox(
     GUI_CONTROL_FOCUSED(value, shape)
 
     // Cursor per Id
-    //int *cursor = &GUI_CTX.state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
     static int cursor = 0;
     static void *last_control_focus_ptr = NULL;
     
@@ -816,7 +815,6 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
         float ratio = workspace.height / window->content_height;
         float bar_h = ratio * workspace.height;
         float bar_y = workspace.y + (window->scroll_offset / window->content_height) * workspace.height;
-
 
         DrawRectangleRec((Rectangle){
             workspace.x + workspace.width,

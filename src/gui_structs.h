@@ -83,7 +83,6 @@ typedef struct {
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
     int             force_z_index;
     int             z_index[GUI_MAX_OPEN_WINS];
-    int             textbox_cursors[GUI_MAX_TEXTBOXES]; // TODO@dc: move to a local and a var? cursor and cursor_id to identify changes?
 } GUI_State;
 
 GUI_State GUI_MakeStateDefault(Vector2 screen_max)
@@ -99,7 +98,6 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 
     state.force_z_index = 0;
     memset(state.z_index, 0, sizeof(state.z_index));
-    memset(state.textbox_cursors, 0, sizeof(state.textbox_cursors));
     // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
@@ -307,7 +305,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
     \
     /* Focused control */                                      \
     bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
-    
+        
 
 void GUI_BeginFontType(EGUI_FontType font_type)
 {
