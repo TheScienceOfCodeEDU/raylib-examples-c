@@ -385,7 +385,7 @@ void GUI_DrawTextBox(
 
 
 void GUI_TextBox(
-    int id, void *value, EGUI_InputType type,
+    int id, char *value, EGUI_InputType type,
     Rectangle shape, GUI_ThemeColors colors)
 {
     GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
