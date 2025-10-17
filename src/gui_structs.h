@@ -237,11 +237,8 @@ float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
 //   NOTES     : Nothing here
 Rectangle GUI_WindowTitle(Rectangle shape)
 {
-    GUI_State* state            = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_FontType_GUI);
-
-    float border            = font_setup->border;
-    float scale             = state->scale;
+    float border    = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
+    float scale     = GUI_CTX.state->scale;
 
     Rectangle shapeTitle = {
         shape.x + border * scale,
@@ -252,13 +249,10 @@ Rectangle GUI_WindowTitle(Rectangle shape)
     return shapeTitle;
 }
 
-Rectangle GUI_WindowWorkspace(Rectangle shape)
+Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
 {
-    GUI_State* state = GUI_GetState();
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(EGUI_FontType_GUI);
-
-    float border    = font_setup->border;
-    float scale     = state->scale;
+    float border    = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
+    float scale     = GUI_CTX.state->scale;
 
     Rectangle shape_title = GUI_WindowTitle(shape);
     Rectangle shape_workspace = {
@@ -267,6 +261,11 @@ Rectangle GUI_WindowWorkspace(Rectangle shape)
         shape.width - (shape_title.x - shape.x ) * 2,
         shape.height - shape_title.height - (shape_title.y - shape.y) - border * scale * 2
     };
+
+    // Vertical scroll
+    if (shape_workspace.height < content_height) {
+        shape_workspace.width -= 20;
+    }
 
     if (DEV_DEBUG_GUI) {
         DrawRectangleRec(shape_title, ColorAlpha(ORANGE, 0.5));

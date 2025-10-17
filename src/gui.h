@@ -80,7 +80,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp.current_scroll };
     bool collide_scolled        = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
-    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window->shape));
+    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window->shape, window->content_height));
     
     // Collide checks    
     bool collide                = collide_scolled && collide_workspace;
@@ -755,8 +755,8 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
 
     // Vertical scroll
     // Scrollbar
-    Rectangle workspace = GUI_WindowWorkspace(shape);
-    if (window->content_height > workspace.height) {
+    Rectangle workspace = GUI_WindowWorkspace(shape, window->content_height);
+    if (workspace.height < window->content_height) {
         float ratio =  workspace.height / window->content_height;
         float bar_h = ratio * workspace.height;
         float bar_y = shape.y + shape_title.height + (window->scroll_offset / window->content_height) *  workspace.height;
@@ -776,21 +776,21 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
 
     // Conditions
-    bool collide            = GUI_CheckCollisionPointerWindow(window->id, window->shape);
-    bool collide_title      = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
-    bool interaction_starts = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool window_focusable   = GUI_CTX.temp.window_focus_moving == 0;
-    bool window_focused     = GUI_CTX.state->z_index[0] == window->id;
+    bool is_pointer_over        = GUI_CheckCollisionPointerWindow(window->id, window->shape);
+    bool is_pointer_over_title  = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
+    bool is_pointer_active      = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool just_focused           = is_pointer_over && is_pointer_active;
+    bool focused                = GUI_CTX.state->z_index[0] == window->id;
 
     // Focus ?
-    if (collide && interaction_starts && window_focusable) {
-        if (window_focused) {            
-            GUI_CTX.temp.window_focus_moving  = collide_title;
+    if (just_focused && GUI_CTX.temp.window_focus_moving == 0) {
+        if (focused) {            
+            GUI_CTX.temp.window_focus_moving = is_pointer_over_title;
         }
     }
 
     // Active
-    if (window_focused){
+    if (focused){
         // Movement
         bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         bool moving             = interacting && GUI_CTX.temp.window_focus_moving;
@@ -811,11 +811,11 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     shape_title     = GUI_WindowTitle(window->shape);
 
     // Vertical scroll
-    Rectangle workspace = GUI_WindowWorkspace(window->shape);
+    Rectangle workspace = GUI_WindowWorkspace(window->shape, window->content_height);
     if (window->content_height <= 0) {
         window->content_height = workspace.height;
     }
-    if (collide) {
+    if (is_pointer_over) {
         float wheel = GetMouseWheelMove();
         if (wheel != 0.0f) {
             window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
@@ -824,17 +824,20 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     }
 
     // Draw
-    GUI_ElementStatus status = window_focused   ? EGUI_Status_Focused :
-                               collide_title    ? EGUI_Status_Collide :
-                                                  EGUI_Status_Default;
+    GUI_ElementStatus status = 
+        focused                 ? EGUI_Status_Focused :
+        is_pointer_over_title   ? EGUI_Status_Collide :
+                                  EGUI_Status_Default;
     GUI_DrawWindow(window, status, font_type);
 }
 
-GUI_Window* GUI_MakeWindow(int id, char *title, Rectangle shape, GUI_ThemeColors colors, Texture2D *icon, void (*contents)(GUI_Window*, void*)) {
-    GUI_State* state = GUI_GetState();
-
+GUI_Window* GUI_MakeWindow(
+    int id, char *title, Rectangle shape, 
+    GUI_ThemeColors colors, Texture2D *icon, 
+    void (*contents)(GUI_Window*, void*))
+{
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-        GUI_Window* window = &state->window_s[i];
+        GUI_Window* window = &GUI_CTX.state->window_s[i];
         if (window->id == 0) {
             window->id          = id;
             window->shape       = shape;
@@ -962,7 +965,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, bool enable_scroll, EGUI_FontType font_type)
 {
     // Data
-    Rectangle window_workspace = GUI_WindowWorkspace(window->shape);
+    Rectangle window_workspace = GUI_WindowWorkspace(window->shape, height);
     
     // Vertical scroll    
     GUI_Assert(enable_scroll == false || height > window_workspace.height);
