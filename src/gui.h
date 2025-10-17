@@ -407,7 +407,7 @@ void GUI_TextBox(
     // Gain focus
     if (just_focused) {
         // Activate blink cursor
-        blink_state = 1;
+        blink_state = true;
         blink_timer = 0;
 
         // Re-locate cursor
@@ -424,12 +424,34 @@ void GUI_TextBox(
 
     // Focused
     if (is_focused) {
+        // TODO@dc: validate length
         int textLength = StringSize(value);
 
         // Handle text input
         int key = GetCharPressed();
         while (key > 0) {
-            if (key >= 32 && key <= 126 && textLength < 255) { // Printable ASCII characters
+            bool valid = false;
+
+            switch (type) {
+                case EGUI_InputText:
+                    valid = (key >= 32 && key <= 126);
+                    break;
+
+                case EGUI_InputInt:
+                    if ((key >= '0' && key <= '9') ||
+                        (key == '-' && *cursor == 0 && value[0] != '-'))
+                        valid = true;
+                    break;
+
+                case EGUI_InputFloat:
+                    if ((key >= '0' && key <= '9') ||
+                        (key == '-' && *cursor == 0 && value[0] != '-') ||
+                        (key == '.' && strchr(value, '.') == NULL))
+                        valid = true;
+                    break;
+            }
+
+            if (valid && textLength < 255) {
                 // Move chars to the right
                 for (int i = textLength; i >= *cursor; i--) {
                     value[i + 1] = value[i];
