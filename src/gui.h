@@ -165,6 +165,9 @@ void GUI_EndDraw()
     GUI_CTX.temp.mouse_last = GUI_CTX.temp.mouse_current;
 }
 
+Rectangle GUI_RectShapeCut(Rectangle shape, float border, float scale) {
+    return AddRect(shape, border * scale, border * scale, -border * scale, -border * scale);
+}
 
 
 // > ICON
@@ -362,9 +365,36 @@ void GUI_DrawTextBox(
     else
         GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
 
-    GUI_DrawAdjustedTextEx(value, 
-        (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale}, 
-        colors.tx_color_0, scale, font_type);
+    // Auto horizontal scroll
+    float auto_scroll_right = 0.9f;
+    float auto_scroll_left = 0.1f;
+    static float auto_scroll_x = 0.0f;
+    {
+        Vector2 cursor_pos = {0};
+        char tmp[256] = {0};
+        strncpy(tmp, value, cursor);
+        cursor_pos = GUI_MeasureAdjustedText(tmp, font_type);
+
+        float visible_w = shape.width - (2.0f * border * scale);
+        float cursor_x  = cursor_pos.x;
+
+        // Right
+        if (cursor_x - auto_scroll_x > visible_w * auto_scroll_right)
+            auto_scroll_x = cursor_x - visible_w * auto_scroll_right;
+        // Left
+        else if (cursor_x - auto_scroll_x < visible_w * auto_scroll_left)
+            auto_scroll_x = cursor_x - visible_w * auto_scroll_left;
+
+        if (auto_scroll_x < 0) auto_scroll_x = 0;
+    }
+
+    BeginScissorModeRect(GUI_RectShapeCut(shape, border, scale));
+        GUI_DrawAdjustedTextEx(value, 
+            (Vector2) { 
+                shape.x + (border) * scale - auto_scroll_x,
+                shape.y + (border) * scale
+            }, colors.tx_color_0, scale, font_type);
+    EndScissorMode();
 
     if (status == EGUI_Status_Focused && blink) {
         Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
@@ -374,7 +404,7 @@ void GUI_DrawTextBox(
 
         text_size = GUI_MeasureAdjustedText(tmp, font_type);
         DrawRectangle(
-            shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x,
+            shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x - auto_scroll_x,
             shape.y + (border + font_setup->blink_delta.y) * scale, 
             font_setup->blink_size.x * scale,
             font_setup->blink_size.y * scale, 
@@ -794,7 +824,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     bool reserve_icon_space = window->icon != NULL || status == EGUI_Status_Focused;
     float icon_w = reserve_icon_space ? GUI_GetIconWidth() : 0;
 
-    BeginScissorModeRect(AddRect(shape_title, 0, 0, -border * scale, -border * scale));
+    BeginScissorModeRect(GUI_RectShapeCut(shape_title, border, scale));
         GUI_DrawAdjustedTextEx(window->title,
             (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale }, 
             colors.tx_color_0, scale, EGUI_FontType_GUI);
