@@ -258,7 +258,7 @@ void WIN_window(GUI_Window* window, void* data)
         GUI_BeginBlock(window_workspace.width / 3, default_height);
         // 1st textbox                
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(2, win_state->textbox_contents, GUI_NextHorizontals(2), window->colors);
+        GUI_TextBox(2, win_state->textbox_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
         
         // Switch
         GUI_BeginDuplicateBlock();

@@ -17,6 +17,12 @@ typedef enum {
     EGUI_Status_Focused
 } GUI_ElementStatus;
 
+typedef enum {
+    EGUI_InputText,      // editable ASCII text
+    EGUI_InputInt,       // integer numeric input
+    EGUI_InputFloat      // floating numeric input
+} EGUI_InputType;
+
 /*
 EXAMPLE: Enum order matters
 typedef enum {

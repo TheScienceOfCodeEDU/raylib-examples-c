@@ -382,9 +382,11 @@ void GUI_DrawTextBox(
     }
 }
 
+
+
 void GUI_TextBox(
-    int id, char *value, Rectangle shape,
-    GUI_ThemeColors colors)
+    int id, void *data, EGUI_InputType type,
+    Rectangle shape, GUI_ThemeColors colors)
 {
     GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
@@ -483,6 +485,7 @@ void GUI_TextBox(
 
     GUI_DrawTextBox(value, cursor, shape, status, colors, blink_state, font_type);
 }
+
 
 
 // > CHECKBOX
