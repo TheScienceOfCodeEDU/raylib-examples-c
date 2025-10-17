@@ -300,7 +300,7 @@ Rectangle GUI_WindowWorkspace(Rectangle shape)
         GUI_CTX.temp.control_focus_id = id;                    \
     }                                                          \
     \
-    /* Update focused control */                               \
+    /* Focused control */                                      \
     bool is_focused = GUI_CTX.temp.control_focus_id == id;     \
     
 

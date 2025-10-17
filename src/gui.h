@@ -390,11 +390,6 @@ void GUI_TextBox(
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_CONTROL_FOCUSED(id, shape, value)
 
-     // Blink
-    const float blink_speed     = 0.5f;
-    static float blink_timer    = 0.0f;
-    static bool blink_state     = 0;
-
     // Cursor per Id
     int *cursor = &GUI_CTX.state->textbox_cursors[id % GUI_MAX_TEXTBOXES];
 
@@ -402,12 +397,19 @@ void GUI_TextBox(
         GUI_CTX.temp.current_pointer = EGUI_Pointer_Text;
     }
 
+    // Blink data
+    const float blink_speed     = 0.5f;
+    static float blink_timer    = 0.0f;
+    static bool blink_state     = 0;
+
+    // Gain focus
     if (just_focused) {
+        // Activate blink cursor
         blink_state = 1;
         blink_timer = 0;
 
         // Re-locate cursor
-        int textLength = StringSize(value);
+        int textLength  = StringSize(value);
         int mouse_x = GUI_CTX.temp.mouse_current.x - shape.x;
         int cursor_position = 0;
         for (int i = 0; i <= textLength; i++) {
@@ -418,6 +420,7 @@ void GUI_TextBox(
         *cursor = cursor_position;
     }
 
+    // Focused
     if (is_focused) {
         int textLength = StringSize(value);
 
@@ -452,17 +455,25 @@ void GUI_TextBox(
         }
 
         // Cursor movement
-        if (IsKeyPressed(KEY_LEFT) && *cursor > 0) (*cursor)--;
-        if (IsKeyPressed(KEY_RIGHT) && *cursor < textLength) (*cursor)++;
-        if (IsKeyPressed(KEY_HOME)) *cursor = 0;
-        if (IsKeyPressed(KEY_END))  *cursor = textLength;
+        if (IsKeyPressed(KEY_LEFT) && *cursor > 0)
+            (*cursor)--;
+        if (IsKeyPressed(KEY_RIGHT) && *cursor < textLength)
+            (*cursor)++;
+        if (IsKeyPressed(KEY_HOME))
+            *cursor = 0;
+        if (IsKeyPressed(KEY_END))
+            *cursor = textLength;
 
-        // Blink
-        if (blink_state)    blink_timer += GetFrameTime();
-        else                blink_timer -= GetFrameTime();
-
-        if (blink_timer > blink_speed)  blink_state = 0;
-        if (blink_timer < 0)            blink_state = 1;
+        // Blink update
+        if (blink_state)
+            blink_timer += GetFrameTime();
+        else
+            blink_timer -= GetFrameTime();
+        // Blink loop
+        if (blink_timer > blink_speed)
+            blink_state = 0;
+        if (blink_timer < 0)
+            blink_state = 1;
     }
 
     GUI_ElementStatus status =
@@ -521,10 +532,12 @@ void GUI_CheckBox(
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_CONTROL_FOCUSED(id, shape, value)
 
+    // Focused
     if (is_focused) {
         if (is_pointer_active) {
+            // Toggle checkbox
             *value = !(*value);
-        }           
+        }
     }
 
     GUI_ElementStatus status =
