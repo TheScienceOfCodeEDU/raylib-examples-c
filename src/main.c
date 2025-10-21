@@ -256,7 +256,7 @@ void WIN_window(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, default_height * 6, font_type);
+    GUI_BeginWindowContents(window, default_height * 10, font_type);
         GUI_BeginBlock(window_workspace.width / 3, default_height);
         // 1st textbox
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors);
@@ -346,7 +346,7 @@ void WIN_winman(GUI_Window* window, void* data)
         Rectangle t_shape = GUI_WindowTitle(active->shape);
         Rectangle w_shape = active->shape;
 
-        GUI_Label(TextFormat("scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->scroll_offset, active->content_height), GUI_NextVertical(), window->colors);
+        GUI_Label(TextFormat("ID=%d scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->id, active->scroll_offset, active->content_height), GUI_NextVertical(), window->colors);
 
         GUI_Label("title_shape", GUI_NextVertical(), window->colors);
         GUI_Label(TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y), GUI_NextVertical(), window->colors);

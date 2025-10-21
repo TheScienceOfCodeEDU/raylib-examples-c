@@ -50,6 +50,18 @@ Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
     return result;
 }
 
+static inline Rectangle RectIntersection(Rectangle a, Rectangle b)
+{
+    float x = fmaxf(a.x, b.x);
+    float y = fmaxf(a.y, b.y);
+    float w = fminf(a.x + a.width,  b.x + b.width)  - x;
+    float h = fminf(a.y + a.height, a.y + b.height) - y;
+    if (w <= 0 || h <= 0)
+        return (Rectangle){0,0,0,0};
+    else
+        return (Rectangle){x, y, w, h};
+}
+
 bool IsKeyEnterPressed()
 {
     return IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);

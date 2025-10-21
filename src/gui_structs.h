@@ -116,10 +116,11 @@ typedef struct {
     // Active window
     int             current_window_idx;
     float           current_scroll;
-    Rectangle       current_workspace;
     EGUI_FontType   current_font_type;
+    Rectangle       current_window_workspace; // Current window workspace
 
     // Layout temporary data
+    Rectangle       current_layout_workspace; // Current available (Use only for layouts)
     int             vertical_count;
     float           vertical_size;
     int             horizontal_count;
@@ -129,25 +130,24 @@ typedef struct {
 GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
-        .window_focus_moving    = false,
-        .control_focus_ptr      = NULL,
-        .window_coll_id         = 0,
+        .window_focus_moving        = false,
+        .control_focus_ptr          = NULL,
+        .window_coll_id             = 0,
 
-        .current_pointer        = EGUI_Pointer_Default,
-        .mouse_last             = (Vector2){ 0.0f, 0.0f },
-        .mouse_current          = (Vector2){ 0.0f, 0.0f },
+        .current_pointer            = EGUI_Pointer_Default,
+        .mouse_last                 = (Vector2){ 0.0f, 0.0f },
+        .mouse_current              = (Vector2){ 0.0f, 0.0f },
 
-        .current_window_idx     = GUI_NO_WIN,
-        .current_scroll         = 0,
-        .current_workspace      = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .current_font_type      = EGUI_FontType_Default,
+        .current_window_idx         = GUI_NO_WIN,
+        .current_scroll             = 0,
+        .current_font_type          = EGUI_FontType_Default,
+        .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
 
-        .vertical_count         = 0,
-        .vertical_size          = 0.0f,
-        .horizontal_count       = 0,
-        .horizontal_size        = 0.0f
-
-
+        .current_layout_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .vertical_count             = 0,
+        .vertical_size              = 0.0f,
+        .horizontal_count           = 0,
+        .horizontal_size            = 0.0f
     };
     return temp;
 }
@@ -278,13 +278,14 @@ Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
     return shape_workspace;
 }
 
-#define GUI_CONTROL_RELATIVE_TO_WINDOW(shape) \
+#define GUI_CONTROL_LAYOUT(shape) \
     if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { \
-            shape = RelativeToRect(shape, GUI_CTX.temp.current_workspace); \
+        shape = RelativeToRect(shape, GUI_CTX.temp.current_layout_workspace); \
     };
 
 #define GUI_CONTROL_FONT_TYPE_FROM_CONTEXT() \
     EGUI_FontType font_type = GUI_CTX.temp.current_font_type;
+
 
 
 #define GUI_CONTROL_FOCUSED(value, shape)                                  \
