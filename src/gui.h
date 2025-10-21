@@ -165,8 +165,28 @@ void GUI_EndDraw()
     GUI_CTX.temp.mouse_last = GUI_CTX.temp.mouse_current;
 }
 
-Rectangle GUI_RectShapeCut(Rectangle shape, float border, float scale) {
-    return AddRect(shape, border * scale, border * scale, -border * scale, -border * scale);
+Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
+    Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale, -border * scale);
+    if (intersect_window && GUI_CTX.temp.current_window_idx != GUI_NO_WIN) {
+        GUI_Window *win = GUI_GetWindow(GUI_CTX.temp.current_window_idx);
+        result.y -= win->scroll_offset;        
+        result = RectIntersection(result, GUI_CTX.temp.current_window_workspace);
+    }
+    return result;
+}
+
+void GUI_BeginControlScissor()
+{
+    if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { 
+        BeginScissorModeRect(GUI_CTX.temp.current_window_workspace);
+    }
+}
+
+// Cut text not only by window but by the control itself
+// Useful to cut text inside a control
+void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale, bool intersect_window)
+{
+    BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, intersect_window));
 }
 
 
@@ -273,26 +293,27 @@ void GUI_DrawButton(
 
     Color b_color_b =   status == EGUI_Status_Focused  ? colors.bg_color_2 :
                                                          colors.bg_color_3;
+    GUI_BeginControlScissor();
+        DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
+        GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
 
-    DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
-    GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
+        float icon_w = icon == NULL ? 0 : GUI_GetIconWidth();
 
-    float icon_w = icon == NULL ? 0 : GUI_GetIconWidth();
+        GUI_DrawAdjustedTextEx(text, 
+            (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
+            colors.tx_color_0, scale, font_type);
 
-    GUI_DrawAdjustedTextEx(text, 
-        (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
-        colors.tx_color_0, scale, font_type);
-
-    if (icon_w > 0) {
-        GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
-    }
+        if (icon_w > 0) {
+            GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
+        }
+    EndScissorMode();
 }
 
 bool GUI_Button(
     const char* text, Rectangle shape, Texture2D* icon,
     GUI_ThemeColors colors)
 {
-    GUI_CONTROL_RELATIVE_TO_WINDOW(shape);
+    GUI_CONTROL_LAYOUT(shape);
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
     GUI_ElementStatus status = EGUI_Status_Default;
@@ -326,14 +347,16 @@ void GUI_DrawLabel(
     float border    = font_setup->border;
     float scale     = state->scale;
 
-    GUI_DrawAdjustedTextEx(text, 
-        (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale}, 
-        colors.tx_color_0, scale, font_type);
+    GUI_BeginControlScissor();
+        GUI_DrawAdjustedTextEx(text, 
+            (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale}, 
+            colors.tx_color_0, scale, font_type);
+    EndScissorMode();
 }
 
 void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
 {
-    GUI_CONTROL_RELATIVE_TO_WINDOW(shape);
+    GUI_CONTROL_LAYOUT(shape);
     GUI_DrawLabel(text, shape, colors, GUI_CTX.temp.current_font_type);
 }
 
@@ -353,24 +376,27 @@ void GUI_DrawTextBox(
     float color_change  = theme->color_change;
     float bg_alpha      = theme->bg_alpha;
 
-    if (status == EGUI_Status_Default) 
-        DrawRectangleRec(shape, ColorAlpha(colors.bg_color_1, bg_alpha));
-    else if (status == EGUI_Status_Collide) 
-        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, color_change), bg_alpha));
-    else if (status == EGUI_Status_Focused) 
-        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));    
+    GUI_BeginControlScissor();
+        if (status == EGUI_Status_Default) 
+            DrawRectangleRec(shape, ColorAlpha(colors.bg_color_1, bg_alpha));
+        else if (status == EGUI_Status_Collide) 
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, color_change), bg_alpha));
+        else if (status == EGUI_Status_Focused) 
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));    
 
-    if (status == EGUI_Status_Focused) 
-        GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
-    else
-        GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
+        if (status == EGUI_Status_Focused) 
+            GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
+        else
+            GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
+    EndScissorMode();
 
     // Auto horizontal scroll
-    float auto_scroll_right = 0.9f;
-    float auto_scroll_left = 0.1f;
-    static float auto_scroll_x = 0.0f;
-    {
+    float auto_scroll_x = 0.0f;
+    if (status == EGUI_Status_Focused) {
+        float auto_scroll_right = 0.9f;
+        float auto_scroll_left = 0.1f;
         Vector2 cursor_pos = {0};
+        // TODO@dc: max text size
         char tmp[256] = {0};
         strncpy(tmp, value, cursor);
         cursor_pos = GUI_MeasureAdjustedText(tmp, font_type);
@@ -388,35 +414,36 @@ void GUI_DrawTextBox(
         if (auto_scroll_x < 0) auto_scroll_x = 0;
     }
 
-    BeginScissorModeRect(GUI_RectShapeCut(shape, border, scale));
+    GUI_BeginInnerControlScissor(shape, border, scale, true);
         GUI_DrawAdjustedTextEx(value, 
             (Vector2) { 
                 shape.x + (border) * scale - auto_scroll_x,
                 shape.y + (border) * scale
             }, colors.tx_color_0, scale, font_type);
+    
+
+        if (status == EGUI_Status_Focused && blink) {
+            Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
+            // TODO@dc: max text size
+            char tmp[256] = {0};
+            strncpy(tmp, value, cursor);
+
+            text_size = GUI_MeasureAdjustedText(tmp, font_type);
+            DrawRectangle(
+                shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x - auto_scroll_x,
+                shape.y + (border + font_setup->blink_delta.y) * scale, 
+                font_setup->blink_size.x * scale,
+                font_setup->blink_size.y * scale, 
+                ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
+        }
     EndScissorMode();
-
-    if (status == EGUI_Status_Focused && blink) {
-        Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
-        
-        char tmp[256] = {0};
-        strncpy(tmp, value, cursor);
-
-        text_size = GUI_MeasureAdjustedText(tmp, font_type);
-        DrawRectangle(
-            shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x - auto_scroll_x,
-            shape.y + (border + font_setup->blink_delta.y) * scale, 
-            font_setup->blink_size.x * scale,
-            font_setup->blink_size.y * scale, 
-            ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
-    }
 }
 
 void GUI_TextBox(
     char *value, EGUI_InputType type,
     Rectangle shape, GUI_ThemeColors colors)
 {
-    GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
+    GUI_CONTROL_LAYOUT(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_CONTROL_FOCUSED(value, shape)
 
@@ -591,29 +618,34 @@ void GUI_DrawCheckBox(
     Color bg = value ? colors.bg_color_3 : colors.bg_color_2;
     Color b1 = value ? colors.bg_color_2 : colors.bg_color_0;
     Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
-    if (status == EGUI_Status_Default) 
-        DrawRectangleRec(shape, ColorAlpha(bg, bg_alpha));
-    else if (status == EGUI_Status_Collide) 
-        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, color_change), bg_alpha));
-    else if (status == EGUI_Status_Focused) 
-        DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, -color_change), bg_alpha));
-    
 
-    if (status == EGUI_Status_Focused) 
-        GUI_DrawBorders(shape, ColorBrightness(b1, -color_change), ColorBrightness(b2, color_change), border * scale, false);
-    else
-        GUI_DrawBorders(shape, b1, b2, border * scale, false);
+    GUI_BeginControlScissor();
+        if (status == EGUI_Status_Default) 
+            DrawRectangleRec(shape, ColorAlpha(bg, bg_alpha));
+        else if (status == EGUI_Status_Collide) 
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, color_change), bg_alpha));
+        else if (status == EGUI_Status_Focused) 
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, -color_change), bg_alpha));
+        
 
-    GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
-        (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
-        tx, scale, EGUI_FontType_GUI);
+        if (status == EGUI_Status_Focused) 
+            GUI_DrawBorders(shape, ColorBrightness(b1, -color_change), ColorBrightness(b2, color_change), border * scale, false);
+        else
+            GUI_DrawBorders(shape, b1, b2, border * scale, false);
+    EndScissorMode();
+
+    GUI_BeginInnerControlScissor(shape, border, scale, true);
+        GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
+            (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
+            tx, scale, EGUI_FontType_GUI);
+    EndScissorMode();
 }
 
 void GUI_CheckBox(
     bool *value, char *on_txt, char *off_txt, 
     Rectangle shape, GUI_ThemeColors colors)
 {
-    GUI_CONTROL_RELATIVE_TO_WINDOW(shape)
+    GUI_CONTROL_LAYOUT(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_CONTROL_FOCUSED(value, shape)
 
@@ -755,23 +787,23 @@ void GUI_BeginBlock(float width, float height)
     if (width > 0.0) {
         GUI_BeginHorizontal(width);
     } else if (width < 0.0) {
-        GUI_BeginHorizontal(GUI_CTX.temp.current_workspace.width + width); // width is already negative
+        GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width + width); // width is already negative
     } else {
-        GUI_BeginHorizontal(GUI_CTX.temp.current_workspace.width);
+        GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width);
     }
 
     // Adjust to get y-available space
     if (GUI_CTX.temp.vertical_count != 0) {
-        GUI_CTX.temp.current_workspace = GUI_WorkspaceAvailable(GUI_CTX.temp.current_workspace);
+        GUI_CTX.temp.current_layout_workspace = GUI_WorkspaceAvailable(GUI_CTX.temp.current_layout_workspace);
     }
 
     // Vertical
     if (height > 0.0) {
         GUI_BeginVertical(height);
     } else if (height < 0.0) {
-        GUI_BeginVertical(GUI_CTX.temp.current_workspace.height + height); // height is already negative
+        GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height + height); // height is already negative
     } else {
-        GUI_BeginVertical(GUI_CTX.temp.current_workspace.height);
+        GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height);
     }
 }
 void GUI_BeginDuplicateBlock()
@@ -781,7 +813,7 @@ void GUI_BeginDuplicateBlock()
 
 Rectangle GUI_Relative(Rectangle shape)
 {
-    GUI_CONTROL_RELATIVE_TO_WINDOW(shape);
+    GUI_CONTROL_LAYOUT(shape);
     return shape;
 }
 
@@ -824,7 +856,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     bool reserve_icon_space = window->icon != NULL || status == EGUI_Status_Focused;
     float icon_w = reserve_icon_space ? GUI_GetIconWidth() : 0;
 
-    BeginScissorModeRect(GUI_RectShapeCut(shape_title, border, scale));
+    GUI_BeginInnerControlScissor(shape_title, border, scale, false);
         GUI_DrawAdjustedTextEx(window->title,
             (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale }, 
             colors.tx_color_0, scale, EGUI_FontType_GUI);
@@ -1059,18 +1091,19 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, EGUI_FontTyp
     Rectangle window_workspace = GUI_WindowWorkspace(window->shape, height);
     
     // Vertical scroll    
-    window->content_height              = height;
-    GUI_CTX.temp.current_window_idx     = window->id;
-    GUI_CTX.temp.current_scroll         = -window->scroll_offset;
-    GUI_CTX.temp.current_workspace      = window_workspace;
-    GUI_CTX.temp.current_font_type      = font_type;
+    window->content_height                  = height;
+    GUI_CTX.temp.current_window_idx         = window->id;
+    GUI_CTX.temp.current_scroll             = -window->scroll_offset;
+    GUI_CTX.temp.current_window_workspace   = window_workspace;
+    GUI_CTX.temp.current_layout_workspace   = window_workspace;
+    GUI_CTX.temp.current_font_type          = font_type;
     
     // Begin window stuff
     GUI_ResetLayout();
-    BeginScissorModeRect(window_workspace);
-        // Vertical scroll    
-        rlPushMatrix();
-        rlTranslatef(0, -window->scroll_offset, 0);
+    
+    // Vertical scroll    
+    rlPushMatrix();
+    rlTranslatef(0, -window->scroll_offset, 0);
 
     return window_workspace;
 }
@@ -1078,13 +1111,13 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, EGUI_FontTyp
 void GUI_EndWindowContents()
 {
     // Close window stuff
-        rlPopMatrix();
-    EndScissorMode();
-
+    rlPopMatrix();
+    
     // Vertical scroll
     // Reset
-    GUI_CTX.temp.current_window_idx = GUI_NO_WIN;
-    GUI_CTX.temp.current_scroll     = 0;
-    GUI_CTX.temp.current_workspace  = (Rectangle){ 0, 0, 0, 0 };
-    GUI_CTX.temp.current_font_type  = EGUI_FontType_Default;
+    GUI_CTX.temp.current_window_idx         = GUI_NO_WIN;
+    GUI_CTX.temp.current_scroll             = 0;
+    GUI_CTX.temp.current_window_workspace   = (Rectangle){ 0, 0, 0, 0 };
+    GUI_CTX.temp.current_layout_workspace   = (Rectangle){ 0, 0, 0, 0 };
+    GUI_CTX.temp.current_font_type          = EGUI_FontType_Default;
 }
