@@ -1,5 +1,4 @@
 #define UNITY_BUILD 1
-#include <time.h> 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -356,12 +355,16 @@ void WIN_winman(GUI_Window* window, void* data)
         GUI_Label(TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y), GUI_NextVertical(), window->colors);
         GUI_Label(TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height), GUI_NextVertical(), window->colors);
 
-        Rectangle next = RelativeToRect(GUI_NextVertical(), window_workspace);
-        GUI_DrawFace((Vector2){ next.x, next.y }, 16);
-        next = RelativeToRect(GUI_NextVertical(), window_workspace);
-        GUI_DrawFace((Vector2){ next.x, next.y }, 32);
-        next = RelativeToRect(GUI_NextVertical(), window_workspace);
-        GUI_DrawFace((Vector2){ next.x, next.y }, 64);
+        Rectangle next = GUI_NextVertical();
+        GUI_Face((Vector2){ next.x, next.y }, 16);
+        GUI_Face((Vector2){ next.x + 16, next.y }, 32);
+        GUI_Face((Vector2){ next.x + 16 + 32, next.y }, 64);
+        GUI_NextVertical(); // Jump line
+
+        static Texture2D image;
+        if (image.id == 0) image = LoadTexture("art/abstractica.png");
+        next = GUI_NextVertical();
+        GUI_Image(image, (Rectangle){ next.x, next.y, next.width, 320 });
     GUI_EndWindowContents();
 }
 
@@ -382,6 +385,74 @@ const char* BuildTimeFormatted()
     snprintf(buffer, sizeof(buffer), "%02dh:%02dm:%02ds %s", h, m, s, ampm);
     return buffer;
 }
+
+void DrawTextureFullScreenKeep(Texture2D tex, Color tint)
+{
+    int screenW = GetScreenWidth();
+    int screenH = GetScreenHeight();
+
+    // 🔹 Escala entera máxima (pixel-perfect sin barra)
+    int scaleX = screenW / tex.width;
+    int scaleY = screenH / tex.height;
+    int scale  = (scaleX < scaleY ? scaleX : scaleY);
+    if (scale < 1) scale = 1;
+
+    int outW = tex.width  * scale;
+    int outH = tex.height * scale;
+
+    // 🔹 Coordenadas exactas centradas en enteros
+    int ox = (screenW - outW) / 2;
+    int oy = (screenH - outH) / 2;
+
+    // 🔹 Fuente normal (sin invertir Y)
+    Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
+    Rectangle dst = {(float)ox, (float)oy, (float)outW, (float)outH};
+
+    // 🔹 Dibujo exacto
+    DrawTexturePro(tex, src, dst, (Vector2){0, 0}, 0.0f, tint);
+}
+
+#include "raylib.h"
+
+// Llena toda la pantalla (cover), sin barras. Recorta centrado.
+void DrawTextureFullScreen(Texture2D tex, Color tint)
+{
+    int screenW = GetScreenWidth();
+    int screenH = GetScreenHeight();
+
+    // Evita sangrados de borde
+    SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+    SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
+
+    float screenAspect = (float)screenW / (float)screenH;
+    float texAspect    = (float)tex.width / (float)tex.height;
+
+    // Destino: ocupa toda la pantalla
+    Rectangle dst = { 0, 0, (float)screenW, (float)screenH };
+
+    // Fuente: recorte centrado (cover)
+    Rectangle src;
+    if (screenAspect > texAspect) {
+        // Pantalla más ancha → recorto altura
+        float neededH = (float)tex.width / screenAspect;   // h que corresponde para no tener barras
+        float y = ((float)tex.height - neededH) * 0.5f;    // centro
+        // Redondeo a enteros para evitar 1px fantasma
+        int iy = (int)(y + 0.5f);
+        int ih = (int)(neededH + 0.5f);
+        src = (Rectangle){ 0.0f, (float)iy, (float)tex.width, (float)ih };
+    } else {
+        // Pantalla más alta → recorto ancho
+        float neededW = (float)tex.height * screenAspect;
+        float x = ((float)tex.width - neededW) * 0.5f;
+        int ix = (int)(x + 0.5f);
+        int iw = (int)(neededW + 0.5f);
+        src = (Rectangle){ (float)ix, 0.0f, (float)iw, (float)tex.height };
+    }
+
+    // OJO: no invertimos Y (src.height positivo) → sale al derecho
+    DrawTexturePro(tex, src, dst, (Vector2){0,0}, 0.0f, tint);
+}
+
 
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -409,7 +480,8 @@ int main(void) {
     GUI_State state             = GUI_MakeStateDefault(screen_max);
     GUI_Setup setup             = GUI_MakeSetupDefault();
     GUI_Icons icons             = setup.icon_setup.icons;
-    Texture2D wallpaper         = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
+    Texture2D wp_voronoi        = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
+    
     GUI_SetContext(&state, &setup);
 
     // PREPARE GAME
@@ -567,10 +639,10 @@ int main(void) {
 
         // Draw
         BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground(BLACK);
 
             if (win_state.checkbox_value == 1) {
-                DrawTextureRec(wallpaper, GetSourceRec(wallpaper), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
+                DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
 

@@ -220,8 +220,12 @@ float GUI_GetIconWidth()
 // > FACE
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
-void GUI_DrawFace(Vector2 position, float height)
+void GUI_Face(Vector2 position, float height)
 {
+    Rectangle shape = { position.x, position.y, height, height };
+    GUI_CONTROL_LAYOUT(shape);
+    position.x = shape.x;
+    position.y = shape.y;
     GUI_Assert(height > 0);
 
     GUI_Icons *icons = GUI_GetIcons();
@@ -264,6 +268,37 @@ void GUI_DrawFace(Vector2 position, float height)
 
     DrawRectangleV(Vector2Add((Vector2){ 4 * texture_scale, 6 * texture_scale }, pixel_pos), (Vector2){ texture_scale, texture_scale }, WHITE);
     DrawRectangleV(Vector2Add((Vector2){ 10 * texture_scale, 6 * texture_scale }, pixel_pos), (Vector2){ texture_scale, texture_scale }, WHITE);
+}
+
+// > IMAGE
+//   STABILITY : █████████░  90%
+//   NOTES     : Nothing here
+void GUI_Image(Texture2D texture, Rectangle shape)
+{
+    GUI_CONTROL_LAYOUT(shape);
+
+    if (texture.id == 0) return;
+
+    float tex_ratio = (float)texture.width / (float)texture.height;
+    float dst_ratio = shape.width / shape.height;
+
+    Rectangle src = { 0, 0, (float)texture.width, (float)texture.height };
+    Rectangle dst = { 0 };
+
+    if (dst_ratio > tex_ratio) {
+        // limit height
+        dst.height = shape.height;
+        dst.width  = shape.height * tex_ratio;
+        dst.x = shape.x + (shape.width - dst.width) * 0.5f;
+        dst.y = shape.y;
+    } else {
+        // limit width
+        dst.width  = shape.width;
+        dst.height = shape.width / tex_ratio;
+        dst.x = shape.x;
+        dst.y = shape.y + (shape.height - dst.height) * 0.5f;
+    }
+    DrawTexturePro(texture, src, dst, (Vector2){0,0}, 0.0f, WHITE);
 }
 
 
@@ -867,7 +902,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
         GUI_Icon(window->icon, icon_position, icon_w, WHITE);
     }
     if (status == EGUI_Status_Focused && icon_w > 0) {
-        GUI_DrawFace((Vector2) { shape_title.x + border * scale, shape_title.y + border * scale }, icon_w);
+        GUI_Face((Vector2) { shape_title.x + border * scale, shape_title.y + border * scale }, icon_w);
     }
 
     // Vertical scroll
