@@ -356,9 +356,10 @@ void WIN_winman(GUI_Window* window, void* data)
         GUI_Label(TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height), GUI_NextVertical(), window->colors);
 
         Rectangle next = GUI_NextVertical();
-        GUI_Face((Vector2){ next.x, next.y }, 16);
-        GUI_Face((Vector2){ next.x + 16, next.y }, 32);
-        GUI_Face((Vector2){ next.x + 16 + 32, next.y }, 64);
+        float icon_w = GUI_GetIconWidth();
+        GUI_Face((Vector2){ next.x, next.y }, (float) icon_w / 2);
+        GUI_Face((Vector2){ next.x + (float) icon_w / 2, next.y }, icon_w);
+        GUI_Face((Vector2){ next.x + (float) icon_w / 2 + icon_w, next.y }, icon_w * 2);
         GUI_NextVertical(); // Jump line
 
         static Texture2D image;
