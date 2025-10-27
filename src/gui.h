@@ -677,7 +677,7 @@ void GUI_DrawCheckBox(
     GUI_BeginInnerControlScissor(shape, border, scale, true);
         GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
             (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
-            tx, scale, EGUI_FontType_GUI);
+            tx, scale, font_type);
     EndScissorMode();
 }
 
