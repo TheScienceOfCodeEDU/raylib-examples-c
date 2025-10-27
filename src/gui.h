@@ -35,7 +35,6 @@ bool GUI_WindowCollide(int window_id)
     return GUI_CTX.temp.window_coll_id != 0 && GUI_CTX.temp.window_coll_id != window_id;
 }
 
-
 bool GUI_CheckCollisionPointerWindow(int window_id, Rectangle shape)
 {
     // This is not the window!
@@ -313,7 +312,7 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 void GUI_DrawButton(
-    const char *text, Rectangle shape, Texture2D *icon,
+    Rectangle shape, const char *text, Texture2D *icon,
     GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type) 
 {
     GUI_State *state            = GUI_GetState();
@@ -352,7 +351,7 @@ void GUI_DrawButton(
 }
 
 bool GUI_Button(
-    const char* text, Rectangle shape, Texture2D* icon,
+    Rectangle shape, const char* text,Texture2D* icon,
     GUI_ThemeColors colors)
 {
     GUI_CONTROL_LAYOUT(shape);
@@ -371,7 +370,7 @@ bool GUI_Button(
         }
     }
     
-    GUI_DrawButton(text, shape, icon, status, colors, font_type);
+    GUI_DrawButton(shape, text, icon, status, colors, font_type);
     
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
@@ -380,7 +379,7 @@ bool GUI_Button(
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 void GUI_DrawLabel(
-    const char* text, Rectangle shape,
+    Rectangle shape, const char* text, 
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State *state            = GUI_GetState();
@@ -396,17 +395,17 @@ void GUI_DrawLabel(
     EndScissorMode();
 }
 
-void GUI_Label(const char* text, Rectangle shape, GUI_ThemeColors colors)
+void GUI_Label(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
     GUI_CONTROL_LAYOUT(shape);
-    GUI_DrawLabel(text, shape, colors, GUI_CTX.temp.current_font_type);
+    GUI_DrawLabel(shape, text, colors, GUI_CTX.temp.current_font_type);
 }
 
-// > TEXTBOX
+// > INPUT
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
-void GUI_DrawTextBox(
-    char* value, int cursor, Rectangle shape,
+void GUI_DrawInput(
+    Rectangle shape, char* value, int cursor,
     GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
@@ -481,9 +480,9 @@ void GUI_DrawTextBox(
     EndScissorMode();
 }
 
-void GUI_TextBox(
-    char *value, EGUI_InputType type,
-    Rectangle shape, GUI_ThemeColors colors)
+void GUI_Input(
+    Rectangle shape, char *value,
+    EGUI_InputType type, GUI_ThemeColors colors)
 {
     GUI_CONTROL_LAYOUT(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
@@ -634,7 +633,7 @@ void GUI_TextBox(
         is_pointer_over ? EGUI_Status_Collide :
                           EGUI_Status_Default;
 
-    GUI_DrawTextBox(value, cursor, shape, status, colors, blink_state, font_type);
+    GUI_DrawInput(shape, value, cursor, status, colors, blink_state, font_type);
 }
 
 
@@ -643,9 +642,8 @@ void GUI_TextBox(
 //   STABILITY : █████████░  90%
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
-    bool value, char *on_txt, char *off_txt, 
-    Rectangle shape, GUI_ElementStatus status, 
-    GUI_ThemeColors colors, EGUI_FontType font_type)
+    Rectangle shape, bool value, char *on_txt, char *off_txt, 
+    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
@@ -683,9 +681,9 @@ void GUI_DrawCheckBox(
     EndScissorMode();
 }
 
-void GUI_CheckBox(
-    bool *value, char *on_txt, char *off_txt, 
-    Rectangle shape, GUI_ThemeColors colors)
+void GUI_Check(
+    Rectangle shape, bool *value, char *on_txt, char *off_txt, 
+    GUI_ThemeColors colors)
 {
     GUI_CONTROL_LAYOUT(shape)
     GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
@@ -703,7 +701,7 @@ void GUI_CheckBox(
         is_focused      ? EGUI_Status_Focused :
         is_pointer_over ? EGUI_Status_Collide :
                           EGUI_Status_Default;
-    GUI_DrawCheckBox(*value, on_txt, off_txt, shape, status, colors, font_type);
+    GUI_DrawCheckBox(shape, *value, on_txt, off_txt, status, colors, font_type);
 }
 
 
@@ -855,6 +853,11 @@ void GUI_BeginBlock(float width, float height)
         GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height);
     }
 }
+void GUI_BeginBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
+{
+    float default_height = GUI_CalcDefaultHeightScaled(font_type);
+    GUI_BeginBlock(window_workspace.width / cols, default_height);
+}
 void GUI_BeginDuplicateBlock()
 {
     GUI_BeginBlock(GUI_CTX.temp.horizontal_size, GUI_CTX.temp.vertical_size);
@@ -902,7 +905,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
         GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, color_change), border * scale, true);
     }
 
-    bool reserve_icon_space = window->icon != NULL || status == EGUI_Status_Focused;
+    bool reserve_icon_space = window->icon != NULL || (status == EGUI_Status_Focused && window->focused_face);
     float icon_w = reserve_icon_space ? GUI_GetIconWidth() : 0;
 
     GUI_BeginInnerControlScissor(shape_title, border, scale, false);
@@ -915,7 +918,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     if (window->icon != NULL && icon_w > 0) {
         GUI_Icon(window->icon, icon_position, icon_w, WHITE);
     }
-    if (status == EGUI_Status_Focused && icon_w > 0) {
+    if (status == EGUI_Status_Focused && icon_w > 0 && window->focused_face) {
         GUI_Face((Vector2) { shape_title.x + border * scale, shape_title.y + border * scale }, icon_w);
     }
 
@@ -1002,18 +1005,19 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
 GUI_Window* GUI_MakeWindow(
     int id, char *title, Rectangle shape, 
-    GUI_ThemeColors colors, Texture2D *icon, 
+    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
     void (*contents)(GUI_Window*, void*))
 {
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
         GUI_Window* window = &GUI_CTX.state->window_s[i];
         if (window->id == 0) {
-            window->id          = id;
-            window->shape       = shape;
-            window->colors      = colors;
-            window->title       = title;
-            window->icon        = icon;
-            window->contents    = contents;
+            window->id              = id;
+            window->shape           = shape;
+            window->colors          = colors;
+            window->title           = title;
+            window->icon            = icon;
+            window->focused_face    = focused_face;
+            window->contents        = contents;
             return window;
         }
     }
@@ -1066,17 +1070,18 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
         }
     }
     
+    // This variable allows to set force the z_index during the current frame
     bool force_z_index  = state->force_z_index > 0;
     bool interacting    = !force_z_index && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 
     if (interacting || force_z_index) {
         // Find ID
-        int interacted_id = state->force_z_index;
-        int current_zindex = -1;
-
-        // Restore state values z-index is being updated
+        int interacted_id       = state->force_z_index;
+        bool forcing_z_index    = state->force_z_index > 0;
+        // Restore state values -> z-index is being updated       
         state->force_z_index = 0;
 
+        int current_zindex  = -1;
         for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
             int id = state->z_index[j];
             if (id == 0) continue;
@@ -1084,8 +1089,8 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
             GUI_Window* window = GUI_GetWindow(id);
             if (window == NULL) continue;
 
-            bool find_window    = interacted_id > 0 && interacted_id == window->id;
-            bool check_window   = interacted_id == 0 && CheckCollisionPointRec(GUI_CTX.temp.mouse_current, window->shape);
+            bool find_window    = forcing_z_index && interacted_id == window->id;
+            bool check_window   = !forcing_z_index && CheckCollisionPointRec(GUI_CTX.temp.mouse_current, window->shape);
             if (find_window || check_window) {
                 interacted_id = window->id;
                 current_zindex = j;
@@ -1113,6 +1118,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
         GUI_Window *window = GUI_GetWindow(id);
         if (GUI_CheckCollisionPointerWindow(window->id, window->shape)) {
             GUI_CTX.temp.window_coll_id = window->id;
+            break;
         }
     }
 

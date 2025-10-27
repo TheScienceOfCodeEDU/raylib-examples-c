@@ -17,6 +17,7 @@ typedef struct {
     Texture2D Setup;
     Texture2D Error;
     Texture2D Face;
+    Texture2D Dog;
 } GUI_Icons;
 
 GUI_Icons GUI_LoadIcons()
@@ -27,7 +28,8 @@ GUI_Icons GUI_LoadIcons()
         .Save   = LoadTexture("ico/save.png"),
         .Setup  = LoadTexture("ico/setup.png"),
         .Error  = LoadTexture("ico/error.png"),
-        .Face   = LoadTexture("ico/face.png")
+        .Face   = LoadTexture("ico/face.png"),
+        .Dog    = LoadTexture("ico/dog.png")
     };
     return icons;
 }

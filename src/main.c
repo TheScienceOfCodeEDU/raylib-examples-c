@@ -148,14 +148,16 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 {
     GUI_Setup *setup = GUI_GetSetup();
     GUI_Icons *icons = GUI_GetIcons();
+    GUI_Theme *theme = &setup->theme;
     int buttons = 3;
     float button_w = target.width / buttons;
     float button_h = target.height;
 
+    Rectangle shape = (Rectangle) { target.x, target.y, button_w, button_h };
     GUI_BeginFontType(EGUI_FontType_GUI);
-        actions->reset_characters    = GUI_Button("Reset",  (Rectangle) { button_w * 0, 0, button_w, button_h }, &icons->New, setup->theme.red);
-        actions->add_character       = GUI_Button("Add",    (Rectangle) { button_w * 1, 0, button_w, button_h }, &icons->Open, setup->theme.gray);
-        actions->toggle_character    = GUI_Button("Change", (Rectangle) { button_w * 2, 0, button_w, button_h }, &icons->Error, setup->theme.gray);
+        actions->reset_characters    = GUI_Button(shape, "Reset", &icons->New, theme->red);
+        actions->add_character       = GUI_Button(MoveRect(shape, (Vector2) { button_w, 0 }), "Add", &icons->Open, theme->gray);
+        actions->toggle_character    = GUI_Button(MoveRect(shape, (Vector2) { button_w * 2, 0 }), "Change", &icons->Error, theme->gray);
     GUI_EndFontType();
 }
 
@@ -176,12 +178,7 @@ typedef struct {
     Camera2D camera2D;
 } Game_State;
 
-typedef struct {
-    bool checkbox_value;
-    char textbox_contents[256];
-    char textbox_int_contents[256];
-    char textbox_float_contents[256];
-} Game_WindowState;
+
 
 Game_State Game_MakeState()
 {
@@ -246,33 +243,66 @@ void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
     }
 }
 
+//
+// SAMPLE WINDOW
+//
 
+// 1. Define your data
+typedef struct {
+    bool checkbox_value;
+    bool font_toggle;
+    char input_contents[256];
+    char input_int_contents[256];
+    char input_float_contents[256];
+} Game_WindowState;
+
+// 2. Define your draw window
 void WIN_window(GUI_Window* window, void* data)
 {
+    // Prepare your data
     Game_WindowState *win_state = (Game_WindowState*)data;
-    GUI_Setup *setup = GUI_GetSetup();
-    EGUI_FontType font_type = EGUI_FontType_GUI;
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
-    Rectangle window_workspace =
+    // Responsive height (if you require it)
+    GUI_WindowUpdateShapeForContent(window);
+    
+    // Get the setup
+    // Allows access to theming setup->theme.red
+    GUI_Setup *setup            = GUI_GetSetup();
+    // Set your font
+    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;
+    // Keep or modify colors
+    GUI_ThemeColors colors      = window->colors;
+    // And define your UI
+    Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font_type);
-        GUI_BeginBlock(window_workspace.width / 3, default_height);
-        // 1st textbox
-        GUI_Label("Hello", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(win_state->textbox_contents, EGUI_InputText, GUI_NextHorizontals(2), window->colors);
+        // A default layout with 3 columns
+        GUI_BeginBlockCols(3, window_workspace, font_type);
 
-        GUI_BeginDuplicateBlock();
-        GUI_Label("Int", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(win_state->textbox_int_contents, EGUI_InputInt, GUI_NextHorizontals(2), window->colors);
+        // 1st input (textbox)
+        GUI_Label(GUI_NextHorizontal(), "Text", colors);
+        GUI_Input(GUI_NextHorizontals(2), win_state->input_contents, EGUI_InputText, colors);
 
+        // 2nd input for integer
+        // TODO@dc: add min, max and parsing
         GUI_BeginDuplicateBlock();
-        GUI_Label("Float", GUI_NextHorizontal(), window->colors);
-        GUI_TextBox(win_state->textbox_float_contents, EGUI_InputFloat, GUI_NextHorizontals(2), window->colors);
+        GUI_Label(GUI_NextHorizontal(), "Int", colors);
+        GUI_Input(GUI_NextHorizontals(2), win_state->input_int_contents, EGUI_InputInt, colors);
 
-        // Switch
+        // 3rd input for float
         GUI_BeginDuplicateBlock();
-        GUI_Label("Switch", GUI_NextHorizontal(), window->colors);
-        GUI_CheckBox(&win_state->checkbox_value, "ON", "OFF", GUI_NextHorizontals(2), setup->theme.red);        
+        GUI_Label(GUI_NextHorizontal(), "Float", colors);
+        GUI_Input(GUI_NextHorizontals(2), win_state->input_float_contents, EGUI_InputFloat, colors);
+
+        // Wallpaper check (checkbox/switch)
+        // With a theme.red color
+        GUI_BeginDuplicateBlock();
+        GUI_Label(GUI_NextHorizontal(), "Wallpaper",  colors);
+        GUI_Check(GUI_NextHorizontals(2), &win_state->checkbox_value, "ON", "OFF", setup->theme.red);
+
+        // Font toggler
+        GUI_BeginDuplicateBlock();
+        GUI_Label(GUI_NextHorizontal(), "Font",  colors);
+        GUI_Check(GUI_NextHorizontals(2), &win_state->font_toggle, "GUI", "DEF", colors);
     GUI_EndWindowContents(window);
 }
 
@@ -288,7 +318,7 @@ void WIN_layouts(GUI_Window* window, void* data)
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height);
-        GUI_Label("Some sample layouts for imKairos", GUI_NextVertical(), setup->theme.gray);
+        GUI_Label(GUI_NextVertical(), "Some sample layouts for imKairos", setup->theme.gray);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
@@ -336,7 +366,7 @@ void WIN_winman(GUI_Window* window, void* data)
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(TextFormat("%d - %s", win->id, win->title), GUI_NextVertical(), NULL, window->colors)) {
+            if (GUI_Button(GUI_NextVertical(), TextFormat("%d - %s", win->id, win->title), NULL, window->colors)) {
                 state->force_z_index = win->id;
             }
         }
@@ -345,15 +375,15 @@ void WIN_winman(GUI_Window* window, void* data)
         Rectangle t_shape = GUI_WindowTitle(active->shape);
         Rectangle w_shape = active->shape;
 
-        GUI_Label(TextFormat("ID=%d scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->id, active->scroll_offset, active->content_height), GUI_NextVertical(), window->colors);
+        GUI_Label(GUI_NextVertical(), TextFormat("ID=%d scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->id, active->scroll_offset, active->content_height),  window->colors);
 
-        GUI_Label("title_shape", GUI_NextVertical(), window->colors);
-        GUI_Label(TextFormat("x=%.2f  y=%.2f", t_shape.x, t_shape.y), GUI_NextVertical(), window->colors);
-        GUI_Label(TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height), GUI_NextVertical(), window->colors);
+        GUI_Label(GUI_NextVertical(), "title_shape", window->colors);
+        GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f", t_shape.y,  t_shape.x), window->colors);
+        GUI_Label(GUI_NextVertical(), TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height), window->colors);
 
-        GUI_Label("window_shape", GUI_NextVertical(), window->colors);
-        GUI_Label(TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y), GUI_NextVertical(), window->colors);
-        GUI_Label(TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height), GUI_NextVertical(), window->colors);
+        GUI_Label(GUI_NextVertical(), "window_shape", window->colors);
+        GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y),  window->colors);
+        GUI_Label(GUI_NextVertical(), TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height), window->colors);
 
         Rectangle next = GUI_NextVertical();
         float icon_w = GUI_GetIconWidth();
@@ -502,7 +532,6 @@ int main(void) {
         GUI_BeginDraw(pointer_style);
 
         float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI);
-        GUI_FontSetup *font_setup = GUI_GetFontSetup(EGUI_FontType_GUI);
         Rectangle window_limits = (Rectangle){ 
             0,
             topbar_height,
@@ -522,14 +551,13 @@ int main(void) {
             {
                 static GUI_Window* win_window = NULL;
                 if (win_window == NULL && !first_render)
-                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 100 }, setup.theme.gray, NULL, WIN_window);
+                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup.theme.gray, &icons.Dog, false, WIN_window);
             }
             {
                 static GUI_Window* win_layouts = NULL;
                 if (win_layouts == NULL && !first_render) {
-                    win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_layouts);
+                    win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, false, WIN_layouts);
                     win_layouts->shape.x         = win_third;
-                    win_layouts->shape.y         = font_setup->default_height;
                 }
                 
                 if (win_layouts != NULL) {                    
@@ -540,7 +568,7 @@ int main(void) {
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL && !first_render)
-                    win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, WIN_winman);
+                    win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
                 
                 if (win_man != NULL) {
                     win_man->shape.x         = win_third * 2;

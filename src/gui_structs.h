@@ -54,6 +54,7 @@ typedef struct GUI_Window {
     Texture2D       *icon;
     float           scroll_offset;
     float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
+    bool            focused_face;
     void (*contents) (struct GUI_Window*, void*);
 } GUI_Window;
 
@@ -67,7 +68,8 @@ GUI_Window GUI_MakeEmptyWindow(void)
         .icon           = NULL,
         .scroll_offset  = 0.0f,
         .content_height = 0.0f,
-        .contents       = NULL
+        .focused_face   = true,
+        .contents       = NULL,        
     };
     return window;
 }
@@ -256,6 +258,16 @@ Rectangle GUI_WindowTitle(Rectangle shape)
         GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI)
     };
     return shapeTitle;
+}
+
+void GUI_WindowUpdateShapeForContent(GUI_Window *window)
+{
+    float border            = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
+    float scale             = GUI_CTX.state->scale;
+
+    Rectangle shape_title   = GUI_WindowTitle(window->shape);
+    float current_height    = window->content_height + shape_title.height + (shape_title.y - window->shape.y) + border * scale * 2;
+    window->shape.height    = current_height;
 }
 
 Rectangle GUI_WindowWorkspace(GUI_Window *window)
