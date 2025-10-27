@@ -265,13 +265,12 @@ void WIN_window(GUI_Window* window, void* data)
     // Responsive height (if you require it)
     GUI_WindowUpdateShapeForContent(window);
     
-    // Get the setup
-    // Allows access to theming setup->theme.red
+    // Get the setup as it allows access to theming setup->theme.red
     GUI_Setup *setup            = GUI_GetSetup();
-    // Set your font
-    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;
     // Keep or modify colors
     GUI_ThemeColors colors      = window->colors;
+    // Set your font
+    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;    
     // And define your UI
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font_type);
