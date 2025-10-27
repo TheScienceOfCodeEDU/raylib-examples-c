@@ -35,8 +35,8 @@ Vector2 LimitVector2Rect(Vector2 point, Rectangle limits) {
 
 void DrawDebugRect(Rectangle rect, Color color)
 {
-    DrawRectangleRec(rect, ColorAlpha(color, 0.75));
-    DrawRectangleLinesEx(rect, 1.0, ColorAlpha(color, 0.95));
+    DrawRectangleRec(rect, color);
+    DrawRectangleLinesEx(rect, 1.0, color);
 }
 
 Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
@@ -55,9 +55,9 @@ static inline Rectangle RectIntersection(Rectangle a, Rectangle b)
     float x = fmaxf(a.x, b.x);
     float y = fmaxf(a.y, b.y);
     float w = fminf(a.x + a.width,  b.x + b.width)  - x;
-    float h = fminf(a.y + a.height, a.y + b.height) - y;
+    float h = fminf(a.y + a.height, b.y + b.height) - y;
     if (w <= 0 || h <= 0)
-        return (Rectangle){0,0,0,0};
+        return (Rectangle){0, 0, 0, 0};
     else
         return (Rectangle){x, y, w, h};
 }

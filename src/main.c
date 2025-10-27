@@ -255,7 +255,7 @@ void WIN_window(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, default_height * 10, font_type);
+    GUI_BeginWindowContents(window, font_type);
         GUI_BeginBlock(window_workspace.width / 3, default_height);
         // 1st textbox
         GUI_Label("Hello", GUI_NextHorizontal(), window->colors);
@@ -272,8 +272,8 @@ void WIN_window(GUI_Window* window, void* data)
         // Switch
         GUI_BeginDuplicateBlock();
         GUI_Label("Switch", GUI_NextHorizontal(), window->colors);
-        GUI_CheckBox(&win_state->checkbox_value, "ON", "OFF", GUI_NextHorizontals(2), setup->theme.red);
-    GUI_EndWindowContents();
+        GUI_CheckBox(&win_state->checkbox_value, "ON", "OFF", GUI_NextHorizontals(2), setup->theme.red);        
+    GUI_EndWindowContents(window);
 }
 
 void WIN_layouts(GUI_Window* window, void* data)
@@ -284,7 +284,7 @@ void WIN_layouts(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, 0, EGUI_FontType_Default);
+    GUI_BeginWindowContents(window, EGUI_FontType_Default);
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height);
@@ -318,7 +318,7 @@ void WIN_layouts(GUI_Window* window, void* data)
         GUI_BeginBlock(window_workspace.width / 2, default_height);
         DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), RED);
         DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLUE);
-    GUI_EndWindowContents();
+    GUI_EndWindowContents(window);
 }
 
 void WIN_winman(GUI_Window* window, void* data)
@@ -330,7 +330,7 @@ void WIN_winman(GUI_Window* window, void* data)
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, 0, font_type);
+    GUI_BeginWindowContents(window, font_type);
         GUI_BeginBlock(window_workspace.width, default_height);
 
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
@@ -366,7 +366,7 @@ void WIN_winman(GUI_Window* window, void* data)
         if (image.id == 0) image = LoadTexture("art/abstractica.png");
         next = GUI_NextVertical();
         GUI_Image(image, (Rectangle){ next.x, next.y, next.width, 320 });
-    GUI_EndWindowContents();
+    GUI_EndWindowContents(window);
 }
 
 const char* BuildTimeFormatted()
@@ -413,9 +413,6 @@ void DrawTextureFullScreenKeep(Texture2D tex, Color tint)
     DrawTexturePro(tex, src, dst, (Vector2){0, 0}, 0.0f, tint);
 }
 
-#include "raylib.h"
-
-// Llena toda la pantalla (cover), sin barras. Recorta centrado.
 void DrawTextureFullScreen(Texture2D tex, Color tint)
 {
     int screenW = GetScreenWidth();
@@ -525,7 +522,7 @@ int main(void) {
             {
                 static GUI_Window* win_window = NULL;
                 if (win_window == NULL && !first_render)
-                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, WIN_window);
+                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 250, 100 }, setup.theme.gray, NULL, WIN_window);
             }
             {
                 static GUI_Window* win_layouts = NULL;
@@ -640,7 +637,7 @@ int main(void) {
 
         // Draw
         BeginDrawing();
-            ClearBackground(BLACK);
+            ClearBackground(WHITE);
 
             if (win_state.checkbox_value == 1) {
                 DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);

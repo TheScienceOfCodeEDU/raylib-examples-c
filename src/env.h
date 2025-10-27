@@ -8,4 +8,5 @@
  #define DEV_HIDE_CURSOR         1
  #define DEV_MAXIMIZE            0
  #define DEV_DEBUG_GUI           0
+ #define DEV_DEBUG_GUI_SCROLL    0
 #endif

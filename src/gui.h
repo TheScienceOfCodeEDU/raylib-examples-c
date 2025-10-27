@@ -80,7 +80,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp.current_scroll };
     bool collide_scolled        = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
-    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window->shape, window->content_height));
+    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window));
     
     // Collide checks
     bool collide                = collide_scolled && collide_workspace;
@@ -168,9 +168,16 @@ void GUI_EndDraw()
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale, -border * scale);
     if (intersect_window && GUI_CTX.temp.current_window_idx != GUI_NO_WIN) {
-        GUI_Window *win = GUI_GetWindow(GUI_CTX.temp.current_window_idx);
-        result.y -= win->scroll_offset;        
-        result = RectIntersection(result, GUI_CTX.temp.current_window_workspace);
+        result.y += GUI_CTX.temp.current_scroll;
+        Rectangle intersection = RectIntersection(result, GUI_CTX.temp.current_window_workspace);
+        if (DEV_DEBUG_GUI_SCROLL) {
+            if (GUI_CTX.temp.current_window_idx == GUI_CTX.state->z_index[0]) {
+                GUI_DrawBorders(GUI_CTX.temp.current_window_workspace, RED, RED, 1, false);
+                DrawDebugRect(result, ColorAlpha(GREEN, 0.1));
+                DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9));
+            }
+        }
+        result = intersection;
     }
     return result;
 }
@@ -720,6 +727,8 @@ Rectangle GUI_NextVertical(void)
                                                                     : (float)GetScreenWidth();
     float vertical_size = GUI_CTX.temp.vertical_size;
 
+    GUI_CTX.temp.layout_used_height += vertical_size;
+
     Rectangle shape = {
         /* X */ horizontal_size * GUI_CTX.temp.horizontal_count,
         /* Y */ vertical_size * GUI_CTX.temp.vertical_count++,
@@ -808,15 +817,20 @@ Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
 }
 void GUI_ResetLayout()
 {
-    GUI_CTX.temp.horizontal_count = 0;
-    GUI_CTX.temp.vertical_count   = 0;
+    GUI_CTX.temp.horizontal_count   = 0;
+    GUI_CTX.temp.vertical_count     = 0;
+    GUI_CTX.temp.layout_used_height = 0; 
 }
-void GUI_BeginBlock(float width, float height)
+void GUI_CheckLayoutJump()
 {
     // Add jump if necessary after ONLY horizontal blocks
     if (GUI_CTX.temp.horizontal_count > 0 && GUI_CTX.temp.vertical_count == 0) {
         GUI_NextVertical();
     }
+}
+void GUI_BeginBlock(float width, float height)
+{
+    GUI_CheckLayoutJump();
 
     // Horizontal
     if (width > 0.0) {
@@ -907,7 +921,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
 
     // Vertical scroll
     // Scrollbar
-    Rectangle workspace = GUI_WindowWorkspace(shape, window->content_height);
+    Rectangle workspace = GUI_WindowWorkspace(window);
     if (workspace.height < window->content_height) {
         float ratio = workspace.height / window->content_height;
         float bar_h = ratio * workspace.height;
@@ -969,10 +983,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     shape_title     = GUI_WindowTitle(window->shape);
 
     // Vertical scroll
-    Rectangle workspace = GUI_WindowWorkspace(window->shape, window->content_height);
-    if (window->content_height <= 0) {
-        window->content_height = workspace.height;
-    }
+    Rectangle workspace = GUI_WindowWorkspace(window);
     if (is_pointer_over && workspace.height < window->content_height) {
         float wheel = GetMouseWheelMove();
         if (wheel != 0.0f) {
@@ -1120,13 +1131,12 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
     }
 }
 
-Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, EGUI_FontType font_type)
+Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
 {
     // Data
-    Rectangle window_workspace = GUI_WindowWorkspace(window->shape, height);
+    Rectangle window_workspace = GUI_WindowWorkspace(window);
     
     // Vertical scroll    
-    window->content_height                  = height;
     GUI_CTX.temp.current_window_idx         = window->id;
     GUI_CTX.temp.current_scroll             = -window->scroll_offset;
     GUI_CTX.temp.current_window_workspace   = window_workspace;
@@ -1143,13 +1153,18 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, float height, EGUI_FontTyp
     return window_workspace;
 }
 
-void GUI_EndWindowContents()
+void GUI_EndWindowContents(GUI_Window* window)
 {
+    // End window stuff
+    GUI_CheckLayoutJump();
+
     // Close window stuff
-    rlPopMatrix();
-    
+    rlPopMatrix();    
+
     // Vertical scroll
-    // Reset
+    // Stored layout heigth
+    window->content_height                  = GUI_CTX.temp.layout_used_height;
+    // Reset temp values    
     GUI_CTX.temp.current_window_idx         = GUI_NO_WIN;
     GUI_CTX.temp.current_scroll             = 0;
     GUI_CTX.temp.current_window_workspace   = (Rectangle){ 0, 0, 0, 0 };

@@ -53,7 +53,7 @@ typedef struct GUI_Window {
     char            *title;
     Texture2D       *icon;
     float           scroll_offset;
-    float           content_height;
+    float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
     void (*contents) (struct GUI_Window*, void*);
 } GUI_Window;
 
@@ -82,6 +82,8 @@ typedef struct {
 
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
     int             force_z_index;
+
+    // z_index stores windows indexes or zero as empty.
     int             z_index[GUI_MAX_OPEN_WINS];
 } GUI_State;
 
@@ -113,8 +115,9 @@ typedef struct {
     Vector2         mouse_last;
     Vector2         mouse_current;
 
-    // Active window
-    int             current_window_idx;
+    // Window that is being processed right now
+    // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
+    int             current_window_idx;       // Current window being drawn
     float           current_scroll;
     EGUI_FontType   current_font_type;
     Rectangle       current_window_workspace; // Current window workspace
@@ -125,6 +128,7 @@ typedef struct {
     float           vertical_size;
     int             horizontal_count;
     float           horizontal_size;
+    float           layout_used_height;
 } GUI_Temp;
 
 GUI_Temp GUI_MakeTempDefault()
@@ -147,7 +151,8 @@ GUI_Temp GUI_MakeTempDefault()
         .vertical_count             = 0,
         .vertical_size              = 0.0f,
         .horizontal_count           = 0,
-        .horizontal_size            = 0.0f
+        .horizontal_size            = 0.0f,
+        .layout_used_height         = 0.0f
     };
     return temp;
 }
@@ -224,9 +229,9 @@ GUI_Window* GUI_GetWindow(int id)
     return NULL;
 }
 
-GUI_Window* GUI_GetWindowByZindex(int z_index)
+GUI_Window* GUI_GetWindowByZindex(int z)
 {
-    return GUI_GetWindow(GUI_CTX.state->z_index[z_index]);
+    return GUI_GetWindow(GUI_CTX.state->z_index[z]);
 }
 
 float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
@@ -253,10 +258,12 @@ Rectangle GUI_WindowTitle(Rectangle shape)
     return shapeTitle;
 }
 
-Rectangle GUI_WindowWorkspace(Rectangle shape, float content_height)
+Rectangle GUI_WindowWorkspace(GUI_Window *window)
 {
-    float border    = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
-    float scale     = GUI_CTX.state->scale;
+    Rectangle shape         = window->shape;
+    float content_height    = window->content_height;
+    float border            = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
+    float scale             = GUI_CTX.state->scale;
 
     Rectangle shape_title = GUI_WindowTitle(shape);
     Rectangle shape_workspace = {
