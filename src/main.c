@@ -263,7 +263,7 @@ void WIN_window(GUI_Window* window, void* data)
     Game_WindowState *win_state = (Game_WindowState*)data;
 
     // Responsive height (if you require it)
-    GUI_WindowUpdateShapeForContent(window);
+    //GUI_WindowUpdateShapeForContent(window);
     
     // Get the setup as it allows access to theming setup->theme.red
     GUI_Setup *setup            = GUI_GetSetup();
@@ -321,32 +321,37 @@ void WIN_layouts(GUI_Window* window, void* data)
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
-        DrawDebugRect(GUI_Relative(GUI_NextVertical()), BROWN);                    
-        DrawDebugRect(GUI_Relative(GUI_NextVertical()), BEIGE);
+        float color_alpha = 0.9;
+        DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BROWN, color_alpha));
+        DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BEIGE, color_alpha));
 
         // 1/3rd and 2/3rds blocks
         GUI_BeginBlock(window_workspace.width / 3, default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), YELLOW);                    
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), GREEN);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));                    
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), ColorAlpha(GREEN, color_alpha));
 
         // Second block
         // 3 horizontals of 1/3 of the available space
         GUI_BeginBlock(window_workspace.width / 3, default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), DARKGRAY);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), GRAY);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), LIGHTGRAY);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(DARKGRAY, color_alpha));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(GRAY, color_alpha));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(LIGHTGRAY, color_alpha));
         
         // Prepare for a new block with 5 elements per row
+        // You can send negative values to use AVAILABLE - YOUR_VALUE
+        // Ex:
+        // -default_height means take all space minus a default_height to insert a final row
         GUI_BeginBlock(window_workspace.width / 5, -default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLACK);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.4));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5));
         
+        // Final row
         GUI_BeginBlock(window_workspace.width / 2, default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), RED);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), BLUE);
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(RED, color_alpha));
+        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLUE, color_alpha));
     GUI_EndWindowContents(window);
 }
 
@@ -355,6 +360,8 @@ void WIN_winman(GUI_Window* window, void* data)
     (void) data; // Supress unused warning.
 
     GUI_State *state = GUI_GetState();
+    GUI_Setup *setup = GUI_GetSetup();
+    GUI_Icons *icons = GUI_GetIcons();
     EGUI_FontType font_type = EGUI_FontType_Default;
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
 
@@ -362,6 +369,28 @@ void WIN_winman(GUI_Window* window, void* data)
     GUI_BeginWindowContents(window, font_type);
         GUI_BeginBlock(window_workspace.width, default_height);
 
+        static GUI_Window* win_window = NULL;
+        if (GUI_Button(GUI_NextVertical(), "Open sample window", NULL, window->colors)) {
+            if (win_window == NULL || win_window->id == 0) {
+                win_window = GUI_MakeWindow(2, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);
+            }
+        }
+        static GUI_Window* win_layouts = NULL;
+        if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
+            if (win_layouts == NULL || win_layouts->id == 0) {
+                win_layouts = GUI_MakeWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, NULL, true, WIN_layouts);
+            }
+        }
+        // Dock layout window
+        Rectangle window_limits = GUI_GetWindowLimits();
+        float win_third = window_limits.width / 3.0;
+        if (win_layouts != NULL) {
+            win_layouts->shape.width    = win_third;
+            win_layouts->shape.height   = window_limits.height;
+        }
+
+        GUI_Label(GUI_NextVertical(), "--- Opened windows ---", window->colors);
+        GUI_BeginDuplicateBlock();
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
@@ -369,26 +398,31 @@ void WIN_winman(GUI_Window* window, void* data)
                 state->force_z_index = win->id;
             }
         }
+        GUI_Label(GUI_NextVertical(), "--- End opened windows ---", window->colors);
 
         GUI_Window *active = GUI_GetWindowByZindex(0);
-        Rectangle t_shape = GUI_WindowTitle(active->shape);
-        Rectangle w_shape = active->shape;
+        if (active != NULL) {
+            Rectangle t_shape = GUI_WindowTitle(active->shape);
+            Rectangle w_shape = active->shape;
 
-        GUI_Label(GUI_NextVertical(), TextFormat("ID=%d scroll=%.2f   content_height=%.2f (>0 enables vertical scroll)", active->id, active->scroll_offset, active->content_height),  window->colors);
+            GUI_Label(GUI_NextVertical(), "--- Focused window ---", window->colors);
+            GUI_Label(GUI_NextVertical(), TextFormat("ID=%d scroll=%.2f content_height=%.2f", active->id, active->scroll_offset, active->content_height),  window->colors);
 
-        GUI_Label(GUI_NextVertical(), "title_shape", window->colors);
-        GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f", t_shape.y,  t_shape.x), window->colors);
-        GUI_Label(GUI_NextVertical(), TextFormat("w=%.2f  h=%.2f", t_shape.width, t_shape.height), window->colors);
+            GUI_Label(GUI_NextVertical(), "title_shape", window->colors);
+            GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", t_shape.y,  t_shape.x, t_shape.width, t_shape.height), window->colors);
 
-        GUI_Label(GUI_NextVertical(), "window_shape", window->colors);
-        GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f", w_shape.x, w_shape.y),  window->colors);
-        GUI_Label(GUI_NextVertical(), TextFormat("w=%.2f  h=%.2f", w_shape.width, w_shape.height), window->colors);
+            GUI_Label(GUI_NextVertical(), "window_shape", window->colors);
+            GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", w_shape.x, w_shape.y, w_shape.width, w_shape.height),  window->colors);
+            GUI_Label(GUI_NextVertical(), "--- End focused window ---", window->colors);
+        }
 
         Rectangle next = GUI_NextVertical();
         float icon_w = GUI_GetIconWidth();
         GUI_Face((Vector2){ next.x, next.y }, (float) icon_w / 2);
         GUI_Face((Vector2){ next.x + (float) icon_w / 2, next.y }, icon_w);
         GUI_Face((Vector2){ next.x + (float) icon_w / 2 + icon_w, next.y }, icon_w * 2);
+        GUI_Icon(&icons->Dog, (Vector2){ next.x + (float) icon_w / 2 + icon_w * 3, next.y }, icon_w * 2, WHITE);
+        GUI_NextVertical(); // Jump line
         GUI_NextVertical(); // Jump line
 
         static Texture2D image;
@@ -537,6 +571,7 @@ int main(void) {
             GetScreenWidth(),
             GetScreenHeight() - topbar_height
         };
+        GUI_SetWindowLimits(window_limits);
 
         BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
@@ -548,26 +583,9 @@ int main(void) {
             float win_third = window_limits.width / 3.0;
             static Game_WindowState win_state = {0};
             {
-                static GUI_Window* win_window = NULL;
-                if (win_window == NULL && !first_render)
-                    win_window = GUI_MakeWindow(1, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup.theme.gray, &icons.Dog, false, WIN_window);
-            }
-            {
-                static GUI_Window* win_layouts = NULL;
-                if (win_layouts == NULL && !first_render) {
-                    win_layouts = GUI_MakeWindow(2, "Sample layouts", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, NULL, false, WIN_layouts);
-                    win_layouts->shape.x         = win_third;
-                }
-                
-                if (win_layouts != NULL) {                    
-                    win_layouts->shape.width     = win_third;
-                    win_layouts->shape.height    = window_limits.height;
-                }
-            }
-            {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL && !first_render)
-                    win_man = GUI_MakeWindow(3, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
+                    win_man = GUI_MakeWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
                 
                 if (win_man != NULL) {
                     win_man->shape.x         = win_third * 2;

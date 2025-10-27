@@ -130,6 +130,26 @@ Rectangle AddRect(Rectangle rectangle, float dx, float dy, float dw, float dh)
     return result;
 }
 
+Vector2 AddVector2(Vector2 vector, float dx, float dy)
+{
+    Vector2 result = {
+        vector.x + dx,
+        vector.y + dy
+    };
+    return result;
+}
+
+Rectangle RectFromVector2(Vector2 position, float w, float h)
+{
+    Rectangle result = {
+        position.x,
+        position.y,
+        w,
+        h
+    };
+    return result;
+}
+
 // Helper function to convert HSV to RGB
 Color HSVToRGB(float h, float s, float v)
 {

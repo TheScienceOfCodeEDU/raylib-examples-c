@@ -111,6 +111,7 @@ typedef struct {
     bool            window_focus_moving;
     void            *control_focus_ptr;
     int             window_coll_id;
+    Rectangle       window_limits;
 
     // Pointer runtime
     EGUI_Pointer    current_pointer;
@@ -139,6 +140,7 @@ GUI_Temp GUI_MakeTempDefault()
         .window_focus_moving        = false,
         .control_focus_ptr          = NULL,
         .window_coll_id             = 0,
+        .window_limits              = (Rectangle) { 0, 0, (float) GetScreenWidth(), (float) GetScreenHeight() },
 
         .current_pointer            = EGUI_Pointer_Default,
         .mouse_last                 = (Vector2){ 0.0f, 0.0f },
@@ -191,6 +193,59 @@ GUI_Icons* GUI_GetIcons()
 {
     GUI_Setup *setup = GUI_GetSetup();
     return &setup->icon_setup.icons;
+}
+
+float GUI_GetIconWidth()
+{
+    return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
+}
+
+float GUI_GetIconSmallWidth()
+{
+    return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
+}
+
+GUI_Window* GUI_MakeWindow(
+    int id, char *title, Rectangle shape, 
+    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
+    void (*contents)(GUI_Window*, void*))
+{
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &GUI_CTX.state->window_s[i];
+        if (window->id == 0) {
+            window->id              = id;
+            window->shape           = shape;
+            window->colors          = colors;
+            window->title           = title;
+            window->icon            = icon;
+            window->focused_face    = focused_face;
+            window->contents        = contents;
+            return window;
+        }
+    }
+    return 0;
+}
+
+
+void GUI_SetWindowLimits(Rectangle limits)
+{
+    GUI_CTX.temp.window_limits = limits;
+}
+
+Rectangle GUI_GetWindowLimits()
+{
+    return GUI_CTX.temp.window_limits;
+}
+
+void GUI_RemoveWindow(int id)
+{
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &GUI_CTX.state->window_s[i];
+        if (window->id == id) {
+            window->id = 0;
+            return;
+        }
+    }
 }
 
 GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type)
@@ -251,13 +306,29 @@ Rectangle GUI_WindowTitle(Rectangle shape)
     float border    = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
     float scale     = GUI_CTX.state->scale;
 
-    Rectangle shapeTitle = {
+    Rectangle shape_title = {
         shape.x + border * scale,
         shape.y + border * scale,
         shape.width - (border * scale * 2),
         GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI)
     };
-    return shapeTitle;
+    return shape_title;
+}
+
+Rectangle GUI_WindowPanel(GUI_Window *window)
+{
+    Rectangle shape_title = GUI_WindowTitle(window->shape);
+
+    float border            = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
+    float scale             = GUI_CTX.state->scale;
+    float icon_sm_width     = GUI_GetIconSmallWidth();
+    
+    Vector2 close_position      = { shape_title.x + shape_title.width - icon_sm_width - border * scale, shape_title.y };
+    Rectangle panel_position    = RectFromVector2(close_position, icon_sm_width + border * scale * 2, shape_title.height);
+    panel_position              = AddRect(panel_position, - border * scale, 0.f, 0.f, 0.f);
+
+    // Review last pixels right
+    return panel_position;
 }
 
 void GUI_WindowUpdateShapeForContent(GUI_Window *window)
@@ -289,25 +360,30 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     if (shape_workspace.height < content_height) {
         shape_workspace.width -= border * scale * 3;
     }
-
-    if (DEV_DEBUG_GUI) {
-        DrawRectangleRec(shape_title, ColorAlpha(ORANGE, 0.5));
-        DrawRectangleRec(shape_workspace, ColorAlpha(GREEN, 0.5));
-    }
     return shape_workspace;
 }
 
-#define GUI_CONTROL_LAYOUT(shape) \
+#define GUI_MACRO_CONTROL_LAYOUT(shape) \
     if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { \
         shape = RelativeToRect(shape, GUI_CTX.temp.current_layout_workspace); \
     };
 
-#define GUI_CONTROL_FONT_TYPE_FROM_CONTEXT() \
+#define GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT() \
     EGUI_FontType font_type = GUI_CTX.temp.current_font_type;
 
+#define GUI_MACRO_CONTROL_ACTIVATED(shape) \
+    /* > GUI_MACRO_CONTROL_ACTIVATED                                      */\
+    /*   is_pointer_over    : pointer currently within control bounds    */\
+    /*   is_pointer_active  : user pressed mouse or enter key this frame */\
+    /*   is_active          : control activated                          */\
+    /* Conditions */ \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx)); \
+    bool is_pointer_active  = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);                                                \
+    \
+    /* Gains focus */                                          \
+    bool is_active = is_pointer_over && is_pointer_active;    \
 
-
-#define GUI_CONTROL_FOCUSED(value, shape)                                  \
+#define GUI_MACRO_CONTROL_FOCUSED(value, shape)                                  \
     /* > GUI_CONTROL_FOCUSED                                             */\
     /*   is_pointer_over    : pointer currently within control bounds    */\
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\

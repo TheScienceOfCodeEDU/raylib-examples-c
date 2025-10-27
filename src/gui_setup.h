@@ -18,24 +18,31 @@ typedef struct {
     Texture2D Error;
     Texture2D Face;
     Texture2D Dog;
+    Texture2D Close;
+    Texture2D CloseSmall;
+    Texture2D MinimizeSmall;
 } GUI_Icons;
 
 GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
-        .New    = LoadTexture("ico/new.png"),
-        .Open   = LoadTexture("ico/open.png"),
-        .Save   = LoadTexture("ico/save.png"),
-        .Setup  = LoadTexture("ico/setup.png"),
-        .Error  = LoadTexture("ico/error.png"),
-        .Face   = LoadTexture("ico/face.png"),
-        .Dog    = LoadTexture("ico/dog.png")
+        .New            = LoadTexture("ico/new.png"),
+        .Open           = LoadTexture("ico/open.png"),
+        .Save           = LoadTexture("ico/save.png"),
+        .Setup          = LoadTexture("ico/setup.png"),
+        .Error          = LoadTexture("ico/error.png"),
+        .Face           = LoadTexture("ico/face.png"),
+        .Dog            = LoadTexture("ico/dog.png"),
+        .Close          = LoadTexture("ico/close.png"),
+        .CloseSmall     = LoadTexture("ico/close-sm.png"),
+        .MinimizeSmall  = LoadTexture("ico/minimize-sm.png"),
     };
     return icons;
 }
 
 typedef struct {
     float       icon_size;
+    float       icon_size_sm;
     Vector2     icon_delta; 
     GUI_Icons   icons;
 } GUI_IconSetup;
@@ -43,9 +50,10 @@ typedef struct {
 GUI_IconSetup GUI_MakeIconSetupDefault()
 {
     GUI_IconSetup setup = {
-        .icon_size  = 32,
-        .icon_delta = (Vector2){0, 0},
-        .icons      = GUI_LoadIcons()
+        .icon_size      = 32,
+        .icon_size_sm   = 16,
+        .icon_delta     = (Vector2){0, 0},
+        .icons          = GUI_LoadIcons()
     };
     return setup;
 }

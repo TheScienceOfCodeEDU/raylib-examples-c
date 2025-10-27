@@ -45,14 +45,14 @@ bool GUI_CheckCollisionPointerWindow(int window_id, Rectangle shape)
     return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape);
 }
 
-bool GUI_CheckCollisionPointerWindowTitle(int window_id, Rectangle shape_title)
+bool GUI_CheckCollisionPointerWindowNotFocusMoving(int window_id, Rectangle shape)
 {
     // This is not the window!... or we are moving
     if (GUI_WindowCollide(window_id) || GUI_CTX.temp.window_focus_moving) {
         return false;
     }
 
-    return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape_title);
+    return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape);
 }
 
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
@@ -165,7 +165,7 @@ void GUI_EndDraw()
 }
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
-    Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale, -border * scale);
+    Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
     if (intersect_window && GUI_CTX.temp.current_window_idx != GUI_NO_WIN) {
         result.y += GUI_CTX.temp.current_scroll;
         Rectangle intersection = RectIntersection(result, GUI_CTX.temp.current_window_workspace);
@@ -201,25 +201,32 @@ void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale, bo
 //   NOTES     : Nothing here
 
 // Returns used texture_scale to draw the texture in the available height
-float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
+float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
-    GUI_Assert(height > 0);
+    GUI_Setup *setup    = GUI_GetSetup();    
+    float texture_scale = (shape.height / texture2d->height);
 
-    GUI_Setup *setup = GUI_GetSetup();
-    
-    float texture_scale = (height / texture2d->height);
-    if (DEV_DEBUG_GUI) {
-        DrawRectangleRec((Rectangle) { position.x, position.y, height, height }, ORANGE);
-    }
-    DrawTextureEx(*texture2d, Vector2Add(position, setup->icon_setup.icon_delta), 0, texture_scale, tint);
+    DrawTextureEx(*texture2d, Vector2Add((Vector2) { shape.x, shape.y }, setup->icon_setup.icon_delta), 0, texture_scale, tint);
     return texture_scale;
 }
 
-float GUI_GetIconWidth()
+float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 {
-    GUI_State *state = GUI_GetState();
-    GUI_Setup *setup = GUI_GetSetup();
-    return setup->icon_setup.icon_size * state->scale;
+    GUI_Assert(height > 0);
+    Rectangle shape = RectFromVector2(position, height, height);
+    GUI_MACRO_CONTROL_LAYOUT(shape);
+    
+    return GUI_DrawIcon(shape, texture2d, tint);
+}
+
+bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint)
+{
+    Rectangle shape = RectFromVector2(position, height, height);
+    GUI_MACRO_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_ACTIVATED(shape);
+
+    GUI_Icon(texture2d, position, height, tint);
+    return is_active;
 }
 
 
@@ -229,7 +236,7 @@ float GUI_GetIconWidth()
 void GUI_Face(Vector2 position, float height)
 {
     Rectangle shape = { position.x, position.y, height, height };
-    GUI_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_LAYOUT(shape);
     position.x = shape.x;
     position.y = shape.y;
     GUI_Assert(height > 0);
@@ -257,7 +264,7 @@ void GUI_Face(Vector2 position, float height)
         (unsigned char)(255 * (1.0f - t)),
         255
     };
-    float texture_scale = GUI_Icon(&icons->Face, position, height, color);
+    float texture_scale = GUI_DrawIcon(shape, &icons->Face, color);
     GUI_Assert(texture_scale > 0);    
 
     // Determine quadrant relative to center
@@ -281,7 +288,7 @@ void GUI_Face(Vector2 position, float height)
 //   NOTES     : Nothing here
 void GUI_Image(Texture2D texture, Rectangle shape)
 {
-    GUI_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_LAYOUT(shape);
 
     if (texture.id == 0) return;
 
@@ -354,8 +361,8 @@ bool GUI_Button(
     Rectangle shape, const char* text,Texture2D* icon,
     GUI_ThemeColors colors)
 {
-    GUI_CONTROL_LAYOUT(shape);
-    GUI_CONTROL_FONT_TYPE_FROM_CONTEXT();
+    GUI_MACRO_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
     GUI_ElementStatus status = EGUI_Status_Default;
 
@@ -397,7 +404,7 @@ void GUI_DrawLabel(
 
 void GUI_Label(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
-    GUI_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_LAYOUT(shape);
     GUI_DrawLabel(shape, text, colors, GUI_CTX.temp.current_font_type);
 }
 
@@ -484,9 +491,9 @@ void GUI_Input(
     Rectangle shape, char *value,
     EGUI_InputType type, GUI_ThemeColors colors)
 {
-    GUI_CONTROL_LAYOUT(shape)
-    GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
-    GUI_CONTROL_FOCUSED(value, shape)
+    GUI_MACRO_CONTROL_LAYOUT(shape)
+    GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
+    GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
     // Cursor per Id
     static int cursor = 0;
@@ -685,9 +692,9 @@ void GUI_Check(
     Rectangle shape, bool *value, char *on_txt, char *off_txt, 
     GUI_ThemeColors colors)
 {
-    GUI_CONTROL_LAYOUT(shape)
-    GUI_CONTROL_FONT_TYPE_FROM_CONTEXT()
-    GUI_CONTROL_FOCUSED(value, shape)
+    GUI_MACRO_CONTROL_LAYOUT(shape)
+    GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
+    GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
     // Focused
     if (is_focused) {
@@ -834,7 +841,9 @@ void GUI_BeginBlock(float width, float height)
     if (width > 0.0) {
         GUI_BeginHorizontal(width);
     } else if (width < 0.0) {
-        GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width + width); // width is already negative
+        // width is already negative
+        // so this takes avaiable space minus width
+        GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width + width);
     } else {
         GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width);
     }
@@ -848,7 +857,9 @@ void GUI_BeginBlock(float width, float height)
     if (height > 0.0) {
         GUI_BeginVertical(height);
     } else if (height < 0.0) {
-        GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height + height); // height is already negative
+        // height is already negative
+        // so this takes avaiable space minus height
+        GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height + height);
     } else {
         GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height);
     }
@@ -865,7 +876,7 @@ void GUI_BeginDuplicateBlock()
 
 Rectangle GUI_Relative(Rectangle shape)
 {
-    GUI_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_LAYOUT(shape);
     return shape;
 }
 
@@ -873,13 +884,36 @@ Rectangle GUI_Relative(Rectangle shape)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 
+void GUI_WindowButtonPanel(GUI_Window* window, EGUI_FontType font_type)
+{
+    GUI_State *state            = GUI_GetState();
+    GUI_Icons *icons            = GUI_GetIcons();
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
+    GUI_ThemeColors colors      = window->colors;
+    
+
+    float border        = font_setup->border;
+    float scale         = state->scale;
+    float icon_sm_width = GUI_GetIconSmallWidth();
+
+    Rectangle shape_panel   = GUI_WindowPanel(window);
+    Vector2 position_button = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
+    DrawRectangleRec(shape_panel, colors.bg_color_0);
+
+    if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, WHITE)) {
+        GUI_RemoveWindow(window->id);
+    }
+    GUI_Icon(&icons->MinimizeSmall, AddVector2(position_button, 0, icon_sm_width + border * scale), icon_sm_width, WHITE);
+}
+
 void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
-
+    
     Rectangle        shape          = window->shape;
     Rectangle        shape_title    = GUI_WindowTitle(window->shape);
+    Rectangle        shape_panel    = GUI_WindowPanel(window);
     GUI_ThemeColors  colors         = window->colors;
     GUI_Theme        *theme         = &GUI_CTX.setup->theme;
 
@@ -943,16 +977,24 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
             bar_h
         }, colors.tx_color_0);
     }
+
+    if (DEV_DEBUG_GUI) {
+        DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75));
+        DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85));        
+        DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25));
+    }
 }
 
 void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 {
     EGUI_FontType font_type = EGUI_FontType_GUI;
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
+    Rectangle shape_panel   = GUI_WindowPanel(window);
 
     // Conditions
     bool is_pointer_over        = GUI_CheckCollisionPointerWindow(window->id, window->shape);
-    bool is_pointer_over_title  = GUI_CheckCollisionPointerWindowTitle(window->id, shape_title);
+    bool is_pointer_over_panel  = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_panel);
+    bool is_pointer_over_title  = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_title) && !is_pointer_over_panel;
     bool is_pointer_active      = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool just_focused           = is_pointer_over && is_pointer_active;
     bool is_focused             = GUI_CTX.state->z_index[0] == window->id;
@@ -991,8 +1033,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
         float wheel = GetMouseWheelMove();
         if (wheel != 0.0f) {
             window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
-            window->scroll_offset = Clamp(window->scroll_offset, 0, window->content_height - workspace.height);
         }
+        window->scroll_offset = Clamp(window->scroll_offset, 0, window->content_height - workspace.height);
     }
 
     // Draw
@@ -1001,27 +1043,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
         is_pointer_over_title   ? EGUI_Status_Collide :
                                   EGUI_Status_Default;
     GUI_DrawWindow(window, status, font_type);
-}
-
-GUI_Window* GUI_MakeWindow(
-    int id, char *title, Rectangle shape, 
-    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
-    void (*contents)(GUI_Window*, void*))
-{
-    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-        GUI_Window* window = &GUI_CTX.state->window_s[i];
-        if (window->id == 0) {
-            window->id              = id;
-            window->shape           = shape;
-            window->colors          = colors;
-            window->title           = title;
-            window->icon            = icon;
-            window->focused_face    = focused_face;
-            window->contents        = contents;
-            return window;
-        }
-    }
-    return 0;
+    // Generate button panel
+    GUI_WindowButtonPanel(window, font_type);
 }
 
 void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
