@@ -21,6 +21,7 @@ typedef struct {
     Texture2D Close;
     Texture2D CloseSmall;
     Texture2D MinimizeSmall;
+    Texture2D Layouts;
 } GUI_Icons;
 
 GUI_Icons GUI_LoadIcons()
@@ -36,6 +37,7 @@ GUI_Icons GUI_LoadIcons()
         .Close          = LoadTexture("ico/close.png"),
         .CloseSmall     = LoadTexture("ico/close-sm.png"),
         .MinimizeSmall  = LoadTexture("ico/minimize-sm.png"),
+        .Layouts        = LoadTexture("ico/layouts.png"),
     };
     return icons;
 }
@@ -239,34 +241,30 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) {
 //   STABILITY : █████░░░░░  50%
 //   NOTES     : Add more
 
-typedef struct {
-    Texture2D   pointer_texture;
-    Vector2     pointer_delta_normalized;
-    float       pointer_scale;
-    float       pointer_alpha;
-} GUI_PointerSetup;
-
 typedef enum {
+    EGUI_Pointer_None,
     EGUI_Pointer_Default,
     EGUI_Pointer_AGS,
     EGUI_Pointer_Text,
-    EGUI_Pointer_Count
+    EGUI_Pointer_Resize,    
+    EGUI_Pointer_Count,    
 } EGUI_Pointer;
 
 typedef struct {
-    GUI_FontSetup       font_setups[EGUI_FontType_Count];
-    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
+    Texture2D       pointer_texture;
+    Vector2         pointer_delta_normalized;
+    float           pointer_scale;
+    float           pointer_alpha;
+    EGUI_Pointer    additional;
+} GUI_PointerSetup;
+
+typedef struct {
     GUI_Theme           theme;
     GUI_IconSetup       icon_setup;
+    GUI_FontSetup       font_setups[EGUI_FontType_Count];
+    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
 } GUI_Setup;
 
-GUI_PointerSetup GUI_MakePointerSetup(Texture2D texture, Vector2 delta_normalized)
-{
-    return (GUI_PointerSetup) {
-        .pointer_texture = texture,
-        .pointer_delta_normalized = delta_normalized
-    };
-}
 
 GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
 {
@@ -279,13 +277,23 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
             setup.pointer_delta_normalized  = (Vector2){ 0.5f, 0.5f };
             setup.pointer_scale             = 2.0f;
             setup.pointer_alpha             = 1.0;
+            setup.additional                = EGUI_Pointer_None;
             break;
 
         case EGUI_Pointer_Text:
             setup.pointer_texture           = LoadTexture("ico/pointer_txt.png");
-            setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.5f };
+            setup.pointer_delta_normalized  = (Vector2){ -1.0f, 0.0f };
             setup.pointer_scale             = 2.0f;
-            setup.pointer_alpha             = 0.75;
+            setup.pointer_alpha             = 0.85;
+            setup.additional                = EGUI_Pointer_Default;
+            break;
+
+        case EGUI_Pointer_Resize:
+            setup.pointer_texture           = LoadTexture("ico/pointer_resize.png");
+            setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
+            setup.pointer_scale             = 2.0f;
+            setup.pointer_alpha             = 1.0;
+            setup.additional                = EGUI_Pointer_None;
             break;
 
         case EGUI_Pointer_Default:
@@ -294,6 +302,7 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
             setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
             setup.pointer_scale             = 2.0f;
             setup.pointer_alpha             = 1.0;
+            setup.additional                = EGUI_Pointer_None;
             break;
 
     }
@@ -309,17 +318,19 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
 GUI_Setup GUI_MakeSetupDefault()
 {
     GUI_Setup setup = {
-        .font_setups = {
-            GUI_MakeFontSetupDefault(EGUI_FontType_Default),
-            GUI_MakeFontSetupDefault(EGUI_FontType_GUI)
-        },
-        .pointer_setups = {
-            GUI_MakePointerSetupForType(EGUI_Pointer_Default),
-            GUI_MakePointerSetupForType(EGUI_Pointer_AGS),
-            GUI_MakePointerSetupForType(EGUI_Pointer_Text)
-        },
         .theme      = GUI_MakeThemeDefault(),
         .icon_setup = GUI_MakeIconSetupDefault()
     };
+
+    // Fonts
+    for (int i = 0; i < EGUI_FontType_Count; i++) {
+        setup.font_setups[i] = GUI_MakeFontSetupDefault((EGUI_FontType)i);
+    }
+
+    // Pointers
+    // 0 is None
+    for (int i = 1; i < EGUI_Pointer_Count; i++) {
+        setup.pointer_setups[i] = GUI_MakePointerSetupForType((EGUI_Pointer)i);
+    }
     return setup;
 }

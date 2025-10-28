@@ -15,11 +15,13 @@
 //   STABILITY : █████████░  90%
 //   STATUS    : Stable
 //   NOTES     : Nothing here
-void GUI_DrawPointer()
+
+void GUI_DrawPointerFor(EGUI_Pointer pointer)
 {
-    Vector2 mouse_current               = GUI_CTX.temp.mouse_current;
-    GUI_PointerSetup* pointer_setup     = GUI_GetPointerSetup();
-    Texture pointer_texture             = pointer_setup->pointer_texture;     
+    GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[pointer];
+    Vector2 mouse_current               = GUI_CTX.temp.mouse_current;    
+    Texture pointer_texture             = pointer_setup->pointer_texture;
+    
 
     Vector2 mouse_shape = (Vector2){
         mouse_current.x -
@@ -28,6 +30,16 @@ void GUI_DrawPointer()
             (pointer_texture.height * pointer_setup->pointer_delta_normalized.y * pointer_setup->pointer_scale)
     };
     DrawTextureEx(pointer_texture, mouse_shape, 0, pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
+}
+
+void GUI_DrawPointer()
+{
+    EGUI_Pointer current_pointer        = GUI_CTX.temp.current_pointer;
+    GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[GUI_CTX.temp.current_pointer];
+    if (pointer_setup->additional != EGUI_Pointer_None) {
+        GUI_DrawPointerFor(pointer_setup->additional);
+    }
+    GUI_DrawPointerFor(current_pointer);
 }
 
 bool GUI_WindowCollide(int window_id)
@@ -47,8 +59,8 @@ bool GUI_CheckCollisionPointerWindow(int window_id, Rectangle shape)
 
 bool GUI_CheckCollisionPointerWindowNotFocusMoving(int window_id, Rectangle shape)
 {
-    // This is not the window!... or we are moving
-    if (GUI_WindowCollide(window_id) || GUI_CTX.temp.window_focus_moving) {
+    // This is not the window!... or we are moving/resizing
+    if (GUI_WindowCollide(window_id) || GUI_CTX.temp.current_action != EGUI_ActionNone) {
         return false;
     }
 
@@ -206,7 +218,9 @@ float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
     GUI_Setup *setup    = GUI_GetSetup();    
     float texture_scale = (shape.height / texture2d->height);
 
-    DrawTextureEx(*texture2d, Vector2Add((Vector2) { shape.x, shape.y }, setup->icon_setup.icon_delta), 0, texture_scale, tint);
+    GUI_BeginControlScissor();
+        DrawTextureEx(*texture2d, Vector2Add((Vector2) { shape.x, shape.y }, setup->icon_setup.icon_delta), 0, texture_scale, tint);
+    EndScissorMode();
     return texture_scale;
 }
 
@@ -311,7 +325,10 @@ void GUI_Image(Texture2D texture, Rectangle shape)
         dst.x = shape.x;
         dst.y = shape.y + (shape.height - dst.height) * 0.5f;
     }
-    DrawTexturePro(texture, src, dst, (Vector2){0,0}, 0.0f, WHITE);
+
+    GUI_BeginControlScissor();
+        DrawTexturePro(texture, src, dst, (Vector2){0,0}, 0.0f, WHITE);
+    EndScissorMode();
 }
 
 
@@ -350,11 +367,11 @@ void GUI_DrawButton(
         GUI_DrawAdjustedTextEx(text, 
             (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
             colors.tx_color_0, scale, font_type);
-
-        if (icon_w > 0) {
-            GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
-        }
     EndScissorMode();
+
+    if (icon_w > 0) {
+        GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
+    }
 }
 
 bool GUI_Button(
@@ -367,7 +384,7 @@ bool GUI_Button(
     GUI_ElementStatus status = EGUI_Status_Default;
 
     bool collide            = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
-    bool moving_window      = GUI_CTX.temp.window_focus_moving == 0;
+    bool moving_window      = GUI_CTX.temp.current_action == EGUI_ActionNone;
     bool focusable          = collide && moving_window;
     if (focusable) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -528,7 +545,7 @@ void GUI_Input(
             int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i), font_type).x;
             if (mouse_x < w) break;
         }
-        cursor = cursor_position;
+        cursor = fmax(0, cursor_position - 1);
     }
 
     // Focused
@@ -886,17 +903,16 @@ Rectangle GUI_Relative(Rectangle shape)
 
 void GUI_WindowButtonPanel(GUI_Window* window, EGUI_FontType font_type)
 {
-    GUI_State *state            = GUI_GetState();
     GUI_Icons *icons            = GUI_GetIcons();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
     GUI_ThemeColors colors      = window->colors;
     
 
     float border        = font_setup->border;
-    float scale         = state->scale;
+    float scale         = GUI_CTX.state->scale;
     float icon_sm_width = GUI_GetIconSmallWidth();
 
-    Rectangle shape_panel   = GUI_WindowPanel(window);
+    Rectangle shape_panel   = GUI_WindowPanel(window->shape);
     Vector2 position_button = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
     DrawRectangleRec(shape_panel, colors.bg_color_0);
 
@@ -906,6 +922,29 @@ void GUI_WindowButtonPanel(GUI_Window* window, EGUI_FontType font_type)
     GUI_Icon(&icons->MinimizeSmall, AddVector2(position_button, 0, icon_sm_width + border * scale), icon_sm_width, WHITE);
 }
 
+void GUI_WindowEndingPanel(GUI_Window* window, EGUI_FontType font_type)
+{
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
+    GUI_ThemeColors colors      = window->colors;
+    
+    float border        = font_setup->border;
+    float scale         = GUI_CTX.state->scale;
+    
+    Rectangle shape_bottom   = GUI_WindowBottom(window->shape);
+    DrawRectangleRec((Rectangle) {
+        shape_bottom.x + border * scale,
+        shape_bottom.y,
+        shape_bottom.width - border * scale * 2,
+        border * scale
+    }, colors.bg_color_2);
+    DrawRectangleRec((Rectangle) {
+        shape_bottom.x + border * scale,
+        shape_bottom.y + border * scale,
+        shape_bottom.width - border * scale * 2,
+        border * scale
+    }, colors.bg_color_0);
+}
+
 void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
@@ -913,7 +952,8 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     
     Rectangle        shape          = window->shape;
     Rectangle        shape_title    = GUI_WindowTitle(window->shape);
-    Rectangle        shape_panel    = GUI_WindowPanel(window);
+    Rectangle        shape_panel    = GUI_WindowPanel(window->shape);
+    Rectangle        shape_bottom   = GUI_WindowBottom(window->shape);
     GUI_ThemeColors  colors         = window->colors;
     GUI_Theme        *theme         = &GUI_CTX.setup->theme;
 
@@ -979,6 +1019,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     }
 
     if (DEV_DEBUG_GUI) {
+        DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85));
         DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75));
         DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85));        
         DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25));
@@ -989,37 +1030,56 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 {
     EGUI_FontType font_type = EGUI_FontType_GUI;
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
-    Rectangle shape_panel   = GUI_WindowPanel(window);
+    Rectangle shape_panel   = GUI_WindowPanel(window->shape);
+    Rectangle shape_bottom  = GUI_WindowBottom(window->shape);
 
     // Conditions
     bool is_pointer_over        = GUI_CheckCollisionPointerWindow(window->id, window->shape);
     bool is_pointer_over_panel  = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_panel);
     bool is_pointer_over_title  = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_title) && !is_pointer_over_panel;
+    bool is_pointer_over_bottom = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_bottom);
     bool is_pointer_active      = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool just_focused           = is_pointer_over && is_pointer_active;
     bool is_focused             = GUI_CTX.state->z_index[0] == window->id;
 
     // Focus ?
-    if (just_focused && GUI_CTX.temp.window_focus_moving == 0) {
+    if (just_focused && GUI_CTX.temp.current_action == EGUI_ActionNone) {
         if (is_focused) {            
-            GUI_CTX.temp.window_focus_moving = is_pointer_over_title;
+            GUI_CTX.temp.current_action =   is_pointer_over_title   ? EGUI_ActionMoving :
+                                            is_pointer_over_bottom  ? EGUI_ActionResizing
+                                                                    : EGUI_ActionNone;
         }
+    }
+
+    if (is_pointer_over_bottom || GUI_CTX.temp.current_action == EGUI_ActionResizing) {
+        GUI_CTX.temp.current_pointer = EGUI_Pointer_Resize;
     }
 
     // Active
     if (is_focused){
-        // Movement
         bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-        bool moving             = interacting && GUI_CTX.temp.window_focus_moving;
-        if (moving) {
-            Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp.mouse_current, limits);
-            Vector2 mouse_last_valid        = LimitVector2Rect(GUI_CTX.temp.mouse_last, limits);
-            Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
-            
-            window->shape.x += displacement.x;
-            window->shape.y += displacement.y;
+        
+        if (interacting) {
+            // Movement
+            if (GUI_CTX.temp.current_action == EGUI_ActionMoving) {
+                Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp.mouse_current, limits);
+                Vector2 mouse_last_valid        = LimitVector2Rect(GUI_CTX.temp.mouse_last, limits);
+                Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
+
+                window->shape.x += displacement.x;
+                window->shape.y += displacement.y;
+            }
+            // Resizing
+            if (GUI_CTX.temp.current_action == EGUI_ActionResizing) {
+                if (interacting) {
+                    Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp.mouse_current, limits);
+
+                    window->shape.width = fmax(mouse_current_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
+                    window->shape.height = fmax(mouse_current_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
+                }
+            }
         } else {
-            GUI_CTX.temp.window_focus_moving = false;
+            GUI_CTX.temp.current_action = EGUI_ActionNone;
         }
     }
 
@@ -1045,6 +1105,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     GUI_DrawWindow(window, status, font_type);
     // Generate button panel
     GUI_WindowButtonPanel(window, font_type);
+    GUI_WindowEndingPanel(window, font_type);
 }
 
 void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
@@ -1162,10 +1223,14 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 
 Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
 {
+    // Grant min dimmensions
+    window->shape.width = fmax(GUI_MIN_WIN_SIZE, window->shape.width);
+    window->shape.height = fmax(GUI_MIN_WIN_SIZE, window->shape.height);
+    
     // Data
     Rectangle window_workspace = GUI_WindowWorkspace(window);
     
-    // Vertical scroll    
+    // Vertical scroll
     GUI_CTX.temp.current_window_idx         = window->id;
     GUI_CTX.temp.current_scroll             = -window->scroll_offset;
     GUI_CTX.temp.current_window_workspace   = window_workspace;

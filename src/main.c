@@ -263,7 +263,7 @@ void WIN_window(GUI_Window* window, void* data)
     Game_WindowState *win_state = (Game_WindowState*)data;
 
     // Responsive height (if you require it)
-    //GUI_WindowUpdateShapeForContent(window);
+    // GUI_WindowUpdateShapeForContent(window);
     
     // Get the setup as it allows access to theming setup->theme.red
     GUI_Setup *setup            = GUI_GetSetup();
@@ -321,37 +321,39 @@ void WIN_layouts(GUI_Window* window, void* data)
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
-        float color_alpha = 0.9;
-        DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BROWN, color_alpha));
-        DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BEIGE, color_alpha));
+        GUI_BeginControlScissor();
+            float color_alpha = 0.9;
+            DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BROWN, color_alpha));
+            DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BEIGE, color_alpha));
 
-        // 1/3rd and 2/3rds blocks
-        GUI_BeginBlock(window_workspace.width / 3, default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));                    
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), ColorAlpha(GREEN, color_alpha));
+            // 1/3rd and 2/3rds blocks
+            GUI_BeginBlock(window_workspace.width / 3, default_height);
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));                    
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), ColorAlpha(GREEN, color_alpha));
 
-        // Second block
-        // 3 horizontals of 1/3 of the available space
-        GUI_BeginBlock(window_workspace.width / 3, default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(DARKGRAY, color_alpha));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(GRAY, color_alpha));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(LIGHTGRAY, color_alpha));
-        
-        // Prepare for a new block with 5 elements per row
-        // You can send negative values to use AVAILABLE - YOUR_VALUE
-        // Ex:
-        // -default_height means take all space minus a default_height to insert a final row
-        GUI_BeginBlock(window_workspace.width / 5, -default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.4));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5));
-        
-        // Final row
-        GUI_BeginBlock(window_workspace.width / 2, default_height);
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(RED, color_alpha));
-        DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLUE, color_alpha));
+            // Second block
+            // 3 horizontals of 1/3 of the available space
+            GUI_BeginBlock(window_workspace.width / 3, default_height);
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(DARKGRAY, color_alpha));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(GRAY, color_alpha));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(LIGHTGRAY, color_alpha));
+            
+            // Prepare for a new block with 5 elements per row
+            // You can send negative values to use AVAILABLE - YOUR_VALUE
+            // Ex:
+            // -default_height means take all space minus a default_height to insert a final row
+            GUI_BeginBlock(window_workspace.width / 5, -default_height);
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.4));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5));
+            
+            // Final row
+            GUI_BeginBlock(window_workspace.width / 2, default_height);
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(RED, color_alpha));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLUE, color_alpha));
+        EndScissorMode();
     GUI_EndWindowContents(window);
 }
 
@@ -378,15 +380,8 @@ void WIN_winman(GUI_Window* window, void* data)
         static GUI_Window* win_layouts = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
             if (win_layouts == NULL || win_layouts->id == 0) {
-                win_layouts = GUI_MakeWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, NULL, true, WIN_layouts);
+                win_layouts = GUI_MakeWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
             }
-        }
-        // Dock layout window
-        Rectangle window_limits = GUI_GetWindowLimits();
-        float win_third = window_limits.width / 3.0;
-        if (win_layouts != NULL) {
-            win_layouts->shape.width    = win_third;
-            win_layouts->shape.height   = window_limits.height;
         }
 
         GUI_Label(GUI_NextVertical(), "--- Opened windows ---", window->colors);
@@ -558,7 +553,7 @@ int main(void) {
 
         // UI
         static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        if (IsKeyPressed(KEY_F10)) {
             pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
         }
 

@@ -2,9 +2,10 @@
  #include "gui_setup.h"
 #endif
 
+#define GUI_MIN_WIN_SIZE    320
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
-#define GUI_SCROLL_SPEED    4
+#define GUI_SCROLL_SPEED    16
 #define GUI_NO_WIN          -1
 
 // > ENUMS
@@ -22,6 +23,13 @@ typedef enum {
     EGUI_InputInt,       // integer numeric input
     EGUI_InputFloat      // floating numeric input
 } EGUI_InputType;
+
+
+typedef enum {
+    EGUI_ActionNone,
+    EGUI_ActionMoving,
+    EGUI_ActionResizing
+} EGUI_Action;
 
 /*
 EXAMPLE: Enum order matters
@@ -106,9 +114,11 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     return state;
 }
 
+
+
 typedef struct {
     // Window runtime
-    bool            window_focus_moving;
+    EGUI_Action     current_action;
     void            *control_focus_ptr;
     int             window_coll_id;
     Rectangle       window_limits;
@@ -137,7 +147,7 @@ typedef struct {
 GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
-        .window_focus_moving        = false,
+        .current_action             = EGUI_ActionNone,
         .control_focus_ptr          = NULL,
         .window_coll_id             = 0,
         .window_limits              = (Rectangle) { 0, 0, (float) GetScreenWidth(), (float) GetScreenHeight() },
@@ -265,10 +275,8 @@ Font GUI_GetFont(EGUI_FontType font_type)
 
 GUI_PointerSetup* GUI_GetPointerSetup()
 {
-    GUI_Setup* setup = GUI_GetSetup();
-    
     EGUI_Pointer pointer = GUI_CTX.temp.current_pointer;
-    return &setup->pointer_setups[pointer];
+    return &GUI_CTX.setup->pointer_setups[pointer];
 }
 
 GUI_Window* GUI_GetWindow(int id)
@@ -315,20 +323,38 @@ Rectangle GUI_WindowTitle(Rectangle shape)
     return shape_title;
 }
 
-Rectangle GUI_WindowPanel(GUI_Window *window)
+Rectangle GUI_WindowPanel(Rectangle shape)
 {
-    Rectangle shape_title = GUI_WindowTitle(window->shape);
+    Rectangle shape_title = GUI_WindowTitle(shape);
 
     float border            = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
     float scale             = GUI_CTX.state->scale;
     float icon_sm_width     = GUI_GetIconSmallWidth();
     
-    Vector2 close_position      = { shape_title.x + shape_title.width - icon_sm_width - border * scale, shape_title.y };
+    Vector2 close_position      = { 
+        shape_title.x + shape_title.width - icon_sm_width - border * scale,
+        shape_title.y 
+    };
     Rectangle panel_position    = RectFromVector2(close_position, icon_sm_width + border * scale * 2, shape_title.height);
     panel_position              = AddRect(panel_position, - border * scale, 0.f, 0.f, 0.f);
 
     // Review last pixels right
     return panel_position;
+}
+
+Rectangle GUI_WindowBottom(Rectangle shape)
+{
+    float border            = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
+    float scale             = GUI_CTX.state->scale;
+    float bottom_height     = border * scale * 3;
+
+    Rectangle shape_bottom = {
+        shape.x,
+        shape.y + shape.height - bottom_height,
+        shape.width,
+        bottom_height
+    };
+    return shape_bottom;
 }
 
 void GUI_WindowUpdateShapeForContent(GUI_Window *window)
@@ -337,7 +363,10 @@ void GUI_WindowUpdateShapeForContent(GUI_Window *window)
     float scale             = GUI_CTX.state->scale;
 
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
-    float current_height    = window->content_height + shape_title.height + (shape_title.y - window->shape.y) + border * scale * 2;
+    Rectangle shape_bottom  = GUI_WindowBottom(window->shape);
+    float current_height    = window->content_height + (shape_title.y - window->shape.y) + border * scale * 2
+                            + shape_title.height + shape_bottom.height;
+
     window->shape.height    = current_height;
 }
 
@@ -348,12 +377,13 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     float border            = GUI_GetFontSetup(EGUI_FontType_GUI)->border;
     float scale             = GUI_CTX.state->scale;
 
-    Rectangle shape_title = GUI_WindowTitle(shape);
+    Rectangle shape_title  = GUI_WindowTitle(shape);
+    Rectangle shape_bottom = GUI_WindowBottom(shape);
     Rectangle shape_workspace = {
         shape_title.x,
         shape_title.y + shape_title.height + (shape_title.y - shape.y),
-        shape.width - (shape_title.x - shape.x ) * 2,
-        shape.height - shape_title.height - (shape_title.y - shape.y) - border * scale * 2
+        shape.width - (shape_title.x - shape.x ) * 3,
+        shape.height - shape_title.height - (shape_title.y - shape.y) - border * scale - shape_bottom.height
     };
 
     // Vertical scroll
