@@ -176,3 +176,10 @@ Color HSVToRGB(float h, float s, float v)
 void BeginScissorModeRect(Rectangle rect) {
     BeginScissorMode((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 }
+
+
+static inline int   IntMax(int a, int b)   { return (a > b) ? a : b; }
+static inline int   IntMin(int a, int b)   { return (a < b) ? a : b; }
+
+static inline float FloatMax(float a, float b) { return (a > b) ? a : b; }
+static inline float FloatMin(float a, float b) { return (a < b) ? a : b; }

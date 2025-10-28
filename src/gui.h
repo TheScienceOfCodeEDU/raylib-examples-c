@@ -429,7 +429,7 @@ void GUI_Label(Rectangle shape, const char* text, GUI_ThemeColors colors)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 void GUI_DrawInput(
-    Rectangle shape, char* value, int cursor,
+    Rectangle shape, char* value, int blink_cursor,
     GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
@@ -463,7 +463,7 @@ void GUI_DrawInput(
         Vector2 cursor_pos = {0};
         // TODO@dc: max text size
         char tmp[256] = {0};
-        strncpy(tmp, value, cursor);
+        strncpy(tmp, value, blink_cursor);
         cursor_pos = GUI_MeasureAdjustedText(tmp, font_type);
 
         float visible_w = shape.width - (2.0f * border * scale);
@@ -491,7 +491,7 @@ void GUI_DrawInput(
             Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
             // TODO@dc: max text size
             char tmp[256] = {0};
-            strncpy(tmp, value, cursor);
+            strncpy(tmp, value, blink_cursor);
 
             text_size = GUI_MeasureAdjustedText(tmp, font_type);
             DrawRectangle(
@@ -512,8 +512,7 @@ void GUI_Input(
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
-    // Cursor per Id
-    static int cursor = 0;
+    // Blink (text cursor)
     static void *last_control_focus_ptr = NULL;
     
     if (is_pointer_over) {
@@ -521,9 +520,10 @@ void GUI_Input(
     }
 
     // Blink data
-    const float blink_speed     = 0.5f;
-    static float blink_timer    = 0.0f;
-    static bool blink_state     = 0;
+    const float     blink_speed     = 0.5f;
+    static float    blink_timer     = 0.0f;
+    static bool     blink_state     = 0;
+    static int      blink_cursor    = 0;
 
     // Gain focus
     if (just_focused) {
@@ -533,25 +533,29 @@ void GUI_Input(
 
         // Re-locate cursor
         if (last_control_focus_ptr != value) {
-            cursor = 0;
+            blink_cursor = 0;
         }
         last_control_focus_ptr = value;
 
-        int textLength  = StringSize(value);
-        int mouse_x = GUI_CTX.temp.mouse_current.x - shape.x;
-        int cursor_position = 0;
-        for (int i = 0; i <= textLength; i++) {
-            cursor_position = i; 
-            int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, i), font_type).x;
-            if (mouse_x < w) break;
+        // TODO@dc: validate length
+        int mouse_x     = GUI_CTX.temp.mouse_current.x - shape.x;
+        int text_size   = StringSize(value);        
+        bool right_test = mouse_x > GUI_MeasureAdjustedText(value, font_type).x;
+        if (right_test) {
+            blink_cursor = text_size;
+        } else {
+            for (blink_cursor = 0; blink_cursor < text_size; blink_cursor++) {
+                int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, blink_cursor), font_type).x;
+                if (mouse_x < w) break;
+            }
+            blink_cursor = IntMax(0, --blink_cursor); // Move one position left for a more accurate mouse-to-text alignment
         }
-        cursor = fmax(0, cursor_position - 1);
     }
 
     // Focused
     if (is_focused) {
         // TODO@dc: validate length
-        int textLength = StringSize(value);
+        int text_size = StringSize(value);
 
         // Handle text input
         int key = GetCharPressed();
@@ -565,8 +569,8 @@ void GUI_Input(
                         int len = StringSize(value);
                         for (int i = 0; i < len; i++)
                             value[i] = value[i + 1];
-                        (cursor)--;
-                        if (cursor < 0) cursor = 0;
+                        blink_cursor--;
+                        if (blink_cursor < 0) blink_cursor = 0;
                     // Add minus
                     } else {
                         int len = StringSize(value);
@@ -574,7 +578,7 @@ void GUI_Input(
                             for (int i = len; i >= 0; i--)
                                 value[i + 1] = value[i];
                             value[0] = '-';
-                            (cursor)++;
+                            blink_cursor++;
                         }
                     }
 
@@ -603,42 +607,42 @@ void GUI_Input(
                 break;
             }
 
-            if (valid && textLength < 255) {
+            if (valid && text_size < 255) {
                 // Move chars to the right
-                for (int i = textLength; i >= cursor; i--) {
+                for (int i = text_size; i >= blink_cursor; i--) {
                     value[i + 1] = value[i];
                 }
-                value[cursor] = (char)key;
-                (cursor)++;
-                textLength++;
+                value[blink_cursor] = (char)key;
+                (blink_cursor)++;
+                text_size++;
             }
             key = GetCharPressed();
         }
 
         // Erase
-        if (IsKeyPressed(KEY_BACKSPACE) && cursor > 0) {
-            for (int i = cursor - 1; i < textLength; i++) {
+        if (IsKeyPressed(KEY_BACKSPACE) && blink_cursor > 0) {
+            for (int i = blink_cursor - 1; i < text_size; i++) {
                 value[i] = value[i+1];
             }
-            (cursor)--;
-            textLength--;
+            blink_cursor--;
+            text_size--;
         }
-        if (IsKeyPressed(KEY_DELETE) && cursor < textLength) {
-            for (int i = cursor; i < textLength; i++) {
+        if (IsKeyPressed(KEY_DELETE) && blink_cursor < text_size) {
+            for (int i = blink_cursor; i < text_size; i++) {
                 value[i] = value[i+1];
             }
-            textLength--;
+            text_size--;
         }
 
         // Cursor movement
-        if (IsKeyPressed(KEY_LEFT) && cursor > 0)
-            (cursor)--;
-        if (IsKeyPressed(KEY_RIGHT) && cursor < textLength)
-            (cursor)++;
+        if (IsKeyPressed(KEY_LEFT) && blink_cursor > 0)
+            blink_cursor--;
+        if (IsKeyPressed(KEY_RIGHT) && blink_cursor < text_size)
+            blink_cursor++;
         if (IsKeyPressed(KEY_HOME))
-            cursor = 0;
+            blink_cursor = 0;
         if (IsKeyPressed(KEY_END))
-            cursor = textLength;
+            blink_cursor = text_size;
 
         // Blink update
         if (blink_state)
@@ -657,7 +661,7 @@ void GUI_Input(
         is_pointer_over ? EGUI_Status_Collide :
                           EGUI_Status_Default;
 
-    GUI_DrawInput(shape, value, cursor, status, colors, blink_state, font_type);
+    GUI_DrawInput(shape, value, blink_cursor, status, colors, blink_state, font_type);
 }
 
 

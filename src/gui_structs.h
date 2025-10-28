@@ -2,7 +2,7 @@
  #include "gui_setup.h"
 #endif
 
-#define GUI_MIN_WIN_SIZE    320
+#define GUI_MIN_WIN_SIZE    128
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
 #define GUI_SCROLL_SPEED    16
