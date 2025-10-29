@@ -20,16 +20,15 @@ void GUI_DrawPointerFor(EGUI_Pointer pointer)
 {
     GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[pointer];
     Vector2 mouse_current               = GUI_CTX.temp.mouse_current;    
-    Texture pointer_texture             = pointer_setup->pointer_texture;
-    
+    Texture texture                     = pointer_setup->pointer_texture;
+    Vector2 delta_normalized            = pointer_setup->pointer_delta_normalized;
+    float scale                         = pointer_setup->pointer_scale * GUI_CTX.state->scale;
 
-    Vector2 mouse_shape = (Vector2){
-        mouse_current.x -
-            (pointer_texture.width * pointer_setup->pointer_delta_normalized.x * pointer_setup->pointer_scale ),
-        mouse_current.y - 
-            (pointer_texture.height * pointer_setup->pointer_delta_normalized.y * pointer_setup->pointer_scale)
+    Vector2 mouse_shape = (Vector2) {
+        mouse_current.x - (texture.width * delta_normalized.x * scale),
+        mouse_current.y - (texture.height * delta_normalized.y * scale)
     };
-    DrawTextureEx(pointer_texture, mouse_shape, 0, pointer_setup->pointer_scale , ColorAlpha(WHITE, pointer_setup->pointer_alpha));
+    DrawTextureEx(texture, mouse_shape, 0, scale, ColorAlpha(WHITE, pointer_setup->pointer_alpha));
 }
 
 void GUI_DrawPointer()
@@ -399,10 +398,10 @@ bool GUI_Button(
     return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
-// > LABEL
+// > TEXT
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
-void GUI_DrawLabel(
+void GUI_DrawText(
     Rectangle shape, const char* text, 
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
@@ -419,10 +418,10 @@ void GUI_DrawLabel(
     EndScissorMode();
 }
 
-void GUI_Label(Rectangle shape, const char* text, GUI_ThemeColors colors)
+void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
     GUI_MACRO_CONTROL_LAYOUT(shape);
-    GUI_DrawLabel(shape, text, colors, GUI_CTX.temp.current_font_type);
+    GUI_DrawText(shape, text, colors, GUI_CTX.temp.current_font_type);
 }
 
 // > INPUT

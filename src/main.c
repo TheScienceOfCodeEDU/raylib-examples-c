@@ -278,29 +278,29 @@ void WIN_window(GUI_Window* window, void* data)
         GUI_BeginBlockCols(3, window_workspace, font_type);
 
         // 1st input (textbox)
-        GUI_Label(GUI_NextHorizontal(), "Text", colors);
+        GUI_Text(GUI_NextHorizontal(), "Text", colors);
         GUI_Input(GUI_NextHorizontals(2), win_state->input_contents, EGUI_InputText, colors);
 
         // 2nd input for integer
         // TODO@dc: add min, max and parsing
         GUI_BeginDuplicateBlock();
-        GUI_Label(GUI_NextHorizontal(), "Int", colors);
+        GUI_Text(GUI_NextHorizontal(), "Int", colors);
         GUI_Input(GUI_NextHorizontals(2), win_state->input_int_contents, EGUI_InputInt, colors);
 
         // 3rd input for float
         GUI_BeginDuplicateBlock();
-        GUI_Label(GUI_NextHorizontal(), "Float", colors);
+        GUI_Text(GUI_NextHorizontal(), "Float", colors);
         GUI_Input(GUI_NextHorizontals(2), win_state->input_float_contents, EGUI_InputFloat, colors);
 
         // Wallpaper check (checkbox/switch)
         // With a theme.red color
         GUI_BeginDuplicateBlock();
-        GUI_Label(GUI_NextHorizontal(), "Wallpaper",  colors);
+        GUI_Text(GUI_NextHorizontal(), "Wallpaper",  colors);
         GUI_Check(GUI_NextHorizontals(2), &win_state->checkbox_value, "ON", "OFF", setup->theme.red);
 
         // Font toggler
         GUI_BeginDuplicateBlock();
-        GUI_Label(GUI_NextHorizontal(), "Font",  colors);
+        GUI_Text(GUI_NextHorizontal(), "Font",  colors);
         GUI_Check(GUI_NextHorizontals(2), &win_state->font_toggle, "GUI", "DEF", colors);
     GUI_EndWindowContents(window);
 }
@@ -317,7 +317,7 @@ void WIN_layouts(GUI_Window* window, void* data)
 
         // First block
         GUI_BeginBlock(window_workspace.width, default_height);
-        GUI_Label(GUI_NextVertical(), "Some sample layouts for imKairos", setup->theme.gray);
+        GUI_Text(GUI_NextVertical(), "Some sample layouts for imKairos", setup->theme.gray);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
@@ -384,7 +384,7 @@ void WIN_winman(GUI_Window* window, void* data)
             }
         }
 
-        GUI_Label(GUI_NextVertical(), "--- Opened windows ---", window->colors);
+        GUI_Text(GUI_NextVertical(), "--- Opened windows ---", window->colors);
         GUI_BeginDuplicateBlock();
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
@@ -393,22 +393,22 @@ void WIN_winman(GUI_Window* window, void* data)
                 state->force_z_index = win->id;
             }
         }
-        GUI_Label(GUI_NextVertical(), "--- End opened windows ---", window->colors);
+        GUI_Text(GUI_NextVertical(), "--- End opened windows ---", window->colors);
 
         GUI_Window *active = GUI_GetWindowByZindex(0);
         if (active != NULL) {
             Rectangle t_shape = GUI_WindowTitle(active->shape);
             Rectangle w_shape = active->shape;
 
-            GUI_Label(GUI_NextVertical(), "--- Focused window ---", window->colors);
-            GUI_Label(GUI_NextVertical(), TextFormat("ID=%d scroll=%.2f content_height=%.2f", active->id, active->scroll_offset, active->content_height),  window->colors);
+            GUI_Text(GUI_NextVertical(), "--- Focused window ---", window->colors);
+            GUI_Text(GUI_NextVertical(), TextFormat("ID=%d scroll=%.2f content_height=%.2f", active->id, active->scroll_offset, active->content_height),  window->colors);
 
-            GUI_Label(GUI_NextVertical(), "title_shape", window->colors);
-            GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", t_shape.y,  t_shape.x, t_shape.width, t_shape.height), window->colors);
+            GUI_Text(GUI_NextVertical(), "title_shape", window->colors);
+            GUI_Text(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", t_shape.y,  t_shape.x, t_shape.width, t_shape.height), window->colors);
 
-            GUI_Label(GUI_NextVertical(), "window_shape", window->colors);
-            GUI_Label(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", w_shape.x, w_shape.y, w_shape.width, w_shape.height),  window->colors);
-            GUI_Label(GUI_NextVertical(), "--- End focused window ---", window->colors);
+            GUI_Text(GUI_NextVertical(), "window_shape", window->colors);
+            GUI_Text(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", w_shape.x, w_shape.y, w_shape.width, w_shape.height),  window->colors);
+            GUI_Text(GUI_NextVertical(), "--- End focused window ---", window->colors);
         }
 
         Rectangle next = GUI_NextVertical();
@@ -608,7 +608,7 @@ int main(void) {
                 GUI_BeginWindowContents(win_debug, &gui);
                     GUI_BeginVertical(gui.default_height);
                     GUI_BeginHorizontal(window_workspace.width);
-                    GUI_Label(textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
+                    GUI_Text(textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
                 GUI_EndWindowContents();
             }
 
