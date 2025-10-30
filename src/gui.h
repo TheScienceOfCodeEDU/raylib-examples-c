@@ -41,6 +41,7 @@ void GUI_DrawPointer()
     GUI_DrawPointerFor(current_pointer);
 }
 
+// TODO@dc: Cleanup
 bool GUI_WindowCollide(int window_id)
 {
     return GUI_CTX.temp.window_coll_id != 0 && GUI_CTX.temp.window_coll_id != window_id;
@@ -99,6 +100,11 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     return result;
 }
 
+bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape)
+{
+    return GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
+}
+
 
 // > UTILS
 //   STABILITY : ██████░░░░  60%
@@ -155,6 +161,7 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 void GUI_BeginDraw(EGUI_Pointer pointer_style)
 {
     GUI_CTX.temp.current_pointer        = pointer_style;
+    GUI_CTX.temp.pointer_over_gui       = false;
 
     Rectangle mouse_limits = (Rectangle) {
         0,
@@ -378,24 +385,19 @@ bool GUI_Button(
     GUI_ThemeColors colors)
 {
     GUI_MACRO_CONTROL_LAYOUT(shape);
+    GUI_MACRO_CONTROL_ACTIVATED(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
-    GUI_ElementStatus status = EGUI_Status_Default;
-
-    bool collide            = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx));
-    bool moving_window      = GUI_CTX.temp.current_action == EGUI_ActionNone;
-    bool focusable          = collide && moving_window;
-    if (focusable) {
+    GUI_ElementStatus status    = EGUI_Status_Default;
+    if (is_pointer_over) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = EGUI_Status_Collide;
         } else {
             status = EGUI_Status_Focused;
         }
     }
-    
-    GUI_DrawButton(shape, text, icon, status, colors, font_type);
-    
-    return collide && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+    GUI_DrawButton(shape, text, icon, status, colors, font_type);    
+    return is_active;
 }
 
 // > TEXT
@@ -1045,6 +1047,9 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     bool is_pointer_active      = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool just_focused           = is_pointer_over && is_pointer_active;
     bool is_focused             = GUI_CTX.state->z_index[0] == window->id;
+
+    // Update pointer_over_gui
+    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true;
 
     // Focus ?
     if (just_focused && GUI_CTX.temp.current_action == EGUI_ActionNone) {

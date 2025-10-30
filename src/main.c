@@ -393,7 +393,9 @@ void WIN_winman(GUI_Window* window, void* data)
                 state->force_z_index = win->id;
             }
         }
-        GUI_Text(GUI_NextVertical(), "--- End opened windows ---", window->colors);
+
+        GUI_Text(GUI_NextVertical(), "--- Global values ---", window->colors);
+        GUI_Text(GUI_NextVertical(), TextFormat("PointerOverGUI: %d", GUI_IsPointerOverGui()),  window->colors);
 
         GUI_Window *active = GUI_GetWindowByZindex(0);
         if (active != NULL) {
@@ -556,9 +558,7 @@ int main(void) {
         if (IsKeyPressed(KEY_F10)) {
             pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
         }
-
-        GUI_BeginDraw(pointer_style);
-
+        
         float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI);
         Rectangle window_limits = (Rectangle){ 
             0,
@@ -568,6 +568,7 @@ int main(void) {
         };
         GUI_SetWindowLimits(window_limits);
 
+        GUI_BeginDraw(pointer_style);
         BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
             
@@ -626,8 +627,9 @@ int main(void) {
         #endif
             GUI_DrawPointer();
         EndTextureMode();
-
         GUI_EndDraw();
+
+        
         
         // Keyboard
         player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);

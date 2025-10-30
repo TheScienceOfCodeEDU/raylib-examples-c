@@ -127,6 +127,7 @@ typedef struct {
     EGUI_Pointer    current_pointer;
     Vector2         mouse_last;
     Vector2         mouse_current;
+    bool            pointer_over_gui; // True if the pointer is over any of the elements in the GUI
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
@@ -155,6 +156,7 @@ GUI_Temp GUI_MakeTempDefault()
         .current_pointer            = EGUI_Pointer_Default,
         .mouse_last                 = (Vector2){ 0.0f, 0.0f },
         .mouse_current              = (Vector2){ 0.0f, 0.0f },
+        .pointer_over_gui           = false,
 
         .current_window_idx         = GUI_NO_WIN,
         .current_scroll             = 0,
@@ -213,6 +215,11 @@ float GUI_GetIconWidth()
 float GUI_GetIconSmallWidth()
 {
     return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
+}
+
+bool GUI_IsPointerOverGui()
+{
+    return GUI_CTX.temp.pointer_over_gui;
 }
 
 GUI_Window* GUI_MakeWindow(
@@ -402,26 +409,32 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     EGUI_FontType font_type = GUI_CTX.temp.current_font_type;
 
 #define GUI_MACRO_CONTROL_ACTIVATED(shape) \
-    /* > GUI_MACRO_CONTROL_ACTIVATED                                      */\
+    /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\
+    /*   is_activable       : if there is no resize or moving action     */\
     /*   is_pointer_over    : pointer currently within control bounds    */\
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
     /*   is_active          : control activated                          */\
     /* Conditions */ \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx)); \
-    bool is_pointer_active  = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);                                                \
+    bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
+    bool is_pointer_over    = is_activable && GUI_CheckCollisionPointerControlCurrentWin(shape); \
+    bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);          \
     \
-    /* Gains focus */                                          \
-    bool is_active = is_pointer_over && is_pointer_active;    \
+    /* Activation */                                           \
+    bool is_active = is_pointer_over && is_pointer_active;     \
+    /* Update pointer_over_gui */                              \
+    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
 
-#define GUI_MACRO_CONTROL_FOCUSED(value, shape)                                  \
+#define GUI_MACRO_CONTROL_FOCUSED(value, shape) \
     /* > GUI_CONTROL_FOCUSED                                             */\
+    /*   is_activable       : if there is no resize or moving action     */\
     /*   is_pointer_over    : pointer currently within control bounds    */\
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
     /*   just_focused       : control gained focus on this frame         */\
     /*   is_focused         : control retains focus state                */\
     /* Conditions */ \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp.current_window_idx)); \
-    bool is_pointer_active  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed();                          \
+    bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
+    bool is_pointer_over    = is_activable && GUI_CheckCollisionPointerControlCurrentWin(shape);              \
+    bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
     /* Gains focus */                                          \
     bool just_focused = is_pointer_over && is_pointer_active;  \
@@ -431,7 +444,8 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     \
     /* Focused control */                                      \
     bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
-        
+    /* Update pointer_over_gui */                              \
+    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
 
 void GUI_BeginFontType(EGUI_FontType font_type)
 {
