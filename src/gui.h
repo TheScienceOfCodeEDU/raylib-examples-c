@@ -1035,6 +1035,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     Rectangle shape_title   = GUI_WindowTitle(window->shape);
     Rectangle shape_panel   = GUI_WindowPanel(window->shape);
     Rectangle shape_bottom  = GUI_WindowBottom(window->shape);
+    Rectangle workspace     = GUI_WindowWorkspace(window);
 
     // Conditions
     bool is_pointer_over        = GUI_CheckCollisionPointerWindow(window->id, window->shape);
@@ -1091,13 +1092,15 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     shape_title     = GUI_WindowTitle(window->shape);
 
     // Vertical scroll
-    Rectangle workspace = GUI_WindowWorkspace(window);
-    if (is_pointer_over && workspace.height < window->content_height) {
-        float wheel = GetMouseWheelMove();
-        if (wheel != 0.0f) {
-            window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
+    bool horizontal_scroll  = workspace.height < window->content_height;
+    if (horizontal_scroll) {
+        if (is_pointer_over) {
+            float wheel = GetMouseWheelMove();
+            if (wheel != 0.0f) window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
         }
         window->scroll_offset = Clamp(window->scroll_offset, 0, window->content_height - workspace.height);
+    } else {
+        window->scroll_offset = 0;
     }
 
     // Draw
