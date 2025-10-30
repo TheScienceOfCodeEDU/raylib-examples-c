@@ -395,7 +395,10 @@ void WIN_winman(GUI_Window* window, void* data)
         }
 
         GUI_Text(GUI_NextVertical(), "--- Global values ---", window->colors);
-        GUI_Text(GUI_NextVertical(), TextFormat("PointerOverGUI: %d", GUI_IsPointerOverGui()),  window->colors);
+        
+        // NOTE:
+        // GUI_IsPointerOverGui() is not safe to be called by a Window. It requires ALL windows to be processed beforehand. 
+        // GUI_Text(GUI_NextVertical(), TextFormat("PointerOverGUI: %d", GUI_IsPointerOverGui()),  window->colors);
 
         GUI_Window *active = GUI_GetWindowByZindex(0);
         if (active != NULL) {
@@ -629,40 +632,41 @@ int main(void) {
         EndTextureMode();
         GUI_EndDraw();
 
-        
-        
-        // Keyboard
-        player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
-        player_actions.move_down             = IsKeyDown(KEY_DOWN);
-        player_actions.move_up               = IsKeyDown(KEY_UP);
-        player_actions.move_left             = IsKeyDown(KEY_LEFT);
-        player_actions.move_right            = IsKeyDown(KEY_RIGHT);
-
-        // Actions
-        if (player_actions.reset_characters) game_state = Game_MakeState();
-        if (player_actions.add_character)    Game_AddCharacter(&game_state);  
-        if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
-
-        // Update character
         Game_Character *player = Game_GetCurrentCharacter(&game_state);
-        if (player_actions.move_down)    player->Shape.y += CHARACTER_MAX_SPEED;
-        if (player_actions.move_up)      player->Shape.y -= CHARACTER_MAX_SPEED;
-        if (player_actions.move_left)    player->Shape.x -= CHARACTER_MAX_SPEED;
-        if (player_actions.move_right)   player->Shape.x += CHARACTER_MAX_SPEED;
-
-        // Update camera
         Camera2D *camera = &game_state.camera2D;
         camera->target = (Vector2){ player->Shape.x, player->Shape.y };
         camera->offset = (Vector2){ window_limits.width / 2.0f,  window_limits.height / 2.0f };
-        camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
-        if (camera->zoom > 3.0f) camera->zoom = 3.0f;
-        else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
+        if (GUI_IsPointerOverGui() == false) {
+            // Keyboard
+            player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
+            player_actions.move_down             = IsKeyDown(KEY_DOWN);
+            player_actions.move_up               = IsKeyDown(KEY_UP);
+            player_actions.move_left             = IsKeyDown(KEY_LEFT);
+            player_actions.move_right            = IsKeyDown(KEY_RIGHT);
+
+            // Actions
+            if (player_actions.reset_characters) game_state = Game_MakeState();
+            if (player_actions.add_character)    Game_AddCharacter(&game_state);  
+            if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
+
+            // Update character
+            
+            if (player_actions.move_down)    player->Shape.y += CHARACTER_MAX_SPEED;
+            if (player_actions.move_up)      player->Shape.y -= CHARACTER_MAX_SPEED;
+            if (player_actions.move_left)    player->Shape.x -= CHARACTER_MAX_SPEED;
+            if (player_actions.move_right)   player->Shape.x += CHARACTER_MAX_SPEED;
+
+            // Update camera
+            camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
+            if (camera->zoom > 3.0f) camera->zoom = 3.0f;
+            else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
+            
+        }
 
         if (IsKeyPressed(KEY_F12)) state.scale += 1.0;
         if (IsKeyPressed(KEY_F11)) state.scale -= 1.0;
 
         static float ui_opacity = 255.0;
-
         // 
         // RENDER
         //

@@ -41,32 +41,6 @@ void GUI_DrawPointer()
     GUI_DrawPointerFor(current_pointer);
 }
 
-// TODO@dc: Cleanup
-bool GUI_WindowCollide(int window_id)
-{
-    return GUI_CTX.temp.window_coll_id != 0 && GUI_CTX.temp.window_coll_id != window_id;
-}
-
-bool GUI_CheckCollisionPointerWindow(int window_id, Rectangle shape)
-{
-    // This is not the window!
-    if (GUI_WindowCollide(window_id)) {
-        return false;
-    }
-
-    return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape);
-}
-
-bool GUI_CheckCollisionPointerWindowNotFocusMoving(int window_id, Rectangle shape)
-{
-    // This is not the window!... or we are moving/resizing
-    if (GUI_WindowCollide(window_id) || GUI_CTX.temp.current_action != EGUI_ActionNone) {
-        return false;
-    }
-
-    return CheckCollisionPointRec(GUI_CTX.temp.mouse_current, shape);
-}
-
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
     GUI_State *state            = GUI_GetState();
@@ -79,7 +53,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     }
 
     // This is not the window!
-    if (GUI_WindowCollide(window->id)) {
+    if (GUI_IsCurrentWindowTarget(window->id) == false) {
         return false;
     }
 
@@ -389,7 +363,7 @@ bool GUI_Button(
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
     GUI_ElementStatus status    = EGUI_Status_Default;
-    if (is_pointer_over) {
+    if (is_pointer_over && is_activable) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = EGUI_Status_Collide;
         } else {
@@ -1038,26 +1012,26 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     Rectangle shape_panel   = GUI_WindowPanel(window->shape);
     Rectangle shape_bottom  = GUI_WindowBottom(window->shape);
     Rectangle workspace     = GUI_WindowWorkspace(window);
+    Vector2 mouse           = GUI_CTX.temp.mouse_current;
 
     // Conditions
-    bool is_pointer_over        = GUI_CheckCollisionPointerWindow(window->id, window->shape);
-    bool is_pointer_over_panel  = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_panel);
-    bool is_pointer_over_title  = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_title) && !is_pointer_over_panel;
-    bool is_pointer_over_bottom = GUI_CheckCollisionPointerWindowNotFocusMoving(window->id, shape_bottom);
-    bool is_pointer_active      = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool just_focused           = is_pointer_over && is_pointer_active;
-    bool is_focused             = GUI_CTX.state->z_index[0] == window->id;
+    bool is_window_target       = GUI_IsCurrentWindowTarget(window->id);
+    bool is_focusable           = is_window_target && GUI_CTX.temp.current_action == EGUI_ActionNone;
+    bool is_pointer_over        = CheckCollisionPointRec(mouse, window->shape);
+    bool is_pointer_over_panel  = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
+    bool is_pointer_over_title  = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_pointer_over_panel;
+    bool is_pointer_over_bottom = is_focusable && CheckCollisionPointRec(mouse, shape_bottom);
+    bool just_interacted        = is_pointer_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool is_z_priority          = GUI_CTX.state->z_index[0] == window->id;
 
     // Update pointer_over_gui
     if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true;
 
     // Focus ?
-    if (just_focused && GUI_CTX.temp.current_action == EGUI_ActionNone) {
-        if (is_focused) {            
-            GUI_CTX.temp.current_action =   is_pointer_over_title   ? EGUI_ActionMoving :
-                                            is_pointer_over_bottom  ? EGUI_ActionResizing
-                                                                    : EGUI_ActionNone;
-        }
+    if (is_focusable && just_interacted && is_z_priority) {            
+        GUI_CTX.temp.current_action =   is_pointer_over_title   ? EGUI_ActionMoving :
+                                        is_pointer_over_bottom  ? EGUI_ActionResizing
+                                                                : EGUI_ActionNone;
     }
 
     if (is_pointer_over_bottom || GUI_CTX.temp.current_action == EGUI_ActionResizing) {
@@ -1065,10 +1039,11 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     }
 
     // Active
-    if (is_focused){
-        bool interacting        = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-        
-        if (interacting) {
+    if (is_z_priority) {
+        bool interacting = IsMouseButtonDown(MOUSE_BUTTON_LEFT);        
+        if (interacting == false) {
+            GUI_CTX.temp.current_action = EGUI_ActionNone;
+        } else {
             // Movement
             if (GUI_CTX.temp.current_action == EGUI_ActionMoving) {
                 Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp.mouse_current, limits);
@@ -1081,14 +1056,13 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
             // Resizing
             if (GUI_CTX.temp.current_action == EGUI_ActionResizing) {
                 if (interacting) {
-                    Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp.mouse_current, limits);
-
-                    window->shape.width = fmax(mouse_current_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
-                    window->shape.height = fmax(mouse_current_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
+                    Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp.mouse_current, limits);
+                    window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
+                    window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
                 }
             }
-        } else {
-            GUI_CTX.temp.current_action = EGUI_ActionNone;
+            // Handled by GUI, as move/resize can make that is_pointer_over is false during frames
+            GUI_CTX.temp.pointer_over_gui = true;
         }
     }
 
@@ -1110,7 +1084,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Draw
     GUI_ElementStatus status = 
-        is_focused              ? EGUI_Status_Focused :
+        is_z_priority           ? EGUI_Status_Focused :
         is_pointer_over_title   ? EGUI_Status_Collide :
                                   EGUI_Status_Default;
     GUI_DrawWindow(window, status, font_type);
@@ -1119,6 +1093,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     GUI_WindowEndingPanel(window, font_type);
 }
 
+// TODO@dc: cleaup
 void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
 {
     GUI_State* state = GUI_GetState();
@@ -1204,15 +1179,17 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
         }
     }
 
-    // Check collisions
-    GUI_CTX.temp.window_coll_id = 0;
+    // Check collisions to determine current window_target_id (not only z-index priority but actual collision for this frame
+    // you can be pointing to a 2nd window with a lower z-index priority.
+    GUI_CTX.temp.window_target_id = 0;
     for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
         int id = state->z_index[j];
         if (id == 0) continue;
 
-        GUI_Window *window = GUI_GetWindow(id);
-        if (GUI_CheckCollisionPointerWindow(window->id, window->shape)) {
-            GUI_CTX.temp.window_coll_id = window->id;
+        GUI_Window  *window         = GUI_GetWindow(id);
+        bool        is_pointer_over = CheckCollisionPointRec(GUI_CTX.temp.mouse_current, window->shape);
+        if (is_pointer_over) {
+            GUI_CTX.temp.window_target_id = window->id;
             break;
         }
     }

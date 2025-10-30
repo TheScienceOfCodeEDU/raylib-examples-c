@@ -120,7 +120,7 @@ typedef struct {
     // Window runtime
     EGUI_Action     current_action;
     void            *control_focus_ptr;
-    int             window_coll_id;
+    int             window_target_id; // Current window as interactable target (pointer is over and z-index is the lowest possible)
     Rectangle       window_limits;
 
     // Pointer runtime
@@ -150,7 +150,7 @@ GUI_Temp GUI_MakeTempDefault()
     GUI_Temp temp = {
         .current_action             = EGUI_ActionNone,
         .control_focus_ptr          = NULL,
-        .window_coll_id             = 0,
+        .window_target_id           = 0,
         .window_limits              = (Rectangle) { 0, 0, (float) GetScreenWidth(), (float) GetScreenHeight() },
 
         .current_pointer            = EGUI_Pointer_Default,
@@ -172,7 +172,6 @@ GUI_Temp GUI_MakeTempDefault()
     };
     return temp;
 }
-
 
 // > STATE > CONTEXT
 //   STABILITY : █████████░  90%
@@ -217,6 +216,8 @@ float GUI_GetIconSmallWidth()
     return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
 }
 
+ // GUI_IsPointerOverGui() is not safe to be called by a Window. It requires ALL windows to be processed beforehand.
+ // Use this to determine if your game-logic needs to handle mouse input.
 bool GUI_IsPointerOverGui()
 {
     return GUI_CTX.temp.pointer_over_gui;
@@ -263,6 +264,12 @@ void GUI_RemoveWindow(int id)
             return;
         }
     }
+}
+
+// Returns true if window id is the interactable target (pointer is over and z-index is the lowest possible)
+bool GUI_IsCurrentWindowTarget(int window_id)
+{
+    return GUI_CTX.temp.window_target_id == 0 || GUI_CTX.temp.window_target_id == window_id;
 }
 
 GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type)
@@ -416,7 +423,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   is_active          : control activated                          */\
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
-    bool is_pointer_over    = is_activable && GUI_CheckCollisionPointerControlCurrentWin(shape); \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape); \
     bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);          \
     \
     /* Activation */                                           \
@@ -433,7 +440,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   is_focused         : control retains focus state                */\
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
-    bool is_pointer_over    = is_activable && GUI_CheckCollisionPointerControlCurrentWin(shape);              \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);              \
     bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
     /* Gains focus */                                          \
