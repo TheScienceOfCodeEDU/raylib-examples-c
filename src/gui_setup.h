@@ -255,6 +255,7 @@ typedef struct {
     Vector2         pointer_delta_normalized;
     float           pointer_scale;
     float           pointer_alpha;
+    Vector2         trail_delta_normalized;
     EGUI_Pointer    additional;
 } GUI_PointerSetup;
 
@@ -277,6 +278,7 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
             setup.pointer_delta_normalized  = (Vector2){ 0.5f, 0.5f };
             setup.pointer_scale             = 2.0f;
             setup.pointer_alpha             = 1.0;
+            setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
             setup.additional                = EGUI_Pointer_None;
             break;
 
@@ -285,6 +287,7 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
             setup.pointer_delta_normalized  = (Vector2){ -1.0f, 0.0f };
             setup.pointer_scale             = 2.0f;
             setup.pointer_alpha             = 0.85;
+            setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
             setup.additional                = EGUI_Pointer_Default;
             break;
 
@@ -293,6 +296,7 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
             setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
             setup.pointer_scale             = 2.0f;
             setup.pointer_alpha             = 1.0;
+            setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
             setup.additional                = EGUI_Pointer_None;
             break;
 
@@ -302,6 +306,7 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
             setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
             setup.pointer_scale             = 2.0f;
             setup.pointer_alpha             = 1.0;
+            setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
             setup.additional                = EGUI_Pointer_None;
             break;
 

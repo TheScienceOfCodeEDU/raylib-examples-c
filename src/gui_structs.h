@@ -2,6 +2,7 @@
  #include "gui_setup.h"
 #endif
 
+#define GUI_MAX_TRAIL       30
 #define GUI_MIN_WIN_SIZE    128
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
@@ -128,6 +129,7 @@ typedef struct {
     Vector2         mouse_last;
     Vector2         mouse_current;
     bool            pointer_over_gui; // True if the pointer is over any of the elements in the GUI
+    Vector2         pointer_trail[GUI_MAX_TRAIL];
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
@@ -157,6 +159,7 @@ GUI_Temp GUI_MakeTempDefault()
         .mouse_last                 = (Vector2){ 0.0f, 0.0f },
         .mouse_current              = (Vector2){ 0.0f, 0.0f },
         .pointer_over_gui           = false,
+        .pointer_trail              = {{0}},
 
         .current_window_idx         = GUI_NO_WIN,
         .current_scroll             = 0,

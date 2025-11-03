@@ -41,6 +41,47 @@ void GUI_DrawPointer()
     GUI_DrawPointerFor(current_pointer);
 }
 
+// raylib [shapes] example - Draw a mouse trail (position history)
+void GUI_DrawPointerTrail()
+{
+    GUI_PointerSetup *pointer_setup = GUI_GetPointerSetup();
+    Vector2 mouse                   = GUI_CTX.temp.mouse_current;
+    
+
+    // Shift all existing positions backward by one slot in the array
+    // The last element (the oldest position) is dropped
+    Vector2 *trail = GUI_CTX.temp.pointer_trail;
+    for (int i = GUI_MAX_TRAIL - 1; i > 0; i--) {
+        trail[i] = trail[i - 1];
+    }
+    Vector2 delta = (Vector2) {
+        pointer_setup->trail_delta_normalized.x * pointer_setup->pointer_texture.width * pointer_setup->pointer_scale,
+        pointer_setup->trail_delta_normalized.y * pointer_setup->pointer_texture.height * pointer_setup->pointer_scale
+    };
+    trail[0] = Vector2Add(mouse, delta);
+
+    for (int i = 0; i < GUI_MAX_TRAIL; i++) {
+        // Ensure we skip drawing if the array hasn't been fully filled on startup
+        if ((trail[i].x != 0.0f) || (trail[i].y != 0.0f))
+        {
+            // Calculate relative trail strength (ratio is near 1.0 for new, near 0.0 for old)
+            float ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL; 
+            
+            // Fade effect: oldest positions are more transparent
+            // Fade (color, alpha) - alpha is 0.5 to 1.0 based on ratio
+            float alpha_min = 0.001f;
+            float alpha_max = 0.05f;
+            float trail_size = 5.0f;
+            Color trail_color = Fade(WHITE, ratio * (alpha_max - alpha_min) + alpha_min);
+            
+            // Size effect: oldest positions are smaller
+            float trail_radius = trail_size * ratio; 
+            
+            DrawCircleV(trail[i], trail_radius, trail_color);
+        }
+    }
+}
+
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
     GUI_State *state            = GUI_GetState();

@@ -628,7 +628,6 @@ int main(void) {
                 
             }
         #endif
-            GUI_DrawPointer();
         EndTextureMode();
         GUI_EndDraw();
 
@@ -712,6 +711,9 @@ int main(void) {
             {
                 DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
             }
+
+            GUI_DrawPointerTrail();
+            GUI_DrawPointer();
         EndDrawing();
 
         first_render = false;
