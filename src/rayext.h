@@ -183,3 +183,6 @@ static inline int   IntMin(int a, int b)   { return (a < b) ? a : b; }
 
 static inline float FloatMax(float a, float b) { return (a > b) ? a : b; }
 static inline float FloatMin(float a, float b) { return (a < b) ? a : b; }
+
+static inline int   IntAbs(int value) { return (value < 0) ? -value : value; }
+static inline float FloatAbs(float value) { return (value < 0.0f) ? -value : value; }

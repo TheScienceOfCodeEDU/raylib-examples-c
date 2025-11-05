@@ -15,6 +15,11 @@
 #include "experiments.h"
 
 
+#define GAME_RES_W          320
+#define GAME_RES_H          240
+#define GAME_RES_HALF_W     160
+#define GAME_RES_HALF_H     120
+
 typedef struct {
     bool reset_characters;
     bool add_character;
@@ -51,11 +56,13 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 
 
 #define CHARACTERS              4
-#define CHARACTER_MAX_SPEED     6
+#define CHARACTER_MAX_SPEED     2
 
 typedef struct  {
-    Rectangle Shape;
-    Color Color;
+    Rectangle shape;
+    Color color;
+    Vector2 movement;
+    float anim_time;
 } Game_Character;
 
 typedef struct {
@@ -67,15 +74,16 @@ typedef struct {
 
 
 
+
 Game_State Game_MakeState()
 {
     Game_State state = {
         0,
         2,
-        (Game_Character){ 0, 0, 10, 20, RED},
-        (Game_Character){ 10, 30, 10, 20, BLUE},
-        (Game_Character){ 50, 60, 10, 20, GREEN},
-        (Game_Character){ 80, 60, 10, 20, ORANGE},
+        (Game_Character){ 0, 0, 10, 20, RED, Vector2Zero(), 0},
+        (Game_Character){ 10, 30, 10, 20, BLUE, Vector2Zero(), 0},
+        (Game_Character){ 50, 60, 10, 20, GREEN, Vector2Zero(), 0},
+        (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0},
         { (Vector2){ 0, 0 }, { 0, 0 }, 0.0f, 1.0f }
     };
 
@@ -101,8 +109,8 @@ Game_Character* Game_GetCurrentCharacter(Game_State* state)
 Vector2 Game_GetCharacterCenter(Game_Character* character)
 {
     return (Vector2){
-        character->Shape.x + character->Shape.width / 2.0f,
-        character->Shape.y + character->Shape.height / 2.0f
+        character->shape.x + character->shape.width / 2.0f,
+        character->shape.y + character->shape.height / 2.0f
     };
 }
 
@@ -130,6 +138,8 @@ void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
     }
 }
 
+
+
 //
 // SAMPLE WINDOW
 //
@@ -141,16 +151,18 @@ typedef struct {
     char input_contents[256];
     char input_int_contents[256];
     char input_float_contents[256];
+    Game_State *game_state;
 } Game_WindowState;
 
-Game_WindowState Game_MakeWindowState()
+Game_WindowState Game_MakeWindowState(Game_State *game_state)
 {
-    Game_WindowState state = {
-        .checkbox_value = true,
-        .font_toggle = false,
-        .input_contents = {'\0'},
-        .input_int_contents = {'\0'},
-        .input_float_contents = {'\0'}
+    Game_WindowState state      = {
+        .checkbox_value         = true,
+        .font_toggle            = false,
+        .input_contents         = {'\0'},
+        .input_int_contents     = {'\0'},
+        .input_float_contents   = {'\0'},
+        .game_state             = game_state
     };
     return state;
 }
@@ -257,6 +269,58 @@ void WIN_layouts(GUI_Window* window, void* data)
     GUI_EndWindowContents(window);
 }
 
+
+
+void WIN_character_debug(GUI_Window* window, void* data)
+{
+    Game_State *game_state      =((Game_WindowState*)data)->game_state;
+    Game_Character *ch          = &game_state->characters[game_state->current_character];
+    GUI_ThemeColors colors      = window->colors;
+    EGUI_FontType font_type     = EGUI_FontType_Default;
+
+    Rectangle workspace = GUI_BeginWindowContents(window, font_type);
+        GUI_BeginBlockCols(2, workspace, font_type);
+
+        // Shape
+        GUI_Text(GUI_NextHorizontal(), "shape.x", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.x), colors);
+
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "shape.y", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.y), colors);
+
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "shape.w", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.width), colors);
+
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "shape.h", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.height), colors);
+
+        // Color (RGB)
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "color", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("r:%d g:%d b:%d a:%d",
+            ch->color.r, ch->color.g, ch->color.b, ch->color.a), colors);
+
+        // Movement
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "movement.x", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->movement.x), colors);
+
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "movement.y", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->movement.y), colors);
+
+        // Animation time
+        GUI_BeginDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "anim_time", colors);
+        GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->anim_time), colors);
+
+    GUI_EndWindowContents(window);
+}
+
+
 void WIN_winman(GUI_Window* window, void* data)
 {
     (void) data; // Supress unused warning.
@@ -281,6 +345,12 @@ void WIN_winman(GUI_Window* window, void* data)
         if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
             if (win_layouts == NULL || win_layouts->id == 0) {
                 win_layouts = GUI_MakeWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
+            }
+        }
+        static GUI_Window* win_character_debug = NULL;
+        if (GUI_Button(GUI_NextVertical(), "Open Character debug", NULL, window->colors)) {
+            if (win_character_debug == NULL || win_character_debug->id == 0) {
+                win_character_debug = GUI_MakeWindow(3, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
             }
         }
 
@@ -415,6 +485,126 @@ void DrawTextureFullScreen(Texture2D tex, Color tint)
 }
 
 
+
+void Game_DrawCharacter(Game_Character c, float anim_time)
+{
+    float h = c.shape.height;
+    float w = c.shape.width;
+    Vector2 base = { c.shape.x, c.shape.y };
+
+    float speed = Vector2Length(c.movement);
+    float phase = anim_time * (2.5f + speed * 0.4f);
+    float cycle = fmodf(phase, PI * 2.0f);
+
+    // Movimiento vertical del cuerpo (ligero "rebote")
+    float body_bob = sinf(cycle * 2.0f) * (h * 0.04f);
+
+    // ----------------------------------------------------------
+    // ARTICULACIONES CENTRALES
+    // ----------------------------------------------------------
+    Vector2 hip   = { base.x + w * 0.5f, base.y + h * 0.6f + body_bob };
+    Vector2 neck  = { hip.x, base.y + h * 0.15f + body_bob };
+    Vector2 head  = { neck.x, base.y - h * 0.1f + body_bob };
+
+    // ----------------------------------------------------------
+    // PIERNAS (movimiento elíptico: x=sin, y=cos)
+    // ----------------------------------------------------------
+    float legAmpX = w * 0.18f;  // amplitud horizontal
+    float legAmpY = h * 0.10f;  // amplitud vertical
+    float legOffsetY = h * 0.25f;
+
+    // pierna delantera (fase normal)
+    Vector2 knee_front = {
+        hip.x + sinf(cycle) * legAmpX * 0.5f,
+        hip.y + legOffsetY + cosf(cycle) * legAmpY
+    };
+    Vector2 foot_front = {
+        knee_front.x + sinf(cycle) * legAmpX * 0.7f,
+        knee_front.y + h * 0.22f
+    };
+
+    // pierna trasera (fase opuesta)
+    Vector2 knee_back = {
+        hip.x + sinf(cycle + PI) * legAmpX * 0.5f,
+        hip.y + legOffsetY + cosf(cycle + PI) * legAmpY
+    };
+    Vector2 foot_back = {
+        knee_back.x + sinf(cycle + PI) * legAmpX * 0.7f,
+        knee_back.y + h * 0.22f
+    };
+
+    // ----------------------------------------------------------
+    // BRAZOS (fase opuesta a las piernas)
+    // ----------------------------------------------------------
+    float armAmpX = w * 0.25f;
+    float armAmpY = h * 0.12f;
+    float armOffsetY = h * 0.20f;
+
+    Vector2 shoulder = { neck.x, neck.y + h * 0.05f };
+
+    // brazo delantero
+    Vector2 elbow_front = {
+        shoulder.x + sinf(cycle + PI) * armAmpX * 0.4f,
+        shoulder.y + armOffsetY + cosf(cycle + PI) * armAmpY
+    };
+    Vector2 hand_front = {
+        elbow_front.x + sinf(cycle + PI) * armAmpX * 0.4f,
+        elbow_front.y + h * 0.18f
+    };
+
+    // brazo trasero
+    Vector2 elbow_back = {
+        shoulder.x + sinf(cycle) * armAmpX * 0.4f,
+        shoulder.y + armOffsetY + cosf(cycle) * armAmpY
+    };
+    Vector2 hand_back = {
+        elbow_back.x + sinf(cycle) * armAmpX * 0.4f,
+        elbow_back.y + h * 0.18f
+    };
+
+    // ----------------------------------------------------------
+    // DIBUJO: líneas (huesos) + puntos (articulaciones)
+    // ----------------------------------------------------------
+    Color joint = ColorAlpha(ORANGE, 0.8);
+    Color joint_front = ColorAlpha(YELLOW, 0.8);
+    Color joint_back = ColorAlpha(RED, 0.8);
+    Color bone  = (Color){200, 200, 220, 255};
+
+    // cuerpo
+    DrawLineV(head, neck, bone);
+    DrawLineV(neck, hip, bone);
+
+    // brazos
+    DrawLineV(shoulder, elbow_front, bone);
+    DrawLineV(elbow_front, hand_front, bone);
+    DrawLineV(shoulder, elbow_back, bone);
+    DrawLineV(elbow_back, hand_back, bone);
+
+    // piernas
+    DrawLineV(hip, knee_front, bone);
+    DrawLineV(knee_front, foot_front, bone);
+    DrawLineV(hip, knee_back, bone);
+    DrawLineV(knee_back, foot_back, bone);
+
+    // puntos visibles
+    DrawCircleV(head, 3, joint);
+    DrawCircleV(neck, 1, joint);
+    DrawCircleV(hip, 1, joint);
+    DrawCircleV(knee_front, 1, joint_front);
+    DrawCircleV(knee_back, 1, joint_back);
+    DrawCircleV(foot_front, 1, joint_front);
+    DrawCircleV(foot_back, 1, joint_back);
+    DrawCircleV(elbow_front, 1, joint_front);
+    DrawCircleV(elbow_back, 1, joint_back);
+    DrawCircleV(hand_front, 1, joint_front);
+    DrawCircleV(hand_back, 1, joint_back);
+}
+
+
+
+
+
+
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
@@ -424,6 +614,7 @@ int main(void) {
     while (GetCurrentMonitor() != DEV_TARGET_MONITOR && DEV_TARGET_MONITOR < GetMonitorCount())
         SetWindowMonitor(DEV_TARGET_MONITOR);
 
+    // TODO@dc: review
     Vector2 screen_max = (Vector2) { GetMonitorWidth(DEV_TARGET_MONITOR),  GetMonitorHeight(DEV_TARGET_MONITOR) };
     SetWindowMaxSize(screen_max.x, screen_max.y);
 
@@ -447,8 +638,12 @@ int main(void) {
 
     // PREPARE GAME
     Game_State game_state = Game_MakeState();
-    Game_WindowState win_state = Game_MakeWindowState();
+    Game_WindowState win_state = Game_MakeWindowState(&game_state);
     PLAYER_Actions player_actions = PLAYER_MakeActions();
+
+    // Game canvas
+    RenderTexture2D game_canvas = LoadRenderTexture(GAME_RES_W, GAME_RES_H);
+    SetTextureFilter(game_canvas.texture, TEXTURE_FILTER_POINT);
 
     SetTargetFPS(60);
     bool first_render = true;
@@ -533,8 +728,8 @@ int main(void) {
 
         Game_Character *player = Game_GetCurrentCharacter(&game_state);
         Camera2D *camera = &game_state.camera2D;
-        camera->target = (Vector2){ player->Shape.x, player->Shape.y };
-        camera->offset = (Vector2){ window_limits.width / 2.0f,  window_limits.height / 2.0f };
+        camera->target = (Vector2){ player->shape.x, player->shape.y };
+        camera->offset = (Vector2){ GAME_RES_HALF_W,  GAME_RES_HALF_H };
         if (GUI_IsPointerOverGui() == false) {
             // Keyboard
             player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
@@ -548,12 +743,21 @@ int main(void) {
             if (player_actions.add_character)    Game_AddCharacter(&game_state);  
             if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
 
-            // Update character
+            // Update character            
+            Vector2 move = { 0.0f, 0.0f };
+            if (player_actions.move_down)  move.y += CHARACTER_MAX_SPEED;
+            if (player_actions.move_up)    move.y -= CHARACTER_MAX_SPEED;
+            if (player_actions.move_left)  move.x -= CHARACTER_MAX_SPEED;
+            if (player_actions.move_right) move.x += CHARACTER_MAX_SPEED;
             
-            if (player_actions.move_down)    player->Shape.y += CHARACTER_MAX_SPEED;
-            if (player_actions.move_up)      player->Shape.y -= CHARACTER_MAX_SPEED;
-            if (player_actions.move_left)    player->Shape.x -= CHARACTER_MAX_SPEED;
-            if (player_actions.move_right)   player->Shape.x += CHARACTER_MAX_SPEED;
+            float dt = GetFrameTime();
+            player->movement = move;
+
+            player->shape.x += player->movement.x * CHARACTER_MAX_SPEED * 2 * dt;
+            player->shape.y += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
+
+            float speed = FloatAbs(player->movement.x);
+            if (speed > 0.01f) player->anim_time += dt * speed;
 
             // Update camera
             camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
@@ -569,6 +773,41 @@ int main(void) {
         // 
         // RENDER
         //
+        BeginTextureMode(game_canvas);
+            ClearBackground(BLANK);
+
+            // Game world
+            BeginMode2D(*camera);
+                // Triángulo tipo Another World
+                Vector2 p1 = {100, 150};
+                Vector2 p2 = {160, 80};
+                Vector2 p3 = {220, 150};
+                DrawTriangle(p1, p2, p3, DARKPURPLE);
+
+                // Línea de contorno
+                DrawLineV(p1, p2, WHITE);
+                DrawLineV(p2, p3, WHITE);
+                DrawLineV(p3, p1, WHITE);
+
+                bool collisions[CHARACTERS];
+                float radius = 30.0f;
+                Game_UpdateCollisions(&game_state, collisions, radius);
+                
+                for (int i = 0; i < game_state.alive_characters; ++i) {
+                    Game_Character* c = &game_state.characters[i];
+                    
+                    Vector2 center = Game_GetCharacterCenter(c);
+                    
+                    Color ring_color = collisions[i] ? RED : BLACK;
+                    DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
+                    
+                    //DrawRectangleRec(c->Shape, c->Color);
+                    float anim_phase = c->anim_time * (c->movement.x < 0 ? 1.0f : -1.0f);
+                    Game_DrawCharacter(*c, anim_phase);
+                }
+            EndMode2D();
+        EndTextureMode();
+
 
         // FXs
         static RenderTexture2D rain_buffer  = { 0 };     
@@ -589,23 +828,13 @@ int main(void) {
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
 
-            // Game world
-            BeginMode2D(*camera);
-                bool collisions[CHARACTERS];
-                float radius = 30.0f;
-                Game_UpdateCollisions(&game_state, collisions, radius);
-                
-                for (int i = 0; i < game_state.alive_characters; ++i) {
-                    Game_Character* c = &game_state.characters[i];
-                    
-                    Vector2 center = Game_GetCharacterCenter(c);
-                    
-                    Color ring_color = collisions[i] ? RED : BLACK;
-                    DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
-                    
-                    DrawRectangleRec(c->Shape, c->Color);
-                }
-            EndMode2D();
+            DrawTexturePro(game_canvas.texture,
+                    (Rectangle){0, 0, GAME_RES_W, -GAME_RES_H},
+                    (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()},
+                    (Vector2){0, 0},
+                    0.0f,
+                    WHITE
+                );
             
             // Draw UI Buffer
             {
