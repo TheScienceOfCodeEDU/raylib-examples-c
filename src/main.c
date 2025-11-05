@@ -56,7 +56,7 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 
 
 #define CHARACTERS              4
-#define CHARACTER_MAX_SPEED     8
+#define CHARACTER_MAX_SPEED     32
 
 typedef struct  {
     Rectangle shape;
@@ -786,18 +786,14 @@ int main(void) {
                 DrawTriangle(p1, p2, p3, DARKPURPLE);
 
                 // Línea de contorno
-                DrawLineV(p1, p2, WHITE);
-                DrawLineV(p2, p3, WHITE);
-                DrawLineV(p3, p1, WHITE);
+                DrawLineV(p1, p2, BLACK);
+                DrawLineV(p2, p3, BLACK);
+                DrawLineV(p3, p1, BLACK);
 
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
                 Game_UpdateCollisions(&game_state, collisions, radius);
 
-                static Texture2D casaena = {0};
-                if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
-                DrawTextureEx(casaena, (Vector2){ -130, -120 }, 0, 1.0, WHITE);
-                
                 for (int i = 0; i < game_state.alive_characters; ++i) {
                     Game_Character* c = &game_state.characters[i];
                     
@@ -806,7 +802,6 @@ int main(void) {
                     Color ring_color = collisions[i] ? ColorAlpha(WHITE, 0.2) : ColorAlpha(WHITE, 0);
                     DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
                     
-                    //DrawRectangleRec(c->Shape, c->Color);
                     float anim_phase = c->anim_time * (c->movement.x < 0 ? 1.0f : -1.0f);
                     Game_DrawCharacter(*c, anim_phase);
                 }
@@ -832,6 +827,12 @@ int main(void) {
                 DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
+
+            BeginMode2D(*camera);
+            static Texture2D casaena = {0};
+                if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
+                DrawTextureEx(casaena, (Vector2){ 0, 0 }, 0, 4.0, WHITE);
+            EndMode2D();
 
             DrawTexturePro(game_canvas.texture,
                     (Rectangle){0, 0, GAME_RES_W, -GAME_RES_H},
