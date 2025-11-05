@@ -565,9 +565,9 @@ void Game_DrawCharacter(Game_Character c, float anim_time)
     // ----------------------------------------------------------
     // DIBUJO: líneas (huesos) + puntos (articulaciones)
     // ----------------------------------------------------------
-    Color joint = ColorAlpha(ORANGE, 0.8);
-    Color joint_front = ColorAlpha(YELLOW, 0.8);
-    Color joint_back = ColorAlpha(RED, 0.8);
+    Color joint = ColorAlpha(c.color, 0.8);
+    Color joint_front = ColorAlpha(c.color, 0.95);
+    Color joint_back = ColorAlpha(c.color, 0.75);
     Color bone  = (Color){200, 200, 220, 255};
 
     // cuerpo
@@ -730,42 +730,42 @@ int main(void) {
         Camera2D *camera = &game_state.camera2D;
         camera->target = (Vector2){ player->shape.x, player->shape.y };
         camera->offset = (Vector2){ GAME_RES_HALF_W,  GAME_RES_HALF_H };
+        
+        // GUI Actions
+        if (player_actions.reset_characters) game_state = Game_MakeState();
+        if (player_actions.add_character)    Game_AddCharacter(&game_state);  
+        if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
+
+        // Scene actions
         if (GUI_IsPointerOverGui() == false) {
-            // Keyboard
-            player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
-            player_actions.move_down             = IsKeyDown(KEY_DOWN);
-            player_actions.move_up               = IsKeyDown(KEY_UP);
-            player_actions.move_left             = IsKeyDown(KEY_LEFT);
-            player_actions.move_right            = IsKeyDown(KEY_RIGHT);
-
-            // Actions
-            if (player_actions.reset_characters) game_state = Game_MakeState();
-            if (player_actions.add_character)    Game_AddCharacter(&game_state);  
-            if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
-
-            // Update character            
-            Vector2 move = { 0.0f, 0.0f };
-            if (player_actions.move_down)  move.y += 1;
-            if (player_actions.move_up)    move.y -= 1;
-            if (player_actions.move_left)  move.x -= 1;
-            if (player_actions.move_right) move.x += 1;
-            
-            float dt = GetFrameTime();
-            player->movement = move;
-
-            player->shape.x += player->movement.x * CHARACTER_MAX_SPEED * 2 * dt;
-            player->shape.y += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
-
-            float speed = FloatAbs(player->movement.x);
-            if (speed > 0.01f) player->anim_time += dt * speed * 2;
-            else player->anim_time = 0;
-
             // Update camera
             camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
             if (camera->zoom > 3.0f) camera->zoom = 3.0f;
             else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
-            
         }
+        // Keyboard
+        player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
+        player_actions.move_down             = IsKeyDown(KEY_DOWN);
+        player_actions.move_up               = IsKeyDown(KEY_UP);
+        player_actions.move_left             = IsKeyDown(KEY_LEFT);
+        player_actions.move_right            = IsKeyDown(KEY_RIGHT);
+
+        // Update character            
+        Vector2 move = { 0.0f, 0.0f };
+        if (player_actions.move_down)  move.y += 1;
+        if (player_actions.move_up)    move.y -= 1;
+        if (player_actions.move_left)  move.x -= 1;
+        if (player_actions.move_right) move.x += 1;
+        
+        float dt = GetFrameTime();
+        player->movement = move;
+
+        player->shape.x += player->movement.x * CHARACTER_MAX_SPEED * 2 * dt;
+        player->shape.y += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
+
+        float speed = FloatAbs(player->movement.x);
+        if (speed > 0.01f) player->anim_time += dt * speed * 2;
+        else player->anim_time = 0;        
 
         if (IsKeyPressed(KEY_F12)) state.scale += 1.0;
         if (IsKeyPressed(KEY_F11)) state.scale -= 1.0;
