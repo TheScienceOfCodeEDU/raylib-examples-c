@@ -779,16 +779,30 @@ int main(void) {
 
             // Game world
             BeginMode2D(*camera);
-                // Triángulo tipo Another World
-                Vector2 p1 = {100, 150};
-                Vector2 p2 = {160, 80};
-                Vector2 p3 = {220, 150};
-                DrawTriangle(p1, p2, p3, DARKPURPLE);
+                {
+                    // Parallax factor: >1.0 = más cerca (se mueve más rápido), <1.0 = más lejos
+                    float parallax = 1.2f;
 
-                // Línea de contorno
-                DrawLineV(p1, p2, BLACK);
-                DrawLineV(p2, p3, BLACK);
-                DrawLineV(p3, p1, BLACK);
+                    // Posiciones base
+                    Vector2 p1 = {100, 250};
+                    Vector2 p2 = {160, 180};
+                    Vector2 p3 = {220, 250};
+
+                    // Ajustar con respecto a la cámara para simular profundidad
+                    Vector2 camOffset = camera->target;
+                    p1.x += (camOffset.x - camera->offset.x) * (1.0f - 1.0f/parallax);
+                    p2.x += (camOffset.x - camera->offset.x) * (1.0f - 1.0f/parallax);
+                    p3.x += (camOffset.x - camera->offset.x) * (1.0f - 1.0f/parallax);
+
+                    p1.y += (camOffset.y - camera->offset.y) * (1.0f - 1.0f/parallax);
+                    p2.y += (camOffset.y - camera->offset.y) * (1.0f - 1.0f/parallax);
+                    p3.y += (camOffset.y - camera->offset.y) * (1.0f - 1.0f/parallax);
+
+                    // Dibujo con efecto "más cercano"
+                    DrawLineV(p1, p2, BLACK);
+                    DrawLineV(p2, p3, BLACK);
+                    DrawLineV(p3, p1, BLACK);
+                }
 
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
@@ -833,7 +847,49 @@ int main(void) {
             camera->target = (Vector2){ player->shape.x * scale_x, player->shape.y * scale_y};
             camera->offset = (Vector2){ GAME_RES_HALF_W * scale_x,  GAME_RES_HALF_H  * scale_y};
             BeginMode2D(*camera);
-            static Texture2D casaena = {0};
+                {
+                    float parallax = 1.4f;
+
+                    static Texture2D arbol = {0};
+                    if (arbol.id == 0) arbol = LoadTexture("art/arbol.png");
+
+                    // Configuración
+                    int num_arboles = 10;         // cuantos arboles
+                    float separacion = 30 * scale_x; // distancia entre arboles
+                    Vector2 basePos = { 7 * scale_x, -50 * scale_y };
+
+                    // Calcular desplazamiento relativo a la cámara (efecto parallax)
+                    Vector2 camOffset = camera->target;
+                    Vector2 camAdjust = {
+                        (camOffset.x - camera->offset.x) * (1.0f - 1.0f/parallax),
+                        (camOffset.y - camera->offset.y) * (1.0f - 1.0f/parallax)
+                    };
+
+                    // --- Horizonte con mismo parallax que los árboles ---
+                    Color horizonColor = GRAY; // #37946e
+                    Rectangle horizonRect = {
+                        -2000 * scale_x + camAdjust.x,  // desplazado según cámara
+                        34 * scale_y + camAdjust.y,   // posición vertical
+                        4000 * scale_x,                 // ancho grande
+                        300 * scale_y                   // altura
+                    };
+                    DrawRectangleRec(horizonRect, horizonColor);
+
+                    // Pintar varios árboles en línea horizontal
+                    for (int i = 0; i < num_arboles; i++)
+                    {
+                        Vector2 parallaxPos = {
+                            basePos.x + i * separacion + camAdjust.x,
+                            basePos.y + camAdjust.y
+                        };
+
+                        DrawTextureEx(arbol, parallaxPos, 0, scale_x, WHITE);
+                    }
+                }
+
+
+
+                static Texture2D casaena = {0};
                 if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
                 DrawTextureEx(casaena, (Vector2){ 10 * scale_x, -100 * scale_y }, 0, scale_x, WHITE);
             EndMode2D();
