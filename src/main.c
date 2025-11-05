@@ -56,7 +56,7 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 
 
 #define CHARACTERS              4
-#define CHARACTER_MAX_SPEED     2
+#define CHARACTER_MAX_SPEED     8
 
 typedef struct  {
     Rectangle shape;
@@ -745,10 +745,10 @@ int main(void) {
 
             // Update character            
             Vector2 move = { 0.0f, 0.0f };
-            if (player_actions.move_down)  move.y += CHARACTER_MAX_SPEED;
-            if (player_actions.move_up)    move.y -= CHARACTER_MAX_SPEED;
-            if (player_actions.move_left)  move.x -= CHARACTER_MAX_SPEED;
-            if (player_actions.move_right) move.x += CHARACTER_MAX_SPEED;
+            if (player_actions.move_down)  move.y += 1;
+            if (player_actions.move_up)    move.y -= 1;
+            if (player_actions.move_left)  move.x -= 1;
+            if (player_actions.move_right) move.x += 1;
             
             float dt = GetFrameTime();
             player->movement = move;
@@ -757,7 +757,8 @@ int main(void) {
             player->shape.y += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
 
             float speed = FloatAbs(player->movement.x);
-            if (speed > 0.01f) player->anim_time += dt * speed;
+            if (speed > 0.01f) player->anim_time += dt * speed * 2;
+            else player->anim_time = 0;
 
             // Update camera
             camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
