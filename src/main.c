@@ -828,10 +828,14 @@ int main(void) {
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
 
+            float scale_x = (float)GetScreenWidth() / GAME_RES_W;
+            float scale_y = (float)GetScreenHeight() / GAME_RES_H;
+            camera->target = (Vector2){ player->shape.x * scale_x, player->shape.y * scale_y};
+            camera->offset = (Vector2){ GAME_RES_HALF_W * scale_x,  GAME_RES_HALF_H  * scale_y};
             BeginMode2D(*camera);
             static Texture2D casaena = {0};
                 if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
-                DrawTextureEx(casaena, (Vector2){ 0, 0 }, 0, 4.0, WHITE);
+                DrawTextureEx(casaena, (Vector2){ 10 * scale_x, -100 * scale_y }, 0, scale_x, WHITE);
             EndMode2D();
 
             DrawTexturePro(game_canvas.texture,
