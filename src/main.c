@@ -157,7 +157,7 @@ typedef struct {
 Game_WindowState Game_MakeWindowState(Game_State *game_state)
 {
     Game_WindowState state      = {
-        .checkbox_value         = true,
+        .checkbox_value         = false,
         .font_toggle            = false,
         .input_contents         = {'\0'},
         .input_int_contents     = {'\0'},
@@ -792,13 +792,17 @@ int main(void) {
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
                 Game_UpdateCollisions(&game_state, collisions, radius);
+
+                static Texture2D casaena = {0};
+                if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
+                DrawTextureEx(casaena, (Vector2){ -130, -120 }, 0, 1.0, WHITE);
                 
                 for (int i = 0; i < game_state.alive_characters; ++i) {
                     Game_Character* c = &game_state.characters[i];
                     
                     Vector2 center = Game_GetCharacterCenter(c);
                     
-                    Color ring_color = collisions[i] ? RED : BLACK;
+                    Color ring_color = collisions[i] ? ColorAlpha(WHITE, 0.2) : ColorAlpha(WHITE, 0);
                     DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
                     
                     //DrawRectangleRec(c->Shape, c->Color);
