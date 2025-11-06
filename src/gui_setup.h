@@ -1,7 +1,7 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include "raylib.h"
- #include "raymath.h"
+ #include <raylib.h>
+ #include <raymath.h>
 #endif
 
 // > ICON SETUP
@@ -84,56 +84,29 @@ typedef struct {
 //   t: Interpolation factor [0.0, 1.0] controlling saturation (0.13 to 0.24) and value (0.89 to 0.33).
 // Returns:
 //   A Raylib Color struct with RGB values (0-255) and full alpha (255).
-Color GetThemeColorFromHue(float hue, float t) {
-    // Clamp t to [0, 1.25] allowing "extra darkness"
-    if (t < 0.0f) t = 0.0f;
+Color GUI_GetThemeColorFromHue(float hue, float t) {
+    if (t < 0.0f)  t = 0.0f;
     if (t > 1.25f) t = 1.25f;
 
-    // Interpolate saturation (S) and value (V)
-    // S ranges from 0.13 (light) to 0.24 (dark)
-    // V ranges from 0.89 (light) to 0.33 (dark)
-    float s = 0.13f + t * (0.24f - 0.13f);
-    float v = 0.89f - t * (0.89f - 0.33f);
-    s = s > 1.0f ? 1.0f : s;
-    v = v > 1.0f ? 1.0f : v;
+    float s = 0.13f + t * (0.24f - 0.13f); // 0.13 → 0.24
+    float v = 0.89f - t * (0.89f - 0.33f); // 0.89 → 0.33
 
-    // Convert HSV to RGB
-    float c = v * s;            // Chroma
-    float h_prime = hue / 60.0f; // Hue sector
-    float x = c * (1.0f - fabsf(fmodf(h_prime, 2.0f) - 1.0f));
-    float m = v - c;
+    // Normaliza hue al rango [0, 360)
+    while (hue < 0.0f)   hue += 360.0f;
+    while (hue >= 360.0f) hue -= 360.0f;
 
-    float r_prime, g_prime, b_prime;
-    int sector = (int)h_prime;
-
-    // Assign RGB based on hue sector
-    switch (sector) {
-        case 0: r_prime = c; g_prime = x; b_prime = 0; break;
-        case 1: r_prime = x; g_prime = c; b_prime = 0; break;
-        case 2: r_prime = 0; g_prime = c; b_prime = x; break;
-        case 3: r_prime = 0; g_prime = x; b_prime = c; break;
-        case 4: r_prime = x; g_prime = 0; b_prime = c; break;
-        case 5: r_prime = c; g_prime = 0; b_prime = x; break;
-        default: r_prime = 0; g_prime = 0; b_prime = 0; break;
-    }
-
-    // Scale to RGB (0-255) and create Raylib Color
-    unsigned char r = (unsigned char)((r_prime + m) * 255.0f);
-    unsigned char g = (unsigned char)((g_prime + m) * 255.0f);
-    unsigned char b = (unsigned char)((b_prime + m) * 255.0f);
-
-    return (Color){r, g, b, 255}; // Full alpha
+    return ColorFromHSV(hue, s, v);
 }
 
 GUI_ThemeColors GUI_MakeThemeColors(float hue)
 {
     GUI_ThemeColors colors = {
-        .tx_color_0 = GetThemeColorFromHue(hue, 0.0f),
-        .tx_color_1 = GetThemeColorFromHue(hue, 1.15f), // darker than bg_color_3
-        .bg_color_0 = GetThemeColorFromHue(hue, 0.25f),
-        .bg_color_1 = GetThemeColorFromHue(hue, 0.5f),
-        .bg_color_2 = GetThemeColorFromHue(hue, 0.75f),
-        .bg_color_3 = GetThemeColorFromHue(hue, 1.0f)
+        .tx_color_0 = GUI_GetThemeColorFromHue(hue, 0.0f),
+        .tx_color_1 = GUI_GetThemeColorFromHue(hue, 1.15f), // darker than bg_color_3
+        .bg_color_0 = GUI_GetThemeColorFromHue(hue, 0.25f),
+        .bg_color_1 = GUI_GetThemeColorFromHue(hue, 0.5f),
+        .bg_color_2 = GUI_GetThemeColorFromHue(hue, 0.75f),
+        .bg_color_3 = GUI_GetThemeColorFromHue(hue, 1.0f)
     };
     return colors;
 }
@@ -194,7 +167,10 @@ typedef struct {
     float           blink_alpha;
 } GUI_FontSetup;
 
-GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) {
+GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) 
+{
+    _Static_assert(EGUI_FontType_Count == 2,  "Update fonts here");
+
     switch (content) {
     case EGUI_FontType_GUI: {
         GUI_FontSetup result = {
@@ -210,6 +186,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) {
             .blink_delta        = (Vector2){ 0.0f, 0.0f },
             .blink_alpha        = 0.95f
         };
+        SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
         return result;
     }
     case EGUI_FontType_Default:
@@ -224,7 +201,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) {
             .font_use_custom    = 1,
             .font_spacing       = 1.0f,
             .blink_size         = (Vector2){ 1.0f, 24.0f },
-            .blink_delta        = (Vector2){ -0.0f, 0.0f },
+            .blink_delta        = (Vector2){ 0.0f, 0.0f },
             .blink_alpha        = 0.95f
         };
         SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
@@ -268,6 +245,7 @@ typedef struct {
 GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
 {
     GUI_PointerSetup setup = { 0 };
+    _Static_assert(EGUI_Pointer_Count  == 5,  "Update pointers here!");
 
     switch (pointer_type)
     {
