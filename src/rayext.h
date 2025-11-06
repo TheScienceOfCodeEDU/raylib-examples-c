@@ -200,3 +200,76 @@ static inline int FloatFloor(float value)
     int i = (int)value;
     return (value < (float)i) ? (i - 1) : i;
 }
+
+
+void DrawTextureFullScreenKeep(Texture2D tex, Color tint)
+{
+    int screenW = GetScreenWidth();
+    int screenH = GetScreenHeight();
+
+    // 🔹 Escala entera máxima (pixel-perfect sin barra)
+    int scaleX = screenW / tex.width;
+    int scaleY = screenH / tex.height;
+    int scale  = (scaleX < scaleY ? scaleX : scaleY);
+    if (scale < 1) scale = 1;
+
+    int outW = tex.width  * scale;
+    int outH = tex.height * scale;
+
+    // 🔹 Coordenadas exactas centradas en enteros
+    int ox = (screenW - outW) / 2;
+    int oy = (screenH - outH) / 2;
+
+    // 🔹 Fuente normal (sin invertir Y)
+    Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
+    Rectangle dst = {(float)ox, (float)oy, (float)outW, (float)outH};
+
+    // 🔹 Dibujo exacto
+    DrawTexturePro(tex, src, dst, (Vector2){0, 0}, 0.0f, tint);
+}
+
+void DrawTextureFullScreen(Texture2D tex, Color tint)
+{
+    int screenW = GetScreenWidth();
+    int screenH = GetScreenHeight();
+
+    // Evita sangrados de borde
+    SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+    SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
+
+    float screenAspect = (float)screenW / (float)screenH;
+    float texAspect    = (float)tex.width / (float)tex.height;
+
+    // Destino: ocupa toda la pantalla
+    Rectangle dst = { 0, 0, (float)screenW, (float)screenH };
+
+    // Fuente: recorte centrado (cover)
+    Rectangle src;
+    if (screenAspect > texAspect) {
+        // Pantalla más ancha → recorto altura
+        float neededH = (float)tex.width / screenAspect;   // h que corresponde para no tener barras
+        float y = ((float)tex.height - neededH) * 0.5f;    // centro
+        // Redondeo a enteros para evitar 1px fantasma
+        int iy = (int)(y + 0.5f);
+        int ih = (int)(neededH + 0.5f);
+        src = (Rectangle){ 0.0f, (float)iy, (float)tex.width, (float)ih };
+    } else {
+        // Pantalla más alta → recorto ancho
+        float neededW = (float)tex.height * screenAspect;
+        float x = ((float)tex.width - neededW) * 0.5f;
+        int ix = (int)(x + 0.5f);
+        int iw = (int)(neededW + 0.5f);
+        src = (Rectangle){ (float)ix, 0.0f, (float)iw, (float)tex.height };
+    }
+
+    // OJO: no invertimos Y (src.height positivo) → sale al derecho
+    DrawTexturePro(tex, src, dst, (Vector2){0,0}, 0.0f, tint);
+}
+
+int StringSize(const char *str) {
+    int len = 0;
+    while (str[len] != '\0') {
+        len++;
+    }
+    return len;
+}

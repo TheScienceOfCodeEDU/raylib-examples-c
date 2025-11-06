@@ -6,137 +6,21 @@
 #include "rlgl.h"
 #include "raymath.h"
 #include "env.h"
-#include "str.h"
 #include "rayext.h"
 
 #include "gui_setup.h"
 #include "gui_structs.h"
 #include "gui.h"
-#include "experiments.h"
 
+#include "game_structs.h"
+#include "game_gui.h"
+#include "game.h"
+#include "experiments.h"
 
 #define GAME_RES_W          320
 #define GAME_RES_H          240
 #define GAME_RES_HALF_W     160
 #define GAME_RES_HALF_H     120
-
-typedef struct {
-    bool reset_characters;
-    bool add_character;
-    bool toggle_character;
-    bool move_up;
-    bool move_down;
-    bool move_left;
-    bool move_right;
-} PLAYER_Actions;
-
-PLAYER_Actions PLAYER_MakeActions()
-{
-    PLAYER_Actions actions = { 0 };
-    return actions;
-}
-
-void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
-{
-    GUI_Setup *setup = GUI_GetSetup();
-    GUI_Icons *icons = GUI_GetIcons();
-    GUI_Theme *theme = &setup->theme;
-    int buttons = 3;
-    float button_w = target.width / buttons;
-    float button_h = target.height;
-
-    Rectangle shape = (Rectangle) { target.x, target.y, button_w, button_h };
-    GUI_BeginFontType(EGUI_FontType_GUI);
-        actions->reset_characters    = GUI_Button(shape, "Reset", &icons->New, theme->red);
-        actions->add_character       = GUI_Button(MoveRect(shape, (Vector2) { button_w, 0 }), "Add", &icons->Open, theme->gray);
-        actions->toggle_character    = GUI_Button(MoveRect(shape, (Vector2) { button_w * 2, 0 }), "Change", &icons->Error, theme->gray);
-    GUI_EndFontType();
-}
-
-
-
-#define CHARACTERS              4
-#define CHARACTER_MAX_SPEED     32
-
-typedef struct  {
-    Rectangle shape;
-    Color color;
-    Vector2 movement;
-    float anim_time;
-} Game_Character;
-
-typedef struct {
-    int current_character;
-    int alive_characters;
-    Game_Character characters[CHARACTERS];
-    Camera2D camera2D;
-} Game_State;
-
-
-
-
-Game_State Game_MakeState()
-{
-    Game_State state = {
-        0,
-        2,
-        (Game_Character){ 0, 0, 10, 20, RED, Vector2Zero(), 0},
-        (Game_Character){ 10, 30, 10, 20, BLUE, Vector2Zero(), 0},
-        (Game_Character){ 50, 60, 10, 20, GREEN, Vector2Zero(), 0},
-        (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0},
-        { (Vector2){ 0, 0 }, { 0, 0 }, 0.0f, 1.0f }
-    };
-
-    return state;
-}
-
-void Game_UpdateNextCharacter(Game_State* state)
-{
-    state->current_character = (state->current_character + 1) % state->alive_characters;
-}
-
-void Game_AddCharacter(Game_State* state)
-{
-    state->alive_characters++;
-    if (state->alive_characters > CHARACTERS) state->alive_characters = CHARACTERS;
-}
-
-Game_Character* Game_GetCurrentCharacter(Game_State* state)
-{
-    return &state->characters[state->current_character];
-}
-
-Vector2 Game_GetCharacterCenter(Game_Character* character)
-{
-    return (Vector2){
-        character->shape.x + character->shape.width / 2.0f,
-        character->shape.y + character->shape.height / 2.0f
-    };
-}
-
-bool Game_CheckRingCollision(Game_Character* character1, Game_Character* character2, float radius)
-{
-    Vector2 center1 = Game_GetCharacterCenter(character1);
-    Vector2 center2 = Game_GetCharacterCenter(character2);
-    float distance = Vector2Distance(center1, center2);
-    return distance < (radius * 2);
-}
-
-void Game_UpdateCollisions(Game_State* state, bool collisions[], float radius)
-{
-    for (int i = 0; i < CHARACTERS; i++) {
-        collisions[i] = false;
-    }
-    
-    for (int i = 0; i < state->alive_characters; ++i) {
-        for (int j = i + 1; j < state->alive_characters; ++j) {
-            if (Game_CheckRingCollision(&state->characters[i], &state->characters[j], radius)) {
-                collisions[i] = true;
-                collisions[j] = true;
-            }
-        }
-    }
-}
 
 
 
@@ -420,190 +304,6 @@ const char* BuildTimeFormatted()
     return buffer;
 }
 
-void DrawTextureFullScreenKeep(Texture2D tex, Color tint)
-{
-    int screenW = GetScreenWidth();
-    int screenH = GetScreenHeight();
-
-    // 🔹 Escala entera máxima (pixel-perfect sin barra)
-    int scaleX = screenW / tex.width;
-    int scaleY = screenH / tex.height;
-    int scale  = (scaleX < scaleY ? scaleX : scaleY);
-    if (scale < 1) scale = 1;
-
-    int outW = tex.width  * scale;
-    int outH = tex.height * scale;
-
-    // 🔹 Coordenadas exactas centradas en enteros
-    int ox = (screenW - outW) / 2;
-    int oy = (screenH - outH) / 2;
-
-    // 🔹 Fuente normal (sin invertir Y)
-    Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
-    Rectangle dst = {(float)ox, (float)oy, (float)outW, (float)outH};
-
-    // 🔹 Dibujo exacto
-    DrawTexturePro(tex, src, dst, (Vector2){0, 0}, 0.0f, tint);
-}
-
-void DrawTextureFullScreen(Texture2D tex, Color tint)
-{
-    int screenW = GetScreenWidth();
-    int screenH = GetScreenHeight();
-
-    // Evita sangrados de borde
-    SetTextureFilter(tex, TEXTURE_FILTER_POINT);
-    SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
-
-    float screenAspect = (float)screenW / (float)screenH;
-    float texAspect    = (float)tex.width / (float)tex.height;
-
-    // Destino: ocupa toda la pantalla
-    Rectangle dst = { 0, 0, (float)screenW, (float)screenH };
-
-    // Fuente: recorte centrado (cover)
-    Rectangle src;
-    if (screenAspect > texAspect) {
-        // Pantalla más ancha → recorto altura
-        float neededH = (float)tex.width / screenAspect;   // h que corresponde para no tener barras
-        float y = ((float)tex.height - neededH) * 0.5f;    // centro
-        // Redondeo a enteros para evitar 1px fantasma
-        int iy = (int)(y + 0.5f);
-        int ih = (int)(neededH + 0.5f);
-        src = (Rectangle){ 0.0f, (float)iy, (float)tex.width, (float)ih };
-    } else {
-        // Pantalla más alta → recorto ancho
-        float neededW = (float)tex.height * screenAspect;
-        float x = ((float)tex.width - neededW) * 0.5f;
-        int ix = (int)(x + 0.5f);
-        int iw = (int)(neededW + 0.5f);
-        src = (Rectangle){ (float)ix, 0.0f, (float)iw, (float)tex.height };
-    }
-
-    // OJO: no invertimos Y (src.height positivo) → sale al derecho
-    DrawTexturePro(tex, src, dst, (Vector2){0,0}, 0.0f, tint);
-}
-
-
-
-void Game_DrawCharacter(Game_Character c, float anim_time)
-{
-    float h = c.shape.height;
-    float w = c.shape.width;
-    Vector2 base = { c.shape.x, c.shape.y };
-
-    float speed = Vector2Length(c.movement);
-    float phase = anim_time * (2.5f + speed * 0.4f);
-    float cycle = fmodf(phase, PI * 2.0f);
-
-    // Movimiento vertical del cuerpo (ligero "rebote")
-    float body_bob = sinf(cycle * 2.0f) * (h * 0.04f);
-
-    // ----------------------------------------------------------
-    // ARTICULACIONES CENTRALES
-    // ----------------------------------------------------------
-    Vector2 hip   = { base.x + w * 0.5f, base.y + h * 0.6f + body_bob };
-    Vector2 neck  = { hip.x, base.y + h * 0.15f + body_bob };
-    Vector2 head  = { neck.x, base.y - h * 0.1f + body_bob };
-
-    // ----------------------------------------------------------
-    // PIERNAS (movimiento elíptico: x=sin, y=cos)
-    // ----------------------------------------------------------
-    float legAmpX = w * 0.18f;  // amplitud horizontal
-    float legAmpY = h * 0.10f;  // amplitud vertical
-    float legOffsetY = h * 0.25f;
-
-    // pierna delantera (fase normal)
-    Vector2 knee_front = {
-        hip.x + sinf(cycle) * legAmpX * 0.5f,
-        hip.y + legOffsetY + cosf(cycle) * legAmpY
-    };
-    Vector2 foot_front = {
-        knee_front.x + sinf(cycle) * legAmpX * 0.7f,
-        knee_front.y + h * 0.22f
-    };
-
-    // pierna trasera (fase opuesta)
-    Vector2 knee_back = {
-        hip.x + sinf(cycle + PI) * legAmpX * 0.5f,
-        hip.y + legOffsetY + cosf(cycle + PI) * legAmpY
-    };
-    Vector2 foot_back = {
-        knee_back.x + sinf(cycle + PI) * legAmpX * 0.7f,
-        knee_back.y + h * 0.22f
-    };
-
-    // ----------------------------------------------------------
-    // BRAZOS (fase opuesta a las piernas)
-    // ----------------------------------------------------------
-    float armAmpX = w * 0.25f;
-    float armAmpY = h * 0.12f;
-    float armOffsetY = h * 0.20f;
-
-    Vector2 shoulder = { neck.x, neck.y + h * 0.05f };
-
-    // brazo delantero
-    Vector2 elbow_front = {
-        shoulder.x + sinf(cycle + PI) * armAmpX * 0.4f,
-        shoulder.y + armOffsetY + cosf(cycle + PI) * armAmpY
-    };
-    Vector2 hand_front = {
-        elbow_front.x + sinf(cycle + PI) * armAmpX * 0.4f,
-        elbow_front.y + h * 0.18f
-    };
-
-    // brazo trasero
-    Vector2 elbow_back = {
-        shoulder.x + sinf(cycle) * armAmpX * 0.4f,
-        shoulder.y + armOffsetY + cosf(cycle) * armAmpY
-    };
-    Vector2 hand_back = {
-        elbow_back.x + sinf(cycle) * armAmpX * 0.4f,
-        elbow_back.y + h * 0.18f
-    };
-
-    // ----------------------------------------------------------
-    // DIBUJO: líneas (huesos) + puntos (articulaciones)
-    // ----------------------------------------------------------
-    Color joint = ColorAlpha(c.color, 0.8);
-    Color joint_front = ColorAlpha(c.color, 0.95);
-    Color joint_back = ColorAlpha(c.color, 0.75);
-    Color bone  = (Color){200, 200, 220, 255};
-
-    // cuerpo
-    DrawLineV(head, neck, bone);
-    DrawLineV(neck, hip, bone);
-
-    // brazos
-    DrawLineV(shoulder, elbow_front, bone);
-    DrawLineV(elbow_front, hand_front, bone);
-    DrawLineV(shoulder, elbow_back, bone);
-    DrawLineV(elbow_back, hand_back, bone);
-
-    // piernas
-    DrawLineV(hip, knee_front, bone);
-    DrawLineV(knee_front, foot_front, bone);
-    DrawLineV(hip, knee_back, bone);
-    DrawLineV(knee_back, foot_back, bone);
-
-    // puntos visibles
-    DrawCircleV(head, 3, joint);
-    DrawCircleV(neck, 1, joint);
-    DrawCircleV(hip, 1, joint);
-    DrawCircleV(knee_front, 1, joint_front);
-    DrawCircleV(knee_back, 1, joint_back);
-    DrawCircleV(foot_front, 1, joint_front);
-    DrawCircleV(foot_back, 1, joint_back);
-    DrawCircleV(elbow_front, 1, joint_front);
-    DrawCircleV(elbow_back, 1, joint_back);
-    DrawCircleV(hand_front, 1, joint_front);
-    DrawCircleV(hand_back, 1, joint_back);
-}
-
-
-
-
-
 
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -817,7 +517,7 @@ int main(void) {
                     DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
                     
                     float anim_phase = c->anim_time * (c->movement.x < 0 ? 1.0f : -1.0f);
-                    Game_DrawCharacter(*c, anim_phase);
+                    DrawCharacter(c->shape, c->movement, anim_phase, c->color);
                 }
             EndMode2D();
         EndTextureMode();
@@ -869,7 +569,7 @@ int main(void) {
                     Color horizonColor = GRAY;
                     Rectangle horizonRect = {
                         -2000 * scale_x + camAdjust.x,  // desplazado según cámara
-                        34 * scale_y + camAdjust.y,   // posición vertical
+                        20 * scale_y + camAdjust.y,   // posición vertical
                         4000 * scale_x,                 // ancho grande
                         300 * scale_y                   // altura
                     };

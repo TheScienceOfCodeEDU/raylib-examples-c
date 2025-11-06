@@ -2,6 +2,121 @@
 #include "rayext.h"
 #endif
 
+void DrawCharacter(Rectangle shape, Vector2 movement, float anim_time, Color color)
+{
+    float h = shape.height;
+    float w = shape.width;
+    Vector2 base = { shape.x, shape.y };
+
+    float speed = Vector2Length(movement);
+    float phase = anim_time * (2.5f + speed * 0.4f);
+    float cycle = fmodf(phase, PI * 2.0f);
+
+    // Movimiento vertical del cuerpo (ligero "rebote")
+    float body_bob = sinf(cycle * 2.0f) * (h * 0.04f);
+
+    // ----------------------------------------------------------
+    // ARTICULACIONES CENTRALES
+    // ----------------------------------------------------------
+    Vector2 hip   = { base.x + w * 0.5f, base.y + h * 0.6f + body_bob };
+    Vector2 neck  = { hip.x, base.y + h * 0.15f + body_bob };
+    Vector2 head  = { neck.x, base.y - h * 0.1f + body_bob };
+
+    // ----------------------------------------------------------
+    // PIERNAS (movimiento elíptico: x=sin, y=cos)
+    // ----------------------------------------------------------
+    float legAmpX = w * 0.18f;  // amplitud horizontal
+    float legAmpY = h * 0.10f;  // amplitud vertical
+    float legOffsetY = h * 0.25f;
+
+    // pierna delantera (fase normal)
+    Vector2 knee_front = {
+        hip.x + sinf(cycle) * legAmpX * 0.5f,
+        hip.y + legOffsetY + cosf(cycle) * legAmpY
+    };
+    Vector2 foot_front = {
+        knee_front.x + sinf(cycle) * legAmpX * 0.7f,
+        knee_front.y + h * 0.22f
+    };
+
+    // pierna trasera (fase opuesta)
+    Vector2 knee_back = {
+        hip.x + sinf(cycle + PI) * legAmpX * 0.5f,
+        hip.y + legOffsetY + cosf(cycle + PI) * legAmpY
+    };
+    Vector2 foot_back = {
+        knee_back.x + sinf(cycle + PI) * legAmpX * 0.7f,
+        knee_back.y + h * 0.22f
+    };
+
+    // ----------------------------------------------------------
+    // BRAZOS (fase opuesta a las piernas)
+    // ----------------------------------------------------------
+    float armAmpX = w * 0.25f;
+    float armAmpY = h * 0.12f;
+    float armOffsetY = h * 0.20f;
+
+    Vector2 shoulder = { neck.x, neck.y + h * 0.05f };
+
+    // brazo delantero
+    Vector2 elbow_front = {
+        shoulder.x + sinf(cycle + PI) * armAmpX * 0.4f,
+        shoulder.y + armOffsetY + cosf(cycle + PI) * armAmpY
+    };
+    Vector2 hand_front = {
+        elbow_front.x + sinf(cycle + PI) * armAmpX * 0.4f,
+        elbow_front.y + h * 0.18f
+    };
+
+    // brazo trasero
+    Vector2 elbow_back = {
+        shoulder.x + sinf(cycle) * armAmpX * 0.4f,
+        shoulder.y + armOffsetY + cosf(cycle) * armAmpY
+    };
+    Vector2 hand_back = {
+        elbow_back.x + sinf(cycle) * armAmpX * 0.4f,
+        elbow_back.y + h * 0.18f
+    };
+
+    // ----------------------------------------------------------
+    // DIBUJO: líneas (huesos) + puntos (articulaciones)
+    // ----------------------------------------------------------
+    Color joint = ColorAlpha(color, 0.8);
+    Color joint_front = ColorAlpha(color, 0.95);
+    Color joint_back = ColorAlpha(color, 0.75);
+    Color bone  = (Color){200, 200, 220, 255};
+
+    // cuerpo
+    DrawLineV(head, neck, bone);
+    DrawLineV(neck, hip, bone);
+
+    // brazos
+    DrawLineV(shoulder, elbow_front, bone);
+    DrawLineV(elbow_front, hand_front, bone);
+    DrawLineV(shoulder, elbow_back, bone);
+    DrawLineV(elbow_back, hand_back, bone);
+
+    // piernas
+    DrawLineV(hip, knee_front, bone);
+    DrawLineV(knee_front, foot_front, bone);
+    DrawLineV(hip, knee_back, bone);
+    DrawLineV(knee_back, foot_back, bone);
+
+    // puntos visibles
+    DrawCircleV(head, 3, joint);
+    DrawCircleV(neck, 1, joint);
+    DrawCircleV(hip, 1, joint);
+    DrawCircleV(knee_front, 1, joint_front);
+    DrawCircleV(knee_back, 1, joint_back);
+    DrawCircleV(foot_front, 1, joint_front);
+    DrawCircleV(foot_back, 1, joint_back);
+    DrawCircleV(elbow_front, 1, joint_front);
+    DrawCircleV(elbow_back, 1, joint_back);
+    DrawCircleV(hand_front, 1, joint_front);
+    DrawCircleV(hand_back, 1, joint_back);
+}
+
+
 // Maximum number of points (static array size)
 #define MAX_POINTS 50
 

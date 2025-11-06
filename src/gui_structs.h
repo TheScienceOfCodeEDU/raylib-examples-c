@@ -1,4 +1,5 @@
 #ifndef UNITY_BUILD
+ #include <string.h>
  #include "gui_setup.h"
 #endif
 

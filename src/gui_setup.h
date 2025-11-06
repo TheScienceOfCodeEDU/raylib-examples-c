@@ -1,9 +1,5 @@
 #ifndef UNITY_BUILD
- #include <string.h>
- #include <stdio.h>
  #include "rayext.h"
- #include "str.h"
- #include "env.h"
 #endif
 
 // > ICON SETUP
