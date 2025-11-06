@@ -196,21 +196,27 @@ void WIN_winman(GUI_Window* window)
 
         static GUI_Window* win_window = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open sample window", NULL, window->colors)) {
+            int win_id = 2;
             if (win_window == NULL || win_window->id == 0) {
-                win_window = GUI_OpenWindow(2, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);
+                win_window = GUI_OpenWindow(win_id, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);                
             }
+            GUI_ForceZindex(win_id);
         }
         static GUI_Window* win_layouts = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
+            int win_id = 3;
             if (win_layouts == NULL || win_layouts->id == 0) {
-                win_layouts = GUI_OpenWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
+                win_layouts = GUI_OpenWindow(win_id, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
             }
+            GUI_ForceZindex(win_id);
         }
         static GUI_Window* win_character_debug = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open Character debug", NULL, window->colors)) {
+            int win_id = 4;
             if (win_character_debug == NULL || win_character_debug->id == 0) {
-                win_character_debug = GUI_OpenWindow(4, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
+                win_character_debug = GUI_OpenWindow(win_id, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
             }
+            GUI_ForceZindex(win_id);
         }
 
         GUI_Text(GUI_NextVertical(), "--- Opened windows ---", window->colors);
@@ -219,7 +225,7 @@ void WIN_winman(GUI_Window* window)
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
             if (GUI_Button(GUI_NextVertical(), TextFormat("%d - %s", win->id, win->title), NULL, window->colors)) {
-                state->force_z_index = win->id;
+                GUI_ForceZindex(win->id);
             }
         }
 

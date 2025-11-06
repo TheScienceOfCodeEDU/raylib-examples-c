@@ -322,6 +322,11 @@ GUI_Window* GUI_GetWindowByZindex(int z)
     return GUI_GetWindow(GUI_CTX.state->z_index[z]);
 }
 
+void GUI_ForceZindex(int win_id)
+{
+    GUI_CTX.state->force_z_index = win_id;
+}
+
 float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
 {
     GUI_Setup* setup = GUI_GetSetup();

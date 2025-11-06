@@ -74,8 +74,9 @@ int main(void) {
 
     // PREPARE GAME
     Game_State game_state = Game_MakeState();
-    Game_WindowState win_state = Game_MakeWindowState(&game_state);
+    Game_WindowState win_state = Game_MakeWindowState();
     PLAYER_Actions player_actions = PLAYER_MakeActions();
+    Game_SetContext(&game_state, &win_state);
 
     // Game canvas
     RenderTexture2D game_canvas = LoadRenderTexture(GAME_RES_W, GAME_RES_H);
@@ -126,7 +127,7 @@ int main(void) {
                 }
             }
 
-            GUI_UpdateAndDrawWindows(window_limits, &win_state);
+            GUI_UpdateAndDrawWindows(window_limits);
         EndTextureMode();
         GUI_EndDraw();
 
