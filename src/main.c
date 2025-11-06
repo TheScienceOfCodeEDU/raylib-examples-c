@@ -245,16 +245,21 @@ int main(void) {
         BeginDrawing();
             ClearBackground(WHITE);
 
+            // Wallpaper
             if (win_state.checkbox_value == 1) {
                 DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
 
+            // TODO@dc: paint each element and scale them separately instead of using this scale. Work here in plain scene coords, this way we can mix pixelperfect sprites (from textures) with the generated pixel characters in game_canvas.texture.
+            // TODO@dc: keep aspect ratio
+            // Scaled game screen
             float scale_x = FloatCeil((float)GetScreenWidth() / GAME_RES_W);
             float scale_y = FloatCeil((float)GetScreenHeight() / GAME_RES_H);
             camera->target = (Vector2){ player->shape.x * scale_x, player->shape.y * scale_y};
             camera->offset = (Vector2){ GAME_RES_HALF_W * scale_x,  GAME_RES_HALF_H  * scale_y};
             BeginMode2D(*camera);
+                // Scene with paralax
                 {
                     float parallax = 1.4f;
 
