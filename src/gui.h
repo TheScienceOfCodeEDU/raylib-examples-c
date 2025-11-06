@@ -1,4 +1,6 @@
 #ifndef UNITY_BUILD
+ #include <stdio.h> 
+ #include "env.h" 
  #include "gui_structs.h"
 #endif
 
