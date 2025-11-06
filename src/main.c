@@ -842,8 +842,8 @@ int main(void) {
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
 
-            float scale_x = (float)GetScreenWidth() / GAME_RES_W;
-            float scale_y = (float)GetScreenHeight() / GAME_RES_H;
+            float scale_x = FloatCeil((float)GetScreenWidth() / GAME_RES_W);
+            float scale_y = FloatCeil((float)GetScreenHeight() / GAME_RES_H);
             camera->target = (Vector2){ player->shape.x * scale_x, player->shape.y * scale_y};
             camera->offset = (Vector2){ GAME_RES_HALF_W * scale_x,  GAME_RES_HALF_H  * scale_y};
             BeginMode2D(*camera);
@@ -866,7 +866,7 @@ int main(void) {
                     };
 
                     // --- Horizonte con mismo parallax que los árboles ---
-                    Color horizonColor = GRAY; // #37946e
+                    Color horizonColor = GRAY;
                     Rectangle horizonRect = {
                         -2000 * scale_x + camAdjust.x,  // desplazado según cámara
                         34 * scale_y + camAdjust.y,   // posición vertical

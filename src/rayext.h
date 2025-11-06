@@ -186,3 +186,17 @@ static inline float FloatMin(float a, float b) { return (a < b) ? a : b; }
 
 static inline int   IntAbs(int value) { return (value < 0) ? -value : value; }
 static inline float FloatAbs(float value) { return (value < 0.0f) ? -value : value; }
+
+// Round up (always to the next integer if not exact)
+static inline int FloatCeil(float value)
+{
+    int i = (int)value;
+    return (value > (float)i) ? (i + 1) : i;
+}
+
+// Round down (always to the lower integer if not exact)
+static inline int FloatFloor(float value)
+{
+    int i = (int)value;
+    return (value < (float)i) ? (i - 1) : i;
+}
