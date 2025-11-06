@@ -253,17 +253,6 @@ GUI_Window* GUI_OpenWindow(
     return 0;
 }
 
-
-void GUI_SetWindowLimits(Rectangle limits)
-{
-    GUI_CTX.temp.window_limits = limits;
-}
-
-Rectangle GUI_GetWindowLimits()
-{
-    return GUI_CTX.temp.window_limits;
-}
-
 void GUI_RemoveWindow(int id)
 {
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {

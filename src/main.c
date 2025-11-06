@@ -83,7 +83,6 @@ int main(void) {
     SetTextureFilter(game_canvas.texture, TEXTURE_FILTER_POINT);
 
     SetTargetFPS(60);
-    bool first_render = true;
     while (!WindowShouldClose()) {
         //
         // UPDATE
@@ -103,19 +102,18 @@ int main(void) {
             GetScreenWidth(),
             GetScreenHeight() - topbar_height
         };
-        GUI_SetWindowLimits(window_limits);
-
+        
+        // Draw UI buffer
         GUI_BeginDraw(pointer_style);
         BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
-            
             // Top bar
             GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
 
             // Win-mananger
             {
                 static GUI_Window* win_man = NULL;
-                if (win_man == NULL && !first_render)
+                if (win_man == NULL)
                     win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
                 
                 if (win_man != NULL) {
@@ -126,7 +124,6 @@ int main(void) {
                     win_man->shape.height    = window_limits.height;
                 }
             }
-
             GUI_UpdateAndDrawWindows(window_limits);
         EndTextureMode();
         GUI_EndDraw();
@@ -314,16 +311,12 @@ int main(void) {
                     WHITE
                 );
             
-            // Draw UI Buffer
-            {
-                DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
-            }
+            // Show UI Buffer
+            DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
 
             GUI_DrawPointerTrail();
             GUI_DrawPointer();
         EndDrawing();
-
-        first_render = false;
     }
 
     CloseWindow();

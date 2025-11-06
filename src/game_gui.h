@@ -266,3 +266,4 @@ void WIN_winman(GUI_Window* window)
         GUI_Image(image, (Rectangle){ next.x, next.y, next.width, 320 });
     GUI_EndWindowContents(window);
 }
+
