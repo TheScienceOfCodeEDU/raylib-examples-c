@@ -224,19 +224,19 @@ void WIN_winman(GUI_Window* window, void* data)
         static GUI_Window* win_window = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open sample window", NULL, window->colors)) {
             if (win_window == NULL || win_window->id == 0) {
-                win_window = GUI_MakeWindow(2, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);
+                win_window = GUI_OpenWindow(2, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);
             }
         }
         static GUI_Window* win_layouts = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
             if (win_layouts == NULL || win_layouts->id == 0) {
-                win_layouts = GUI_MakeWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
+                win_layouts = GUI_OpenWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
             }
         }
         static GUI_Window* win_character_debug = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open Character debug", NULL, window->colors)) {
             if (win_character_debug == NULL || win_character_debug->id == 0) {
-                win_character_debug = GUI_MakeWindow(3, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
+                win_character_debug = GUI_OpenWindow(4, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
             }
         }
 

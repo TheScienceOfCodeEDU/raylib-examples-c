@@ -65,7 +65,7 @@ typedef struct GUI_Window {
     int             id;
     Rectangle       shape;
     GUI_ThemeColors colors;
-    char            *title;
+    const char      *title;
     Texture2D       *icon;
     float           scroll_offset;
     float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
@@ -232,8 +232,8 @@ bool GUI_IsPointerOverGui()
     return GUI_CTX.temp.pointer_over_gui;
 }
 
-GUI_Window* GUI_MakeWindow(
-    int id, char *title, Rectangle shape, 
+GUI_Window* GUI_OpenWindow(
+    int id, const char *title, Rectangle shape, 
     GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
     void (*contents)(GUI_Window*, void*))
 {

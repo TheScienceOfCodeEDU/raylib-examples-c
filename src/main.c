@@ -115,7 +115,7 @@ int main(void) {
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL && !first_render)
-                    win_man = GUI_MakeWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
+                    win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
                 
                 if (win_man != NULL) {
                     float win_forth          = window_limits.width / 4.0;

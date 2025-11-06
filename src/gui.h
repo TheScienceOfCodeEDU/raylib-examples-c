@@ -696,7 +696,7 @@ void GUI_Input(
 //   STABILITY : █████████░  90%
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
-    Rectangle shape, bool value, char *on_txt, char *off_txt, 
+    Rectangle shape, bool value, const char *on_txt, const char *off_txt, 
     GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_GetState();
@@ -736,7 +736,7 @@ void GUI_DrawCheckBox(
 }
 
 void GUI_Check(
-    Rectangle shape, bool *value, char *on_txt, char *off_txt, 
+    Rectangle shape, bool *value, const char *on_txt, const char *off_txt, 
     GUI_ThemeColors colors)
 {
     GUI_MACRO_CONTROL_LAYOUT(shape)

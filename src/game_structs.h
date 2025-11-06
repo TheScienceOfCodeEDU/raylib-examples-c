@@ -2,6 +2,35 @@
  #include "rayext.h"
 #endif
 
+//
+// CORE
+//
+
+typedef struct {
+    Texture2D texture;
+    Vector2 position;
+    float parallax;      // Parallax factor (1.0f = camera locked)
+    float scale;
+    Color tint;
+} Game_Element;
+
+Game_Element Game_MakeElement(const char *path, Vector2 position, float parallax, float scale, Color tint)
+{
+    Game_Element element = {
+        .texture    = LoadTexture(path),
+        .position   = position,
+        .parallax   = parallax,
+        .scale      = scale,
+        .tint       = tint
+    };
+    return element;
+}
+
+
+//
+// GAME ITSELF
+//
+
 #define CHARACTERS              4
 #define CHARACTER_MAX_SPEED     32
 
