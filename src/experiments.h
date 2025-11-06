@@ -1,5 +1,9 @@
 #ifndef UNITY_BUILD
-#include "rayext.h"
+ #define UNITY_BUILD 0
+ #include "raylib.h"
+ #include "raymath.h"
+ #include "rlgl.h"
+ #include "rayext.h"
 #endif
 
 void DrawCharacter(Rectangle shape, Vector2 movement, float anim_time, Color color)

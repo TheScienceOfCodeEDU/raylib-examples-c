@@ -1,38 +1,18 @@
+
 #ifndef UNITY_BUILD
-  #include "gui.h"
+ #define UNITY_BUILD 0
+ #include <stdio.h> 
+ #include "env.h"
+ #include <raylib.h>
+ #include <raymath.h>
+ #include "rayext.h"
+ #include "game_structs.h"
+ #include "gui_setup.h"
+ #include "gui_structs.h" 
+ #include "gui.h"
+ #include "game_gui.h" 
 #endif
 
-#define CHARACTERS              4
-#define CHARACTER_MAX_SPEED     32
-
-typedef struct  {
-    Rectangle shape;
-    Color color;
-    Vector2 movement;
-    float anim_time;
-} Game_Character;
-
-typedef struct {
-    int current_character;
-    int alive_characters;
-    Game_Character characters[CHARACTERS];
-    Camera2D camera2D;
-} Game_State;
-
-Game_State Game_MakeState()
-{
-    Game_State state = {
-        0,
-        2,
-        (Game_Character){ 0, 0, 10, 20, RED, Vector2Zero(), 0},
-        (Game_Character){ 10, 30, 10, 20, BLUE, Vector2Zero(), 0},
-        (Game_Character){ 50, 60, 10, 20, GREEN, Vector2Zero(), 0},
-        (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0},
-        { (Vector2){ 0, 0 }, { 0, 0 }, 0.0f, 1.0f }
-    };
-
-    return state;
-}
 
 void Game_UpdateNextCharacter(Game_State* state)
 {
@@ -50,19 +30,11 @@ Game_Character* Game_GetCurrentCharacter(Game_State* state)
     return &state->characters[state->current_character];
 }
 
-Vector2 Game_GetCharacterCenter(Game_Character* character)
-{
-    return (Vector2){
-        character->shape.x + character->shape.width / 2.0f,
-        character->shape.y + character->shape.height / 2.0f
-    };
-}
-
 bool Game_CheckRingCollision(Game_Character* character1, Game_Character* character2, float radius)
 {
-    Vector2 center1 = Game_GetCharacterCenter(character1);
-    Vector2 center2 = Game_GetCharacterCenter(character2);
-    float distance = Vector2Distance(center1, center2);
+    Vector2 center1     = RectCenter(character1->shape);
+    Vector2 center2     = RectCenter(character2->shape);
+    float distance      = Vector2Distance(center1, center2);
     return distance < (radius * 2);
 }
 

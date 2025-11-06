@@ -1,5 +1,7 @@
 #ifndef UNITY_BUILD
- #include "rayext.h"
+ #define UNITY_BUILD 0
+ #include "raylib.h"
+ #include "raymath.h"
 #endif
 
 // > ICON SETUP

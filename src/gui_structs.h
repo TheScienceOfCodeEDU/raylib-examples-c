@@ -1,6 +1,11 @@
+
 #ifndef UNITY_BUILD
+ #define UNITY_BUILD 0
  #include <string.h>
- #include "gui_setup.h"
+ #include "raylib.h"
+ #include "raymath.h"
+ #include "rayext.h"
+ #include "gui_setup.h" 
 #endif
 
 #define GUI_MAX_TRAIL       30

@@ -22,270 +22,6 @@
 #define GAME_RES_HALF_W     160
 #define GAME_RES_HALF_H     120
 
-
-
-//
-// SAMPLE WINDOW
-//
-
-// 1. Define your data
-typedef struct {
-    bool checkbox_value;
-    bool font_toggle;
-    char input_contents[256];
-    char input_int_contents[256];
-    char input_float_contents[256];
-    Game_State *game_state;
-} Game_WindowState;
-
-Game_WindowState Game_MakeWindowState(Game_State *game_state)
-{
-    Game_WindowState state      = {
-        .checkbox_value         = false,
-        .font_toggle            = false,
-        .input_contents         = {'\0'},
-        .input_int_contents     = {'\0'},
-        .input_float_contents   = {'\0'},
-        .game_state             = game_state
-    };
-    return state;
-}
-
-
-// 2. Define your draw window
-void WIN_window(GUI_Window* window, void* data)
-{
-    // Prepare your data
-    Game_WindowState *win_state = (Game_WindowState*)data;
-
-    // Responsive height (if you require it)
-    // GUI_WindowUpdateShapeForContent(window);
-    
-    // Get the setup as it allows access to theming setup->theme.red
-    GUI_Setup *setup            = GUI_GetSetup();
-    // Keep or modify colors
-    GUI_ThemeColors colors      = window->colors;
-    // Set your font
-    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;    
-    // And define your UI
-    Rectangle window_workspace  =
-    GUI_BeginWindowContents(window, font_type);
-        // A default layout with 3 columns
-        GUI_BeginBlockCols(3, window_workspace, font_type);
-
-        // 1st input (textbox)
-        GUI_Text(GUI_NextHorizontal(), "Text", colors);
-        GUI_Input(GUI_NextHorizontals(2), win_state->input_contents, EGUI_InputText, colors);
-
-        // 2nd input for integer
-        // TODO@dc: add min, max and parsing
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "Int", colors);
-        GUI_Input(GUI_NextHorizontals(2), win_state->input_int_contents, EGUI_InputInt, colors);
-
-        // 3rd input for float
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "Float", colors);
-        GUI_Input(GUI_NextHorizontals(2), win_state->input_float_contents, EGUI_InputFloat, colors);
-
-        // Wallpaper check (checkbox/switch)
-        // With a theme.red color
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "Wallpaper",  colors);
-        GUI_Check(GUI_NextHorizontals(2), &win_state->checkbox_value, "ON", "OFF", setup->theme.red);
-
-        // Font toggler
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "Font",  colors);
-        GUI_Check(GUI_NextHorizontals(2), &win_state->font_toggle, "GUI", "DEF", colors);
-    GUI_EndWindowContents(window);
-}
-
-void WIN_layouts(GUI_Window* window, void* data)
-{
-    (void) data; // Supress unused warning.
-    GUI_Setup* setup = GUI_GetSetup();
-    EGUI_FontType font_type = EGUI_FontType_Default;
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
-
-    Rectangle window_workspace =
-    GUI_BeginWindowContents(window, EGUI_FontType_Default);
-
-        // First block
-        GUI_BeginBlock(window_workspace.width, default_height);
-        GUI_Text(GUI_NextVertical(), "Some sample layouts for imKairos", setup->theme.gray);
-
-        // and more verticals of full width (can be written as Horizontals too, but requires
-        // an explicit call to GUI_BeginBlock() to end each line)
-        GUI_BeginControlScissor();
-            float color_alpha = 0.9;
-            DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BROWN, color_alpha));
-            DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BEIGE, color_alpha));
-
-            // 1/3rd and 2/3rds blocks
-            GUI_BeginBlock(window_workspace.width / 3, default_height);
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));                    
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), ColorAlpha(GREEN, color_alpha));
-
-            // Second block
-            // 3 horizontals of 1/3 of the available space
-            GUI_BeginBlock(window_workspace.width / 3, default_height);
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(DARKGRAY, color_alpha));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(GRAY, color_alpha));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(LIGHTGRAY, color_alpha));
-            
-            // Prepare for a new block with 5 elements per row
-            // You can send negative values to use AVAILABLE - YOUR_VALUE
-            // Ex:
-            // -default_height means take all space minus a default_height to insert a final row
-            GUI_BeginBlock(window_workspace.width / 5, -default_height);
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.4));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5));
-            
-            // Final row
-            GUI_BeginBlock(window_workspace.width / 2, default_height);
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(RED, color_alpha));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLUE, color_alpha));
-        EndScissorMode();
-    GUI_EndWindowContents(window);
-}
-
-
-
-void WIN_character_debug(GUI_Window* window, void* data)
-{
-    Game_State *game_state      =((Game_WindowState*)data)->game_state;
-    Game_Character *ch          = &game_state->characters[game_state->current_character];
-    GUI_ThemeColors colors      = window->colors;
-    EGUI_FontType font_type     = EGUI_FontType_Default;
-
-    Rectangle workspace = GUI_BeginWindowContents(window, font_type);
-        GUI_BeginBlockCols(2, workspace, font_type);
-
-        // Shape
-        GUI_Text(GUI_NextHorizontal(), "shape.x", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.x), colors);
-
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "shape.y", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.y), colors);
-
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "shape.w", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.width), colors);
-
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "shape.h", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.height), colors);
-
-        // Color (RGB)
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "color", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("r:%d g:%d b:%d a:%d",
-            ch->color.r, ch->color.g, ch->color.b, ch->color.a), colors);
-
-        // Movement
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "movement.x", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->movement.x), colors);
-
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "movement.y", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->movement.y), colors);
-
-        // Animation time
-        GUI_BeginDuplicateBlock();
-        GUI_Text(GUI_NextHorizontal(), "anim_time", colors);
-        GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->anim_time), colors);
-
-    GUI_EndWindowContents(window);
-}
-
-
-void WIN_winman(GUI_Window* window, void* data)
-{
-    (void) data; // Supress unused warning.
-
-    GUI_State *state = GUI_GetState();
-    GUI_Setup *setup = GUI_GetSetup();
-    GUI_Icons *icons = GUI_GetIcons();
-    EGUI_FontType font_type = EGUI_FontType_Default;
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
-
-    Rectangle window_workspace =
-    GUI_BeginWindowContents(window, font_type);
-        GUI_BeginBlock(window_workspace.width, default_height);
-
-        static GUI_Window* win_window = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open sample window", NULL, window->colors)) {
-            if (win_window == NULL || win_window->id == 0) {
-                win_window = GUI_MakeWindow(2, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);
-            }
-        }
-        static GUI_Window* win_layouts = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
-            if (win_layouts == NULL || win_layouts->id == 0) {
-                win_layouts = GUI_MakeWindow(3, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
-            }
-        }
-        static GUI_Window* win_character_debug = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open Character debug", NULL, window->colors)) {
-            if (win_character_debug == NULL || win_character_debug->id == 0) {
-                win_character_debug = GUI_MakeWindow(3, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
-            }
-        }
-
-        GUI_Text(GUI_NextVertical(), "--- Opened windows ---", window->colors);
-        GUI_BeginDuplicateBlock();
-        for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-            GUI_Window* win = &state->window_s[i];
-            if (win->id == 0 || window->id == win->id) continue;
-            if (GUI_Button(GUI_NextVertical(), TextFormat("%d - %s", win->id, win->title), NULL, window->colors)) {
-                state->force_z_index = win->id;
-            }
-        }
-
-        GUI_Text(GUI_NextVertical(), "--- Global values ---", window->colors);
-        
-        // NOTE:
-        // GUI_IsPointerOverGui() is not safe to be called by a Window. It requires ALL windows to be processed beforehand. 
-        // GUI_Text(GUI_NextVertical(), TextFormat("PointerOverGUI: %d", GUI_IsPointerOverGui()),  window->colors);
-
-        GUI_Window *active = GUI_GetWindowByZindex(0);
-        if (active != NULL) {
-            Rectangle t_shape = GUI_WindowTitle(active->shape);
-            Rectangle w_shape = active->shape;
-
-            GUI_Text(GUI_NextVertical(), "--- Focused window ---", window->colors);
-            GUI_Text(GUI_NextVertical(), TextFormat("ID=%d scroll=%.2f content_height=%.2f", active->id, active->scroll_offset, active->content_height),  window->colors);
-
-            GUI_Text(GUI_NextVertical(), "title_shape", window->colors);
-            GUI_Text(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", t_shape.y,  t_shape.x, t_shape.width, t_shape.height), window->colors);
-
-            GUI_Text(GUI_NextVertical(), "window_shape", window->colors);
-            GUI_Text(GUI_NextVertical(), TextFormat("x=%.2f  y=%.2f w=%.2f  h=%.2f", w_shape.x, w_shape.y, w_shape.width, w_shape.height),  window->colors);
-            GUI_Text(GUI_NextVertical(), "--- End focused window ---", window->colors);
-        }
-
-        Rectangle next = GUI_NextVertical();
-        float icon_w = GUI_GetIconWidth();
-        GUI_Face((Vector2){ next.x, next.y }, (float) icon_w / 2);
-        GUI_Face((Vector2){ next.x + (float) icon_w / 2, next.y }, icon_w);
-        GUI_Face((Vector2){ next.x + (float) icon_w / 2 + icon_w, next.y }, icon_w * 2);
-        GUI_Icon(&icons->Dog, (Vector2){ next.x + (float) icon_w / 2 + icon_w * 3, next.y }, icon_w * 2, WHITE);
-        GUI_NextVertical(); // Jump line
-        GUI_NextVertical(); // Jump line
-
-        static Texture2D image;
-        if (image.id == 0) image = LoadTexture("art/abstractica.png");
-        next = GUI_NextVertical();
-        GUI_Image(image, (Rectangle){ next.x, next.y, next.width, 320 });
-    GUI_EndWindowContents(window);
-}
-
 const char* BuildTimeFormatted()
 {
     static char buffer[32];
@@ -352,6 +88,7 @@ int main(void) {
         // UPDATE
         //
 
+        //
         // UI
         static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
         if (IsKeyPressed(KEY_F10)) {
@@ -374,76 +111,47 @@ int main(void) {
             // Top bar
             GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
 
-            // Window(s)
-            float win_third = window_limits.width / 3.0;
+            // Win-mananger
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL && !first_render)
                     win_man = GUI_MakeWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
                 
                 if (win_man != NULL) {
-                    win_man->shape.x         = win_third * 2;
+                    float win_forth          = window_limits.width / 4.0;
+                    win_man->shape.x         = win_forth * 3;
                     win_man->shape.y         = window_limits.y;
-                    win_man->shape.width     = win_third;
+                    win_man->shape.width     = win_forth;
                     win_man->shape.height    = window_limits.height;
                 }
             }
 
             GUI_UpdateAndDrawWindows(window_limits, &win_state);
-            
-        #if 0
-            static Rectangle win_debug = { 20, 220, 350, 200 };
-            float win_third     = window_limits.width / 3.0;
-            win_debug.x         = win_third * 2;
-            win_debug.y         = window_limits.y;
-            win_debug.width     = win_third;
-            win_debug.height    = window_limits.height;
-            
-            void (*win_debug_contents)
-            GUI_Window(4, "Kairos Debug", &gui, &win_debug, window_limits, gui.theme.gray);
-            {
-                // Window contents
-                Rectangle window_workspace =
-                GUI_BeginWindowContents(win_debug, &gui);
-                    GUI_BeginVertical(gui.default_height);
-                    GUI_BeginHorizontal(window_workspace.width);
-                    GUI_Text(textbox_contents, RelativeToRect(GUI_NextVertical(), window_workspace), &gui, gui.theme.gray);
-                GUI_EndWindowContents();
-            }
-
-            static Rectangle win_layouts = { 20, 220, 350, 200 };
-            win_layouts.x         = win_third;
-            win_layouts.y         = window_limits.y;
-            win_layouts.width     = win_third;
-            win_layouts.height    = window_limits.height;
-            GUI_Window(500, "Kairos Layouts", &gui, &win_layouts, window_limits, gui.theme.gray);
-            {
-                // Window contents
-                Rectangle window_workspace =
-                
-            }
-        #endif
         EndTextureMode();
         GUI_EndDraw();
 
+        //
+        // CHARACTERS
         Game_Character *player = Game_GetCurrentCharacter(&game_state);
         Camera2D *camera = &game_state.camera2D;
         camera->target = (Vector2){ player->shape.x, player->shape.y };
         camera->offset = (Vector2){ GAME_RES_HALF_W,  GAME_RES_HALF_H };
         
         // GUI Actions
-        if (player_actions.reset_characters) game_state = Game_MakeState();
-        if (player_actions.add_character)    Game_AddCharacter(&game_state);  
-        if (player_actions.toggle_character) Game_UpdateNextCharacter(&game_state);
+        if (player_actions.reset_characters)    game_state = Game_MakeState();
+        if (player_actions.add_character)       Game_AddCharacter(&game_state);  
+        if (player_actions.toggle_character)    Game_UpdateNextCharacter(&game_state);
+        if (IsKeyPressed(KEY_F12))              state.scale += 1.0;
+        if (IsKeyPressed(KEY_F11))              state.scale -= 1.0;
 
-        // Scene actions
         if (GUI_IsPointerOverGui() == false) {
             // Update camera
             camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
             if (camera->zoom > 3.0f) camera->zoom = 3.0f;
             else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
         }
-        // Keyboard
+
+        // Character keyboard
         player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
         player_actions.move_down             = IsKeyDown(KEY_DOWN);
         player_actions.move_up               = IsKeyDown(KEY_UP);
@@ -458,19 +166,20 @@ int main(void) {
         if (player_actions.move_right) move.x += 1;
         
         float dt = GetFrameTime();
-        player->movement = move;
 
-        player->shape.x += player->movement.x * CHARACTER_MAX_SPEED * 2 * dt;
-        player->shape.y += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
-
+        // Move
+        player->movement    = move;
+        player->shape.x     += player->movement.x * CHARACTER_MAX_SPEED * 2 * dt;
+        player->shape.y     += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
+        
+        // Animate
         float speed = FloatAbs(player->movement.x);
-        if (speed > 0.01f) player->anim_time += dt * speed * 2;
-        else player->anim_time = 0;        
+        if (speed > 0.01f)
+            player->anim_time   += dt * speed * 2;
+        else
+            player->anim_time   = 0;        
 
-        if (IsKeyPressed(KEY_F12)) state.scale += 1.0;
-        if (IsKeyPressed(KEY_F11)) state.scale -= 1.0;
-
-        static float ui_opacity = 255.0;
+        
         // 
         // RENDER
         //
@@ -504,20 +213,19 @@ int main(void) {
                     DrawLineV(p3, p1, BLACK);
                 }
 
+                // TODO@dc: Move to update part
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
                 Game_UpdateCollisions(&game_state, collisions, radius);
 
                 for (int i = 0; i < game_state.alive_characters; ++i) {
-                    Game_Character* c = &game_state.characters[i];
-                    
-                    Vector2 center = Game_GetCharacterCenter(c);
-                    
-                    Color ring_color = collisions[i] ? ColorAlpha(WHITE, 0.2) : ColorAlpha(WHITE, 0);
-                    DrawRing(center, radius-3, radius, 0, 360, 32, ring_color);
-                    
-                    float anim_phase = c->anim_time * (c->movement.x < 0 ? 1.0f : -1.0f);
-                    DrawCharacter(c->shape, c->movement, anim_phase, c->color);
+                    Game_Character *character   = &game_state.characters[i];
+                    Vector2 center              = RectCenter(character->shape);
+                    Color ring_color            = collisions[i] ? ColorAlpha(WHITE, 0.2)
+                                                                : ColorAlpha(WHITE, 0);
+                    float anim_phase            = character->anim_time * (character->movement.x < 0 ? 1.0f : -1.0f);
+                    DrawRing(center, radius - 3, radius, 0, 360, 32, ring_color);
+                    DrawCharacter(character->shape, character->movement, anim_phase, character->color);
                 }
             EndMode2D();
         EndTextureMode();
@@ -587,8 +295,6 @@ int main(void) {
                     }
                 }
 
-
-
                 static Texture2D casaena = {0};
                 if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
                 DrawTextureEx(casaena, (Vector2){ 10 * scale_x, -100 * scale_y }, 0, scale_x, WHITE);
@@ -604,7 +310,7 @@ int main(void) {
             
             // Draw UI Buffer
             {
-                DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, (Color){ 255, 255, 255, ui_opacity});
+                DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
             }
 
             GUI_DrawPointerTrail();

@@ -273,3 +273,11 @@ int StringSize(const char *str) {
     }
     return len;
 }
+
+Vector2 RectCenter(Rectangle shape)
+{
+    return (Vector2){
+        shape.x + shape.width / 2.0f,
+        shape.y + shape.height / 2.0f
+    };
+}
