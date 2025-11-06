@@ -26,7 +26,6 @@ Game_Element Game_MakeElement(const char *path, Vector2 position, float parallax
     return element;
 }
 
-
 //
 // GAME ITSELF
 //
@@ -77,4 +76,43 @@ Game_State Game_MakeState()
     };
 
     return state;
+}
+
+//
+// Win state
+//
+
+typedef struct {
+    bool checkbox_value;
+    bool font_toggle;
+    char input_contents[256];
+    char input_int_contents[256];
+    char input_float_contents[256];
+} Game_WindowState;
+
+Game_WindowState Game_MakeWindowState()
+{
+    Game_WindowState state      = {
+        .checkbox_value         = true,
+        .font_toggle            = false,
+        .input_contents         = {'\0'},
+        .input_int_contents     = {'\0'},
+        .input_float_contents   = {'\0'}
+    };
+    return state;
+}
+
+// > STATE > CONTEXT
+//   STABILITY : █████████░  90%
+//   NOTES     : Nothing here
+
+static struct {
+    Game_State          *state;
+    Game_WindowState    *win_state;
+} GAME_CTX = { 0 };
+
+void Game_SetContext(Game_State *state, Game_WindowState *win_state)
+{
+    GAME_CTX.state      = state;
+    GAME_CTX.win_state  = win_state;
 }

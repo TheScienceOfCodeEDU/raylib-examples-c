@@ -1145,7 +1145,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 }
 
 // TODO@dc: cleaup
-void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
+void GUI_UpdateAndDrawWindows(Rectangle limits)
 {
     GUI_State* state = GUI_GetState();
 
@@ -1255,7 +1255,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits, void* win_state)
             if (window->id != id) continue;
 
             GUI_UpdateAndDrawWindow(window, limits);
-            window->contents(window, win_state);
+            window->contents(window);
         }
     }
 }

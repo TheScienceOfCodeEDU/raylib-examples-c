@@ -70,7 +70,7 @@ typedef struct GUI_Window {
     float           scroll_offset;
     float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
     bool            focused_face;
-    void (*contents) (struct GUI_Window*, void*);
+    void (*contents) (struct GUI_Window*);
 } GUI_Window;
 
 GUI_Window GUI_MakeEmptyWindow(void)
@@ -235,7 +235,7 @@ bool GUI_IsPointerOverGui()
 GUI_Window* GUI_OpenWindow(
     int id, const char *title, Rectangle shape, 
     GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
-    void (*contents)(GUI_Window*, void*))
+    void (*contents)(GUI_Window*))
 {
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
         GUI_Window* window = &GUI_CTX.state->window_s[i];

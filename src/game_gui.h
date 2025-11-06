@@ -30,35 +30,11 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 // SAMPLE WINDOW
 //
 
-// 1. Define your data
-typedef struct {
-    bool checkbox_value;
-    bool font_toggle;
-    char input_contents[256];
-    char input_int_contents[256];
-    char input_float_contents[256];
-    Game_State *game_state;
-} Game_WindowState;
-
-Game_WindowState Game_MakeWindowState(Game_State *game_state)
-{
-    Game_WindowState state      = {
-        .checkbox_value         = true,
-        .font_toggle            = false,
-        .input_contents         = {'\0'},
-        .input_int_contents     = {'\0'},
-        .input_float_contents   = {'\0'},
-        .game_state             = game_state
-    };
-    return state;
-}
-
-
-// 2. Define your draw window
-void WIN_window(GUI_Window* window, void* data)
+// Define your draw window
+void WIN_window(GUI_Window* window)
 {
     // Prepare your data
-    Game_WindowState *win_state = (Game_WindowState*)data;
+    Game_WindowState *win_state = GAME_CTX.win_state;
 
     // Responsive height (if you require it)
     // GUI_WindowUpdateShapeForContent(window);
@@ -103,9 +79,8 @@ void WIN_window(GUI_Window* window, void* data)
     GUI_EndWindowContents(window);
 }
 
-void WIN_layouts(GUI_Window* window, void* data)
+void WIN_layouts(GUI_Window* window)
 {
-    (void) data; // Supress unused warning.
     GUI_Setup* setup = GUI_GetSetup();
     EGUI_FontType font_type = EGUI_FontType_Default;
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
@@ -157,9 +132,9 @@ void WIN_layouts(GUI_Window* window, void* data)
 
 
 
-void WIN_character_debug(GUI_Window* window, void* data)
+void WIN_character_debug(GUI_Window* window)
 {
-    Game_State *game_state      =((Game_WindowState*)data)->game_state;
+    Game_State *game_state      = GAME_CTX.state;
     Game_Character *ch          = &game_state->characters[game_state->current_character];
     GUI_ThemeColors colors      = window->colors;
     EGUI_FontType font_type     = EGUI_FontType_Default;
@@ -207,10 +182,8 @@ void WIN_character_debug(GUI_Window* window, void* data)
 }
 
 
-void WIN_winman(GUI_Window* window, void* data)
+void WIN_winman(GUI_Window* window)
 {
-    (void) data; // Supress unused warning.
-
     GUI_State *state = GUI_GetState();
     GUI_Setup *setup = GUI_GetSetup();
     GUI_Icons *icons = GUI_GetIcons();
