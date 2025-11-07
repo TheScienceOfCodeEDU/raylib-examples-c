@@ -357,7 +357,5 @@ This imports GUI but not `GAME` itself (since it’s the current module). The ma
 
 ---
 
-\*\*Abstractica Game Toolkit \*\*\
-*Updated: Nov 2025*\
+**Abstractica Game Toolkit**
 *Keep it simple, keep it kind.*
-
