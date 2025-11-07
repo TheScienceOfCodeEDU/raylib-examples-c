@@ -276,13 +276,13 @@ It tells the next developer how the logic flows and keeps meaning explicit.
 
 ```c
 typedef struct {
-    int current_character;
-    int alive_characters;
-    Game_Character characters[CHARACTERS];
-    Camera2D camera2D;
+    int                 current_character;
+    int                 alive_characters;
+    Game_Character      characters[CHARACTERS];
+    Camera2D            camera2D;
 } Game_State;
 
-Game_State Game_MakeState(void)
+Game_State Game_MakeState()
 {
     Game_State state = {
         .current_character = 0,
