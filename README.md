@@ -79,7 +79,38 @@ That’s the whole idea of the Abstractica style.
 **Another example:**
 
 ```c
-Vector2 GUI_MeasureAdjustedText_CLUNKY(const char* text, EGUI_FontType font_type)
+// Let's start with this
+Vector2 GUI_MeasureAdjustedText_WORST(const char* text, EGUI_FontType font_type)
+{
+    return Vector2Add(
+        (Vector2){
+            MeasureTextEx(GUI_GetFont(font_type), text,
+                GUI_GetFont(font_type).baseSize *
+                GUI_GetSetup()->font_setups[font_type].font_scale *
+                GUI_GetState()->scale,
+                GUI_GetSetup()->font_setups[font_type].font_spacing).x +
+            GUI_GetSetup()->font_setups[font_type].blink_delta.x *
+                GUI_GetState()->scale *
+                GUI_GetSetup()->font_setups[font_type].font_scale,
+
+            MeasureTextEx(GUI_GetFont(font_type), text,
+                GUI_GetFont(font_type).baseSize *
+                GUI_GetSetup()->font_setups[font_type].font_scale *
+                GUI_GetState()->scale,
+                GUI_GetSetup()->font_setups[font_type].font_spacing).y +
+            GUI_GetSetup()->font_setups[font_type].blink_delta.y *
+                GUI_GetState()->scale *
+                GUI_GetSetup()->font_setups[font_type].font_scale
+        },
+        Vector2Scale(
+            GUI_GetSetup()->font_setups[font_type].font_delta,
+            GUI_GetState()->scale
+        )
+    );
+}
+
+// Then make it more readable
+Vector2 GUI_MeasureAdjustedText_READABLE(const char* text, EGUI_FontType font_type)
 {
     // We are extracting data
     GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
@@ -95,7 +126,7 @@ Vector2 GUI_MeasureAdjustedText_CLUNKY(const char* text, EGUI_FontType font_type
     return Vector2Add(result, Vector2Scale(setup->font_delta, state->scale));
 }
 
-// So we can be more descriptive:
+// And polish it!
 Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 {
     // Extract data
