@@ -1,7 +1,6 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include <raylib.h>
- #include <raymath.h>
+ #include "common.h"
 #endif
 
 // > ICON SETUP

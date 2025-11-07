@@ -1,15 +1,9 @@
 
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include <stdio.h> 
- #include <string.h>
- #include <raylib.h>
- #include <raymath.h>
- #include "rlgl.h"
- #include "rayext.h"
- #include "env.h"
+ #include "common.h"
  #include "gui_setup.h"
- #include "gui_structs.h" 
+ #include "gui_structs.h"
 #endif
 
 #define GUI_Assert(cond) \

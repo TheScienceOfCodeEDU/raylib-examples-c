@@ -1,5 +1,7 @@
 #ifndef UNITY_BUILD
- #include "rayext.h"
+ #define UNITY_BUILD 0
+ #define INCLUDE_GUI
+ #include "common.h"
 #endif
 
 //

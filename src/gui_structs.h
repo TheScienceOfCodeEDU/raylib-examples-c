@@ -1,10 +1,7 @@
 
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include <string.h>
- #include "raylib.h"
- #include "raymath.h"
- #include "rayext.h"
+ #include "common.h"
  #include "gui_setup.h" 
 #endif
 

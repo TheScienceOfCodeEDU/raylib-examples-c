@@ -1,21 +1,8 @@
 #define UNITY_BUILD 1
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include "raylib.h"
-#include "rlgl.h"
-#include "raymath.h"
-#include "env.h"
-#include "rayext.h"
-
-#include "gui_setup.h"
-#include "gui_structs.h"
-#include "gui.h"
-
-#include "game_structs.h"
-#include "game_gui.h"
-#include "game.h"
-#include "experiments.h"
+#define INCLUDE_GUI
+#define INCLUDE_GAME
+#include "common.h"
+#include "lab.h"
 
 #define GAME_RES_W          320
 #define GAME_RES_H          240

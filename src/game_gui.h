@@ -1,12 +1,8 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include <stdio.h>
- #include <raylib.h>
- #include "rayext.h"
+ #define INCLUDE_GUI
+ #include "common.h"
  #include "game_structs.h"
- #include "gui_setup.h"
- #include "gui_structs.h" 
- #include "gui.h" 
 #endif
 
 void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)

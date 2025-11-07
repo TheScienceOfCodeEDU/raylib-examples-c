@@ -1,15 +1,9 @@
 
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include <stdio.h> 
- #include "env.h"
- #include <raylib.h>
- #include <raymath.h>
- #include "rayext.h"
+ #define INCLUDE_GUI
+ #include "common.h"
  #include "game_structs.h"
- #include "gui_setup.h"
- #include "gui_structs.h" 
- #include "gui.h"
  #include "game_gui.h" 
 #endif
 
