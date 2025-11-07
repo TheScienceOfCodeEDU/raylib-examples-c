@@ -107,7 +107,7 @@ typedef struct {
 GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
     GUI_State state = {
-        .buffer                 = LoadRenderTexture(screen_max.x, screen_max.y),
+        .buffer                 = LoadRenderTexture((int)screen_max.x, (int)screen_max.y),
         .scale                  = 1.0f
     };
 
@@ -128,7 +128,6 @@ typedef struct {
     EGUI_Action     current_action;
     void            *control_focus_ptr;
     int             window_target_id; // Current window as interactable target (pointer is over and z-index is the lowest possible)
-    Rectangle       window_limits;
 
     // Pointer runtime
     EGUI_Pointer    current_pointer;
@@ -159,7 +158,6 @@ GUI_Temp GUI_MakeTempDefault()
         .current_action             = EGUI_ActionNone,
         .control_focus_ptr          = NULL,
         .window_target_id           = 0,
-        .window_limits              = (Rectangle) { 0, 0, (float) GetScreenWidth(), (float) GetScreenHeight() },
 
         .current_pointer            = EGUI_Pointer_Default,
         .mouse_last                 = (Vector2){ 0.0f, 0.0f },
@@ -232,38 +230,6 @@ bool GUI_IsPointerOverGui()
     return GUI_CTX.temp.pointer_over_gui;
 }
 
-GUI_Window* GUI_OpenWindow(
-    int id, const char *title, Rectangle shape, 
-    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
-    void (*contents)(GUI_Window*))
-{
-    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-        GUI_Window* window = &GUI_CTX.state->window_s[i];
-        if (window->id == 0) {
-            window->id              = id;
-            window->shape           = shape;
-            window->colors          = colors;
-            window->title           = title;
-            window->icon            = icon;
-            window->focused_face    = focused_face;
-            window->contents        = contents;
-            return window;
-        }
-    }
-    return 0;
-}
-
-void GUI_RemoveWindow(int id)
-{
-    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
-        GUI_Window* window = &GUI_CTX.state->window_s[i];
-        if (window->id == id) {
-            window->id = 0;
-            return;
-        }
-    }
-}
-
 // Returns true if window id is the interactable target (pointer is over and z-index is the lowest possible)
 bool GUI_IsCurrentWindowTarget(int window_id)
 {
@@ -308,7 +274,10 @@ GUI_Window* GUI_GetWindow(int id)
 
 GUI_Window* GUI_GetWindowByZindex(int z)
 {
-    return GUI_GetWindow(GUI_CTX.state->z_index[z]);
+    if (z > 0 && z < GUI_MAX_OPEN_WINS)
+        return GUI_GetWindow(GUI_CTX.state->z_index[z]);
+    else
+        return NULL;
 }
 
 void GUI_ForceZindex(int win_id)
@@ -316,10 +285,45 @@ void GUI_ForceZindex(int win_id)
     GUI_CTX.state->force_z_index = win_id;
 }
 
+GUI_Window* GUI_OpenWindow(
+    int id, const char *title, Rectangle shape, 
+    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
+    void (*contents)(GUI_Window*))
+{
+    // avoid duplicates
+    if (GUI_GetWindow(id)) return GUI_GetWindow(id);
+
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &GUI_CTX.state->window_s[i];
+        if (window->id == 0) {
+            window->id              = id;
+            window->shape           = shape;
+            window->colors          = colors;
+            window->title           = title;
+            window->icon            = icon;
+            window->focused_face    = focused_face;
+            window->contents        = contents;
+            return window;
+        }
+    }
+    return NULL;
+}
+
+void GUI_RemoveWindow(int id)
+{
+    for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
+        GUI_Window* window = &GUI_CTX.state->window_s[i];
+        if (window->id == id) {
+            window->id = 0;
+            return;
+        }
+    }
+}
+
 float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
 {
-    GUI_Setup* setup = GUI_GetSetup();
-    GUI_State* state = GUI_GetState();
+    GUI_Setup* setup = GUI_CTX.setup;
+    GUI_State* state = GUI_CTX.state;
     return setup->font_setups[font_type].default_height * state->scale;
 }
 
