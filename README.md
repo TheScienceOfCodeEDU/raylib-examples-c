@@ -55,7 +55,31 @@ Readable beats fancy. If someone can guess what it does from the name — perfec
 
 ## 🧠 Example — Clear, Story-like Code
 
+Your code must look like an script.
+
 ```c
+// Abstract example
+bool Module_Function()
+{   // <- NEW LINE openning the function
+    // Human-readable instructions  = system mappings (computer-level operations)
+    // readable_camel_case            Module_PascalCaseFunction or PascalCaseFunction
+    MY_State *state                 = ComponentSystem_GetState();
+    bool is_active                  = ComponentSystem_IsActive();
+    Vector mouse                    = GetMousePosition();
+
+    // Same here with a few values
+    float border                    = font_setup->border;
+    float scale                     = state->scale;
+    float color_change              = theme->color_change;
+    float bg_alpha                  = theme->bg_alpha;
+    // Transform and do your things
+    if (is_active) { // NO NEW LINE inside the function
+        ++border;
+        ++scale;
+    }
+}
+
+// An actual example
 bool Game_CheckRingCollision(Game_Character* character_1, Game_Character* character_2, float radius)
 {
     // Extract data
@@ -200,7 +224,7 @@ This allows us to simply return that value, clearly indicating that the button w
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
     bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     bool just_focused = is_pointer_over && is_pointer_active;  \
-    if (just_focused) { GUI_CTX.temp.control_focus_ptr = value; } \
+    if (just_focused) GUI_CTX.temp.control_focus_ptr = value;  \
     bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
     if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
 ```

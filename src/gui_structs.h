@@ -450,9 +450,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     \
     /* Gains focus */                                          \
     bool just_focused = is_pointer_over && is_pointer_active;  \
-    if (just_focused) {                                        \
-        GUI_CTX.temp.control_focus_ptr = value;                \
-    }                                                          \
+    if (just_focused) GUI_CTX.temp.control_focus_ptr = value;  \
     \
     /* Focused control */                                      \
     bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
