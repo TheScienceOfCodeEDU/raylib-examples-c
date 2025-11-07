@@ -38,16 +38,16 @@ typedef enum {
 /*
 EXAMPLE: Enum order matters
 typedef enum {
-    GUI_Focus_Available,
-    GUI_Focus_CanOverride,
-    GUI_Focus_Granted
-} GUI_Focus;
+    EGUI_Focus_Available,
+    EGUI_Focus_CanOverride,
+    EGUI_Focus_Granted
+} EGUI_Focus;
 
 // NOTE: define a function near the type instead of using it everywhere. 
 //       Now, we know that the order matters for this Enum.
-bool FocusOverridable(GUI_Focus focus)
+bool FocusOverridable(EGUI_Focus focus)
 {
-    return focus <= GUI_Focus_CanOverride;
+    return focus <= EGUI_Focus_CanOverride;
 }
 */
 

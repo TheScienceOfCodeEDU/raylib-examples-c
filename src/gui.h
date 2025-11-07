@@ -166,18 +166,24 @@ void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, floa
 
 Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 {
+    // Extract data
     GUI_State *state        = GUI_CTX.state;
     GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
-
     Font font               = GUI_GetFont(font_type);
+
+    // Process it
     float font_scaled       = font.baseSize * setup->font_scale * state->scale;
     Vector2 text_measure    = MeasureTextEx(font, text, font_scaled, setup->font_spacing);
+
+    // Results (or statements)
     Vector2 result = {
         text_measure.x + setup->blink_delta.x * state->scale * setup->font_scale,
         text_measure.y + setup->blink_delta.y * state->scale * setup->font_scale
     };
 
-    return Vector2Add(result, Vector2Scale(setup->font_delta, state->scale));
+    // Adjust
+    Vector2 delta_scaled = Vector2Scale(setup->font_delta, state->scale);
+    return Vector2Add(result, delta_scaled);
 }
 
 void GUI_BeginDraw(EGUI_Pointer pointer_style)

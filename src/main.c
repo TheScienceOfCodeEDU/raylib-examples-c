@@ -56,7 +56,6 @@ int main(void) {
     GUI_Setup setup             = GUI_MakeSetupDefault();
     GUI_Icons icons             = setup.icon_setup.icons;
     Texture2D wp_voronoi        = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
-    
     GUI_SetContext(&state, &setup);
 
     // PREPARE GAME

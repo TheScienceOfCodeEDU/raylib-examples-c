@@ -65,16 +65,23 @@ typedef struct {
     Camera2D camera2D;
 } Game_State;
 
-Game_State Game_MakeState()
+Game_State Game_MakeState(void)
 {
     Game_State state = {
-        0,
-        2,
-        (Game_Character){ 0, 0, 10, 20, RED, Vector2Zero(), 0},
-        (Game_Character){ 10, 30, 10, 20, BLUE, Vector2Zero(), 0},
-        (Game_Character){ 50, 60, 10, 20, GREEN, Vector2Zero(), 0},
-        (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0},
-        { (Vector2){ 0, 0 }, { 0, 0 }, 0.0f, 1.0f }
+        .current_character = 0,
+        .alive_characters  = 2,
+        .characters = {
+            (Game_Character){  0,  0, 10, 20, RED,    Vector2Zero(), 0 },
+            (Game_Character){ 10, 30, 10, 20, BLUE,   Vector2Zero(), 0 },
+            (Game_Character){ 50, 60, 10, 20, GREEN,  Vector2Zero(), 0 },
+            (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0 },
+        },
+        .camera2D = {
+            .offset   = (Vector2){ 0, 0 },
+            .target   = (Vector2){ 0, 0 },
+            .rotation = 0.0f,
+            .zoom     = 1.0f
+        }
     };
 
     return state;
