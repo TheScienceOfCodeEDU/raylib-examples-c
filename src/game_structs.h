@@ -59,10 +59,10 @@ typedef struct  {
 } Game_Character;
 
 typedef struct {
-    int current_character;
-    int alive_characters;
-    Game_Character characters[CHARACTERS];
-    Camera2D camera2D;
+    int             current_character;
+    int             alive_characters;    
+    Camera2D        camera2D;
+    Game_Character  characters[CHARACTERS];
 } Game_State;
 
 Game_State Game_MakeState(void)
@@ -70,17 +70,17 @@ Game_State Game_MakeState(void)
     Game_State state = {
         .current_character = 0,
         .alive_characters  = 2,
-        .characters = {
-            (Game_Character){  0,  0, 10, 20, RED,    Vector2Zero(), 0 },
-            (Game_Character){ 10, 30, 10, 20, BLUE,   Vector2Zero(), 0 },
-            (Game_Character){ 50, 60, 10, 20, GREEN,  Vector2Zero(), 0 },
-            (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0 },
-        },
         .camera2D = {
             .offset   = (Vector2){ 0, 0 },
             .target   = (Vector2){ 0, 0 },
             .rotation = 0.0f,
             .zoom     = 1.0f
+        },
+        .characters = {
+            (Game_Character){  0,  0, 10, 20, RED,    Vector2Zero(), 0 },
+            (Game_Character){ 10, 30, 10, 20, BLUE,   Vector2Zero(), 0 },
+            (Game_Character){ 50, 60, 10, 20, GREEN,  Vector2Zero(), 0 },
+            (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0 },
         }
     };
 
