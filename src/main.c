@@ -60,9 +60,9 @@ int main(void) {
     GUI_SetContext(&state, &setup);
 
     // PREPARE GAME
-    Game_State game_state = Game_MakeState();
-    Game_WindowState win_state = Game_MakeWindowState();
-    PLAYER_Actions player_actions = PLAYER_MakeActions();
+    Game_State game_state           = Game_MakeState();
+    Game_WindowState win_state      = Game_MakeWindowState();
+    PLAYER_Actions player_actions   = PLAYER_MakeActions();
     Game_SetContext(&game_state, &win_state);
 
     // Game canvas
