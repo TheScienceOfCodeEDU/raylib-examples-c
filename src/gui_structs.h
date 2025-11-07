@@ -194,11 +194,13 @@ void GUI_SetContext(GUI_State* state, GUI_Setup* setup)
     GUI_CTX.temp  = GUI_MakeTempDefault();
 }
 
+// To be used out-side this module
 GUI_State* GUI_GetState()
 {
     return GUI_CTX.state;
 }
 
+// To be used out-side this module
 GUI_Setup* GUI_GetSetup()
 {
     return GUI_CTX.setup;
@@ -206,8 +208,7 @@ GUI_Setup* GUI_GetSetup()
 
 GUI_Icons* GUI_GetIcons()
 {
-    GUI_Setup *setup = GUI_GetSetup();
-    return &setup->icon_setup.icons;
+    return &GUI_CTX.setup->icon_setup.icons;
 }
 
 float GUI_GetIconWidth()
@@ -241,7 +242,7 @@ GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type)
 
 Font GUI_GetFont(EGUI_FontType font_type)
 {
-    GUI_Setup *setup = GUI_GetSetup();
+    GUI_Setup *setup = GUI_CTX.setup;
     if (setup->font_setups[font_type].font_use_custom)
         return setup->font_setups[font_type].font_custom;
     else
@@ -426,9 +427,9 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
     /*   is_active          : control activated                          */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape); \
-    bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);          \
+    bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;           \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);        \
+    bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT); \
     \
     /* Activation */                                           \
     bool is_active = is_pointer_over && is_pointer_active;     \
@@ -444,7 +445,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   is_focused         : control retains focus state                */\
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);              \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
     bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
     /* Gains focus */                                          \

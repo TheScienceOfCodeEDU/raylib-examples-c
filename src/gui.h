@@ -50,7 +50,6 @@ void GUI_DrawPointerTrail()
 {
     GUI_PointerSetup *pointer_setup = GUI_GetPointerSetup();
     Vector2 mouse                   = GUI_CTX.temp.mouse_current;
-    
 
     // Shift all existing positions backward by one slot in the array
     // The last element (the oldest position) is dropped
@@ -77,10 +76,10 @@ void GUI_DrawPointerTrail()
             float alpha_max = 0.05f;
             float trail_size = 5.0f;
             Color trail_color = Fade(WHITE, ratio * (alpha_max - alpha_min) + alpha_min);
-            
+
             // Size effect: oldest positions are smaller
             float trail_radius = trail_size * ratio; 
-            
+
             DrawCircleV(trail[i], trail_radius, trail_color);
         }
     }
@@ -88,10 +87,10 @@ void GUI_DrawPointerTrail()
 
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
-    GUI_State *state            = GUI_GetState();
+    GUI_State *state            = GUI_CTX.state;
     int focused_window_id       = state->z_index[0];
     Vector2 mouse               = GUI_CTX.temp.mouse_current;
-    
+
     // Simple collision (outside a window)
     if (window == NULL || focused_window_id == 0) {
         return CheckCollisionPointRec(mouse, shape);
@@ -155,23 +154,27 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
 }
 
 void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type)
-{   
+{
+    GUI_State *state        = GUI_CTX.state;
     GUI_FontSetup *setup    = GUI_GetFontSetup(font_type);
-    GUI_State *state        = GUI_GetState();
-    Font font               = GUI_GetFont(font_type);
 
-    DrawTextEx(font, text, Vector2Add(position, Vector2Scale(setup->font_delta, state->scale)), font.baseSize * setup->font_scale * scale, setup->font_spacing, tint);
+    Font font               = GUI_GetFont(font_type);
+    float font_scaled       = font.baseSize * setup->font_scale * scale;
+    Vector2 delta_scaled    = Vector2Scale(setup->font_delta, state->scale);
+    DrawTextEx(font, text, Vector2Add(position, delta_scaled), font_scaled, setup->font_spacing, tint);
 }
 
 Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 {
+    GUI_State *state        = GUI_CTX.state;
     GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
-    GUI_State* state        = GUI_GetState();
+
     Font font               = GUI_GetFont(font_type);
-    
+    float font_scaled       = font.baseSize * setup->font_scale * state->scale;
+    Vector2 text_measure    = MeasureTextEx(font, text, font_scaled, setup->font_spacing);
     Vector2 result = {
-        MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).x + setup->blink_delta.x * state->scale * setup->font_scale,
-        MeasureTextEx(font, text, font.baseSize * setup->font_scale * state->scale, setup->font_spacing).y + setup->blink_delta.y * state->scale * setup->font_scale
+        text_measure.x + setup->blink_delta.x * state->scale * setup->font_scale,
+        text_measure.y + setup->blink_delta.y * state->scale * setup->font_scale
     };
 
     return Vector2Add(result, Vector2Scale(setup->font_delta, state->scale));
@@ -240,7 +243,7 @@ void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale, bo
 // Returns used texture_scale to draw the texture in the available height
 float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
-    GUI_Setup *setup    = GUI_GetSetup();    
+    GUI_Setup *setup    = GUI_CTX.setup;    
     float texture_scale = (shape.height / texture2d->height);
 
     GUI_BeginControlScissor();
@@ -364,9 +367,9 @@ void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
     GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type) 
 {
-    GUI_State *state            = GUI_GetState();
+    GUI_State *state            = GUI_CTX.state;
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
-    GUI_Theme       *theme          = &GUI_CTX.setup->theme;
+    GUI_Theme *theme            = &GUI_CTX.setup->theme;
 
     float border    = font_setup->border;
     float scale     = state->scale;
@@ -426,7 +429,7 @@ void GUI_DrawText(
     Rectangle shape, const char* text, 
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
-    GUI_State *state            = GUI_GetState();
+    GUI_State *state            = GUI_CTX.state;
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
 
     float border    = font_setup->border;
@@ -452,7 +455,7 @@ void GUI_DrawInput(
     Rectangle shape, char* value, int blink_cursor,
     GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
 {
-    GUI_State       *state          = GUI_GetState();
+    GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
@@ -693,7 +696,7 @@ void GUI_DrawCheckBox(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt, 
     GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
-    GUI_State       *state          = GUI_GetState();
+    GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
@@ -971,7 +974,7 @@ void GUI_WindowEndingPanel(GUI_Window* window, EGUI_FontType font_type)
 
 void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType font_type)
 {
-    GUI_State       *state          = GUI_GetState();
+    GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
     
     Rectangle        shape          = window->shape;
@@ -1141,7 +1144,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 // TODO@dc: cleaup
 void GUI_UpdateAndDrawWindows(Rectangle limits)
 {
-    GUI_State* state = GUI_GetState();
+    GUI_State* state = GUI_CTX.state;
 
     // Remove unused window ids
     for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
