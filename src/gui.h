@@ -273,7 +273,13 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
     GUI_MACRO_CONTROL_LAYOUT(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
 
-    GUI_Icon(texture2d, position, height, tint);
+    GUI_Theme *theme    = &GUI_CTX.setup->theme;
+    float color_change  = theme->color_change;
+
+    if (is_pointer_over)
+        GUI_Icon(texture2d, position, height, tint);
+    else
+        GUI_Icon(texture2d, position, height, ColorBrightness(tint, -color_change));
     return is_active;
 }
 
@@ -377,8 +383,8 @@ void GUI_DrawButton(
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
     GUI_Theme *theme            = &GUI_CTX.setup->theme;
 
-    float border    = font_setup->border;
-    float scale     = state->scale;
+    float border        = font_setup->border;
+    float scale         = state->scale;
     float color_change  = theme->color_change;
     float bg_alpha      = theme->bg_alpha;
 
