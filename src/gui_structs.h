@@ -457,12 +457,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /* Update pointer_over_gui */                              \
     if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
 
-void GUI_BeginFontType(EGUI_FontType font_type)
+void GUI_FontType(EGUI_FontType font_type)
 {
     GUI_CTX.temp.current_font_type = font_type;
-}
-
-void GUI_EndFontType()
-{
-    GUI_CTX.temp.current_font_type = EGUI_FontType_Default;
 }

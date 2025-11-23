@@ -5,21 +5,32 @@
  #include "game_structs.h"
 #endif
 
-void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
-{
-    GUI_Setup *setup = GUI_GetSetup();
-    GUI_Icons *icons = GUI_GetIcons();
-    GUI_Theme *theme = &setup->theme;
-    int buttons = 3;
-    float button_w = target.width / buttons;
-    float button_h = target.height;
+//
+// INDEX
+//
 
-    Rectangle shape = (Rectangle) { target.x, target.y, button_w, button_h };
-    GUI_BeginFontType(EGUI_FontType_GUI);
-        actions->reset_characters    = GUI_Button(shape, "Reset", &icons->New, theme->red);
-        actions->add_character       = GUI_Button(MoveRect(shape, (Vector2) { button_w, 0 }), "Add", &icons->Open, theme->gray);
-        actions->toggle_character    = GUI_Button(MoveRect(shape, (Vector2) { button_w * 2, 0 }), "Change", &icons->Error, theme->gray);
-    GUI_EndFontType();
+void GUI_TopBar(PLAYER_Actions* actions, Rectangle target);
+void WIN_Window(GUI_Window* window);
+void WIN_Layouts(GUI_Window* window);
+void WIN_CharacterDebug(GUI_Window* window);
+void WIN_Winman(GUI_Window* window);
+
+//
+// FUNCTIONS
+//
+
+void GUI_TopBar(PLAYER_Actions* actions, Rectangle shape)
+{
+    GUI_Setup *setup    = GUI_GetSetup();
+    GUI_Icons *icons    = GUI_GetIcons();
+    GUI_Theme *theme    = &setup->theme;
+    const int BUTTONS   = 4;
+
+    GUI_LayoutReset();
+    GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
+    actions->reset_characters    = GUI_Button(GUI_NextHorizontal(), "Reset",    &icons->New,    theme->red);
+    actions->add_character       = GUI_Button(GUI_NextHorizontal(), "Add",      &icons->Open,   theme->gray);
+    actions->toggle_character    = GUI_Button(GUI_NextHorizontal(), "Change",   &icons->Error,  theme->gray);
 }
 
 //
@@ -27,7 +38,7 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle target)
 //
 
 // Define your draw window
-void WIN_window(GUI_Window* window)
+void WIN_Window(GUI_Window* window)
 {
     // Prepare your data
     Game_WindowState *win_state = GAME_CTX.win_state;
@@ -45,7 +56,7 @@ void WIN_window(GUI_Window* window)
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font_type);
         // A default layout with 3 columns
-        GUI_BeginBlockCols(3, window_workspace, font_type);
+        GUI_LayoutBlockCols(3, window_workspace, font_type);
 
         // 1st input (textbox)
         GUI_Text(GUI_NextHorizontal(), "Text", colors);
@@ -53,29 +64,29 @@ void WIN_window(GUI_Window* window)
 
         // 2nd input for integer
         // TODO@dc: add min, max and parsing
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Int", colors);
         GUI_Input(GUI_NextHorizontals(2), win_state->input_int_contents, EGUI_InputInt, colors);
 
         // 3rd input for float
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Float", colors);
         GUI_Input(GUI_NextHorizontals(2), win_state->input_float_contents, EGUI_InputFloat, colors);
 
         // Wallpaper check (checkbox/switch)
         // With a theme.red color
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Wallpaper",  colors);
         GUI_Check(GUI_NextHorizontals(2), &win_state->checkbox_value, "ON", "OFF", setup->theme.red);
 
         // Font toggler
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Font",  colors);
         GUI_Check(GUI_NextHorizontals(2), &win_state->font_toggle, "GUI", "DEF", colors);
     GUI_EndWindowContents(window);
 }
 
-void WIN_layouts(GUI_Window* window)
+void WIN_Layouts(GUI_Window* window)
 {
     GUI_Setup* setup = GUI_GetSetup();
     EGUI_FontType font_type = EGUI_FontType_Default;
@@ -85,7 +96,7 @@ void WIN_layouts(GUI_Window* window)
     GUI_BeginWindowContents(window, EGUI_FontType_Default);
 
         // First block
-        GUI_BeginBlock(window_workspace.width, default_height);
+        GUI_LayoutBlock(window_workspace.width, default_height);
         GUI_Text(GUI_NextVertical(), "Some sample layouts for imKairos", setup->theme.gray);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
@@ -96,13 +107,13 @@ void WIN_layouts(GUI_Window* window)
             DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BEIGE, color_alpha));
 
             // 1/3rd and 2/3rds blocks
-            GUI_BeginBlock(window_workspace.width / 3, default_height);
+            GUI_LayoutBlock(window_workspace.width / 3, default_height);
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));                    
             DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), ColorAlpha(GREEN, color_alpha));
 
             // Second block
             // 3 horizontals of 1/3 of the available space
-            GUI_BeginBlock(window_workspace.width / 3, default_height);
+            GUI_LayoutBlock(window_workspace.width / 3, default_height);
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(DARKGRAY, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(GRAY, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(LIGHTGRAY, color_alpha));
@@ -111,7 +122,7 @@ void WIN_layouts(GUI_Window* window)
             // You can send negative values to use AVAILABLE - YOUR_VALUE
             // Ex:
             // -default_height means take all space minus a default_height to insert a final row
-            GUI_BeginBlock(window_workspace.width / 5, -default_height);
+            GUI_LayoutBlock(window_workspace.width / 5, -default_height);
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3));
@@ -119,7 +130,7 @@ void WIN_layouts(GUI_Window* window)
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5));
             
             // Final row
-            GUI_BeginBlock(window_workspace.width / 2, default_height);
+            GUI_LayoutBlock(window_workspace.width / 2, default_height);
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(RED, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLUE, color_alpha));
         EndScissorMode();
@@ -128,7 +139,7 @@ void WIN_layouts(GUI_Window* window)
 
 
 
-void WIN_character_debug(GUI_Window* window)
+void WIN_CharacterDebug(GUI_Window* window)
 {
     Game_State *game_state      = GAME_CTX.state;
     Game_Character *ch          = &game_state->characters[game_state->current_character];
@@ -136,41 +147,41 @@ void WIN_character_debug(GUI_Window* window)
     EGUI_FontType font_type     = EGUI_FontType_Default;
 
     Rectangle workspace = GUI_BeginWindowContents(window, font_type);
-        GUI_BeginBlockCols(2, workspace, font_type);
+        GUI_LayoutBlockCols(2, workspace, font_type);
 
         // Shape
         GUI_Text(GUI_NextHorizontal(), "shape.x", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.x), colors);
 
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "shape.y", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.y), colors);
 
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "shape.w", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.width), colors);
 
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "shape.h", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.2f", ch->shape.height), colors);
 
         // Color (RGB)
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "color", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("r:%d g:%d b:%d a:%d",
             ch->color.r, ch->color.g, ch->color.b, ch->color.a), colors);
 
         // Movement
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "movement.x", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->movement.x), colors);
 
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "movement.y", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->movement.y), colors);
 
         // Animation time
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "anim_time", colors);
         GUI_Text(GUI_NextHorizontal(), TextFormat("%.3f", ch->anim_time), colors);
 
@@ -178,7 +189,7 @@ void WIN_character_debug(GUI_Window* window)
 }
 
 
-void WIN_winman(GUI_Window* window)
+void WIN_Winman(GUI_Window* window)
 {
     GUI_State *state = GUI_GetState();
     GUI_Setup *setup = GUI_GetSetup();
@@ -188,13 +199,13 @@ void WIN_winman(GUI_Window* window)
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window, font_type);
-        GUI_BeginBlock(window_workspace.width, default_height);
+        GUI_LayoutBlock(window_workspace.width, default_height);
 
         static GUI_Window* win_window = NULL;
         if (GUI_Button(GUI_NextVertical(), "Open sample window", NULL, window->colors)) {
             int win_id = 2;
             if (win_window == NULL || win_window->id == 0) {
-                win_window = GUI_OpenWindow(win_id, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_window);                
+                win_window = GUI_OpenWindow(win_id, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_Window);                
             }
             GUI_ForceZindex(win_id);
         }
@@ -202,7 +213,7 @@ void WIN_winman(GUI_Window* window)
         if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
             int win_id = 3;
             if (win_layouts == NULL || win_layouts->id == 0) {
-                win_layouts = GUI_OpenWindow(win_id, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_layouts);
+                win_layouts = GUI_OpenWindow(win_id, "Layouts window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Layouts, false, WIN_Layouts);
             }
             GUI_ForceZindex(win_id);
         }
@@ -210,13 +221,13 @@ void WIN_winman(GUI_Window* window)
         if (GUI_Button(GUI_NextVertical(), "Open Character debug", NULL, window->colors)) {
             int win_id = 4;
             if (win_character_debug == NULL || win_character_debug->id == 0) {
-                win_character_debug = GUI_OpenWindow(win_id, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_character_debug);
+                win_character_debug = GUI_OpenWindow(win_id, "Character debug", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_CharacterDebug);
             }
             GUI_ForceZindex(win_id);
         }
 
         GUI_Text(GUI_NextVertical(), "--- Opened windows ---", window->colors);
-        GUI_BeginDuplicateBlock();
+        GUI_LayoutDuplicateBlock();
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;

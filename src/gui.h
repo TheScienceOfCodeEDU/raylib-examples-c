@@ -777,7 +777,7 @@ void GUI_Check(
 #define ONLY_GET_COUNT  2
 #define DEFAULT_SIZE    0.0
 
-void GUI_BeginVertical(float size)
+void GUI_LayoutVertical(float size)
 {
     GUI_CTX.temp.vertical_count = 0;
     GUI_CTX.temp.vertical_size  = size;
@@ -802,7 +802,7 @@ float GUI_GetAvailableHorizontal(Rectangle window_workspace)
 {
     return window_workspace.width - (GUI_CTX.temp.horizontal_size * GUI_CTX.temp.horizontal_count);
 }
-void GUI_BeginHorizontal(float size)
+void GUI_LayoutHorizontal(float size)
 {
     GUI_CTX.temp.horizontal_count = 0;
     GUI_CTX.temp.horizontal_size = size;
@@ -860,7 +860,7 @@ Rectangle GUI_NextVerticals(int quantity)
     return result;
 }
 
-Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
+Rectangle GUI_LayoutAvailable(Rectangle workspace)
 {
     float used_w = GUI_CTX.temp.horizontal_size * GUI_CTX.temp.horizontal_count;
     float used_h = GUI_CTX.temp.vertical_size   * GUI_CTX.temp.vertical_count;
@@ -876,58 +876,59 @@ Rectangle GUI_WorkspaceAvailable(Rectangle workspace)
         result.height = GUI_CTX.temp.vertical_size;
     return result;
 }
-void GUI_ResetLayout()
+void GUI_LayoutReset()
 {
     GUI_CTX.temp.horizontal_count   = 0;
     GUI_CTX.temp.vertical_count     = 0;
     GUI_CTX.temp.layout_used_height = 0; 
 }
-void GUI_CheckLayoutJump()
+void GUI_LayoutAutoJump()
 {
     // Add jump if necessary after ONLY horizontal blocks
     if (GUI_CTX.temp.horizontal_count > 0 && GUI_CTX.temp.vertical_count == 0) {
         GUI_NextVertical();
     }
 }
-void GUI_BeginBlock(float width, float height)
+void GUI_LayoutBlock(float width, float height)
 {
-    GUI_CheckLayoutJump();
+    GUI_LayoutAutoJump();
 
     // Horizontal
     if (width > 0.0) {
-        GUI_BeginHorizontal(width);
+        GUI_LayoutHorizontal(width);
     } else if (width < 0.0) {
         // width is already negative
         // so this takes avaiable space minus width
-        GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width + width);
+        GUI_LayoutHorizontal(GUI_CTX.temp.current_layout_workspace.width + width);
     } else {
-        GUI_BeginHorizontal(GUI_CTX.temp.current_layout_workspace.width);
+        GUI_LayoutHorizontal(GUI_CTX.temp.current_layout_workspace.width);
     }
 
     // Adjust to get y-available space
     if (GUI_CTX.temp.vertical_count != 0) {
-        GUI_CTX.temp.current_layout_workspace = GUI_WorkspaceAvailable(GUI_CTX.temp.current_layout_workspace);
+        GUI_CTX.temp.current_layout_workspace = GUI_LayoutAvailable(GUI_CTX.temp.current_layout_workspace);
     }
 
     // Vertical
     if (height > 0.0) {
-        GUI_BeginVertical(height);
+        GUI_LayoutVertical(height);
     } else if (height < 0.0) {
         // height is already negative
         // so this takes avaiable space minus height
-        GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height + height);
+        GUI_LayoutVertical(GUI_CTX.temp.current_layout_workspace.height + height);
     } else {
-        GUI_BeginVertical(GUI_CTX.temp.current_layout_workspace.height);
+        GUI_LayoutVertical(GUI_CTX.temp.current_layout_workspace.height);
     }
 }
-void GUI_BeginBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
+void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
-    GUI_BeginBlock(window_workspace.width / cols, default_height);
+    GUI_LayoutBlock(window_workspace.width / cols, default_height);
+    GUI_FontType(font_type);
 }
-void GUI_BeginDuplicateBlock()
+void GUI_LayoutDuplicateBlock()
 {
-    GUI_BeginBlock(GUI_CTX.temp.horizontal_size, GUI_CTX.temp.vertical_size);
+    GUI_LayoutBlock(GUI_CTX.temp.horizontal_size, GUI_CTX.temp.vertical_size);
 }
 
 Rectangle GUI_Relative(Rectangle shape)
@@ -1286,7 +1287,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
     GUI_CTX.temp.current_font_type          = font_type;
     
     // Begin window stuff
-    GUI_ResetLayout();
+    GUI_LayoutReset();
     
     // Vertical scroll    
     rlPushMatrix();
@@ -1298,7 +1299,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
 void GUI_EndWindowContents(GUI_Window* window)
 {
     // End window stuff
-    GUI_CheckLayoutJump();
+    GUI_LayoutAutoJump();
 
     // Close window stuff
     rlPopMatrix();    

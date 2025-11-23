@@ -96,13 +96,12 @@ int main(void) {
             // Top bar
             GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
 
-            // Win-mananger
+            // Win-manager
             {
                 static GUI_Window* win_man = NULL;
-                if (win_man == NULL)
-                    win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_winman);
-                
-                if (win_man != NULL) {
+                if (win_man == NULL) {
+                    win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_Winman);
+                } else {
                     float win_forth          = window_limits.width / 4.0;
                     win_man->shape.x         = win_forth * 3;
                     win_man->shape.y         = window_limits.y;
