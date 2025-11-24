@@ -6,7 +6,8 @@ imKairos
         -  uses it for next render.         OK
 - Resize
 
-- Button menu       OK
+- Button menu           OK
+    - Draw at the end
 
 - Close windows
 

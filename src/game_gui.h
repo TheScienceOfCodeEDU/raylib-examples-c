@@ -9,7 +9,7 @@
 // INDEX
 //
 
-void GUI_TopBar(PLAYER_Actions* actions, Rectangle target);
+void GUI_TopBar(Rectangle shape);
 void WIN_Window(GUI_Window* window);
 void WIN_Layouts(GUI_Window* window);
 void WIN_CharacterDebug(GUI_Window* window);
@@ -19,23 +19,33 @@ void WIN_Winman(GUI_Window* window);
 // FUNCTIONS
 //
 
-void GUI_TopBar(PLAYER_Actions* actions, Rectangle shape)
+void GUI_GameMenu()
+{
+    GUI_Setup *setup        = GUI_GetSetup();
+    GUI_Icons *icons        = GUI_GetIcons();
+    GUI_Theme *theme        = &setup->theme;
+    PLAYER_Actions *actions = &GAME_CTX.temp->player_actions;
+
+    Rectangle shape         = GUI_GetButtonMenu();
+    //GUI_LayoutReset(shape);
+    GUI_LayoutBlock(shape.width, shape.height);
+
+    actions->reset_characters    = GUI_Button(GUI_NextInPlace(0,1), "Reset",    &icons->New,    theme->gray);
+    actions->add_character       = GUI_Button(GUI_NextInPlace(0,2), "Add",      &icons->Open,   theme->gray);
+    actions->toggle_character    = GUI_Button(GUI_NextInPlace(0,3), "Change",   &icons->Error,  theme->gray);
+}
+
+void GUI_TopBar(Rectangle shape)
 {
     GUI_Setup *setup    = GUI_GetSetup();
     GUI_Icons *icons    = GUI_GetIcons();
     GUI_Theme *theme    = &setup->theme;
     const int BUTTONS   = 4;
 
-    GUI_LayoutReset();
+    GUI_LayoutReset(GUI_Workspace());
     GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
-    if (GUI_ButtonMenu(GUI_NextHorizontal(), "File",    &icons->New,    theme->red)) {
-
-    }
-    if (GUI_ButtonMenu(GUI_NextHorizontal(), "Game",    &icons->Dog,    theme->gray)) {
-        actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
-        actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
-        actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
-    }
+    GUI_ButtonMenu(GUI_NextHorizontal(), "File",    &icons->New,    theme->red, GUI_GameMenu);
+    GUI_ButtonMenu(GUI_NextHorizontal(), "Game",    &icons->Dog,    theme->gray, GUI_GameMenu);
 }
 
 //
@@ -46,13 +56,14 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle shape)
 void WIN_Window(GUI_Window* window)
 {
     // Prepare your data
-    Game_WindowState *win_state = GAME_CTX.win_state;
+    GAME_WindowState *win_state = GAME_CTX.win_state;
 
     // Responsive height (if you require it)
     // GUI_WindowUpdateShapeForContent(window);
     
-    // Get the setup as it allows access to theming setup->theme.red
     GUI_Setup *setup            = GUI_GetSetup();
+    GUI_Icons *icons            = GUI_GetIcons();
+    GUI_Theme theme             = setup->theme;
     // Keep or modify colors
     GUI_ThemeColors colors      = window->colors;
     // Set your font
@@ -62,6 +73,9 @@ void WIN_Window(GUI_Window* window)
     GUI_BeginWindowContents(window, font_type);
         // A default layout with 3 columns
         GUI_LayoutBlockCols(3, window_workspace, font_type);
+
+        GUI_LayoutDuplicateBlock();
+        GUI_ButtonMenu(GUI_NextHorizontal(), "Game 1",    &icons->Dog,    theme.gray, GUI_GameMenu);
 
         // 1st input (textbox)
         GUI_Text(GUI_NextHorizontal(), "Text", colors);
@@ -88,6 +102,10 @@ void WIN_Window(GUI_Window* window)
         GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Font",  colors);
         GUI_Check(GUI_NextHorizontals(2), &win_state->font_toggle, "GUI", "DEF", colors);
+
+        GUI_LayoutDuplicateBlock();
+        GUI_NextHorizontal();
+        GUI_ButtonMenu(GUI_NextHorizontal(), "Game 2",    &icons->Dog,    theme.gray, GUI_GameMenu);
     GUI_EndWindowContents(window);
 }
 
@@ -146,8 +164,8 @@ void WIN_Layouts(GUI_Window* window)
 
 void WIN_CharacterDebug(GUI_Window* window)
 {
-    Game_State *game_state      = GAME_CTX.state;
-    Game_Character *ch          = &game_state->characters[game_state->current_character];
+    GAME_State *game_state      = GAME_CTX.state;
+    GAME_Character *ch          = &game_state->characters[game_state->current_character];
     GUI_ThemeColors colors      = window->colors;
     EGUI_FontType font_type     = EGUI_FontType_Default;
 

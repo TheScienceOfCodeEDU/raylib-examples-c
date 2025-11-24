@@ -56,18 +56,18 @@ typedef struct  {
     Color color;
     Vector2 movement;
     float anim_time;
-} Game_Character;
+} GAME_Character;
 
 typedef struct {
     int             current_character;
     int             alive_characters;    
     Camera2D        camera2D;
-    Game_Character  characters[CHARACTERS];
-} Game_State;
+    GAME_Character  characters[CHARACTERS];
+} GAME_State;
 
-Game_State Game_MakeState(void)
+GAME_State GAME_MakeState(void)
 {
-    Game_State state = {
+    GAME_State state = {
         .current_character = 0,
         .alive_characters  = 2,
         .camera2D = {
@@ -77,10 +77,10 @@ Game_State Game_MakeState(void)
             .zoom     = 1.0f
         },
         .characters = {
-            (Game_Character){  0,  0, 10, 20, RED,    Vector2Zero(), 0 },
-            (Game_Character){ 10, 30, 10, 20, BLUE,   Vector2Zero(), 0 },
-            (Game_Character){ 50, 60, 10, 20, GREEN,  Vector2Zero(), 0 },
-            (Game_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0 },
+            (GAME_Character){  0,  0, 10, 20, RED,    Vector2Zero(), 0 },
+            (GAME_Character){ 10, 30, 10, 20, BLUE,   Vector2Zero(), 0 },
+            (GAME_Character){ 50, 60, 10, 20, GREEN,  Vector2Zero(), 0 },
+            (GAME_Character){ 80, 60, 10, 20, ORANGE, Vector2Zero(), 0 },
         }
     };
 
@@ -97,11 +97,11 @@ typedef struct {
     char input_contents[256];
     char input_int_contents[256];
     char input_float_contents[256];
-} Game_WindowState;
+} GAME_WindowState;
 
-Game_WindowState Game_MakeWindowState()
+GAME_WindowState GAME_MakeWindowState()
 {
-    Game_WindowState state      = {
+    GAME_WindowState state      = {
         .checkbox_value         = true,
         .font_toggle            = false,
         .input_contents         = {'\0'},
@@ -111,17 +111,31 @@ Game_WindowState Game_MakeWindowState()
     return state;
 }
 
+typedef struct {
+    PLAYER_Actions  player_actions;
+} GAME_Temp;
+
+GAME_Temp GAME_MakeTemp()
+{
+    GAME_Temp temp = {
+        .player_actions     = {0}
+    };
+    return temp;
+}
+
 // > STATE > CONTEXT
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 
 static struct {
-    Game_State          *state;
-    Game_WindowState    *win_state;
+    GAME_State          *state;
+    GAME_WindowState    *win_state;
+    GAME_Temp           *temp;
 } GAME_CTX = { 0 };
 
-void Game_SetContext(Game_State *state, Game_WindowState *win_state)
+void Game_SetContext(GAME_State *state, GAME_WindowState *win_state, GAME_Temp *temp)
 {
     GAME_CTX.state      = state;
     GAME_CTX.win_state  = win_state;
+    GAME_CTX.temp       = temp;
 }

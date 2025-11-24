@@ -52,16 +52,18 @@ int main(void) {
 
     // PREPARE GUI
     // Create render texture for the GUI
-    GUI_State state             = GUI_MakeStateDefault(screen_max);
-    GUI_Setup setup             = GUI_MakeSetupDefault();
-    GUI_Icons icons             = setup.icon_setup.icons;
+    GUI_State gui_state             = GUI_MakeStateDefault(screen_max);
+    GUI_Setup gui_setup             = GUI_MakeSetupDefault();
+    GUI_Temp gui_temp               = GUI_MakeTempDefault();
+    GUI_Icons icons             = gui_setup.icon_setup.icons;
     Texture2D wp_voronoi        = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
-    GUI_SetContext(&state, &setup);
+    GUI_SetContext(&gui_state, &gui_setup, &gui_temp);
 
     // PREPARE GAME
-    Game_State game_state           = Game_MakeState();
-    Game_WindowState win_state      = Game_MakeWindowState();
-    Game_SetContext(&game_state, &win_state);
+    GAME_State game_state           = GAME_MakeState();
+    GAME_WindowState win_state      = GAME_MakeWindowState();
+    GAME_Temp game_temp             = GAME_MakeTemp();
+    Game_SetContext(&game_state, &win_state, &game_temp);
 
     // Game canvas
     RenderTexture2D game_canvas = LoadRenderTexture(GAME_RES_W, GAME_RES_H);
@@ -69,13 +71,15 @@ int main(void) {
 
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
+        // RESET TEMP VALUES ONLY 1-FRAME
+        GAME_CTX.temp->player_actions   = PLAYER_MakeActions();
+
         //
         // UPDATE
         //
 
         //
         // UI
-        PLAYER_Actions player_actions       = PLAYER_MakeActions();
         static EGUI_Pointer pointer_style   = EGUI_Pointer_Default;
         if (IsKeyPressed(KEY_F10)) {
             pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
@@ -90,14 +94,15 @@ int main(void) {
         };
         
         // Draw UI buffer
+        
+        BeginTextureMode(gui_state.buffer);
         GUI_BeginDraw(pointer_style);
-        BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
             // Win-manager
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL) {
-                    win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, setup.theme.gray, &icons.Setup, true, WIN_Winman);
+                    win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, gui_setup.theme.gray, &icons.Setup, true, WIN_Winman);
                 } else {
                     float win_forth          = window_limits.width / 4.0;
                     win_man->shape.x         = win_forth * 3;
@@ -107,23 +112,24 @@ int main(void) {
                 }
             }
             GUI_UpdateAndDrawWindows(window_limits);
-            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
-        EndTextureMode();
+            GUI_TopBar((Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
         GUI_EndDraw();
+        EndTextureMode();
 
         //
         // CHARACTERS
-        Game_Character *player = Game_GetCurrentCharacter(&game_state);
+        GAME_Character *player = GAME_GetCurrentCharacter();
         Camera2D *camera = &game_state.camera2D;
         camera->target = (Vector2){ player->shape.x, player->shape.y };
         camera->offset = (Vector2){ GAME_RES_HALF_W,  GAME_RES_HALF_H };
         
         // GUI Actions
-        if (player_actions.reset_characters)    game_state = Game_MakeState();
-        if (player_actions.add_character)       Game_AddCharacter(&game_state);  
-        if (player_actions.toggle_character)    Game_UpdateNextCharacter(&game_state);
-        if (IsKeyPressed(KEY_F12))              state.scale += 1.0;
-        if (IsKeyPressed(KEY_F11))              state.scale -= 1.0;
+        PLAYER_Actions *player_actions = &GAME_CTX.temp->player_actions;
+        if (player_actions->reset_characters)    game_state = GAME_MakeState();
+        if (player_actions->add_character)       GAME_AddCharacter(&game_state);  
+        if (player_actions->toggle_character)    GAME_UpdateNextCharacter(&game_state);
+        if (IsKeyPressed(KEY_F12))              gui_state.scale += 1.0;
+        if (IsKeyPressed(KEY_F11))              gui_state.scale -= 1.0;
 
         if (GUI_IsPointerOverGui() == false) {
             // Update camera
@@ -133,18 +139,18 @@ int main(void) {
         }
 
         // Character keyboard
-        player_actions.toggle_character     |= IsKeyPressed(KEY_TAB);
-        player_actions.move_down             = IsKeyDown(KEY_DOWN);
-        player_actions.move_up               = IsKeyDown(KEY_UP);
-        player_actions.move_left             = IsKeyDown(KEY_LEFT);
-        player_actions.move_right            = IsKeyDown(KEY_RIGHT);
+        player_actions->toggle_character     |= IsKeyPressed(KEY_TAB);
+        player_actions->move_down             = IsKeyDown(KEY_DOWN);
+        player_actions->move_up               = IsKeyDown(KEY_UP);
+        player_actions->move_left             = IsKeyDown(KEY_LEFT);
+        player_actions->move_right            = IsKeyDown(KEY_RIGHT);
 
         // Update character            
         Vector2 move = { 0.0f, 0.0f };
-        if (player_actions.move_down)  move.y += 1;
-        if (player_actions.move_up)    move.y -= 1;
-        if (player_actions.move_left)  move.x -= 1;
-        if (player_actions.move_right) move.x += 1;
+        if (player_actions->move_down)  move.y += 1;
+        if (player_actions->move_up)    move.y -= 1;
+        if (player_actions->move_left)  move.x -= 1;
+        if (player_actions->move_right) move.x += 1;
         
         float dt = GetFrameTime();
 
@@ -197,10 +203,10 @@ int main(void) {
                 // TODO@dc: Move to update part
                 bool collisions[CHARACTERS];
                 float radius = 30.0f;
-                Game_UpdateCollisions(&game_state, collisions, radius);
+                GAME_UpdateCollisions(collisions, radius);
 
                 for (int i = 0; i < game_state.alive_characters; ++i) {
-                    Game_Character *character   = &game_state.characters[i];
+                    GAME_Character *character   = &game_state.characters[i];
                     Vector2 center              = RectCenter(character->shape);
                     Color ring_color            = collisions[i] ? ColorAlpha(WHITE, 0.2)
                                                                 : ColorAlpha(WHITE, 0);
@@ -228,7 +234,7 @@ int main(void) {
 
             // Wallpaper
             if (win_state.checkbox_value == 1) {
-                DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, setup.theme.gray.bg_color_3);
+                DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, gui_setup.theme.gray.bg_color_3);
                 DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
             }
 
@@ -295,7 +301,7 @@ int main(void) {
                 );
             
             // Show UI Buffer
-            DrawTextureRec(state.buffer.texture, FlipYRec(GetSourceRec(state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
+            DrawTextureRec(gui_state.buffer.texture, FlipYRec(GetSourceRec(gui_state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
 
             GUI_DrawPointerTrail();
             GUI_DrawPointer();

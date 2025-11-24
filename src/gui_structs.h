@@ -136,6 +136,8 @@ typedef struct {
     // Button menu
     const char      *current_button_menu;
     bool            updated_button_menu;
+    Rectangle       shape_button_menu;
+    void            (*function_button_menu)(void);
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
@@ -168,6 +170,8 @@ GUI_Temp GUI_MakeTempDefault()
 
         .current_button_menu        = NULL,
         .updated_button_menu        = 0,
+        .shape_button_menu          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .function_button_menu       = NULL,
 
         .current_window_idx         = GUI_NO_WIN,
         .current_scroll             = 0,
@@ -191,14 +195,14 @@ GUI_Temp GUI_MakeTempDefault()
 static struct {
     GUI_State*  state;
     GUI_Setup*  setup;
-    GUI_Temp    temp;
+    GUI_Temp*    temp;
 } GUI_CTX = { 0 };
 
-void GUI_SetContext(GUI_State* state, GUI_Setup* setup)
+void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp)
 {
     GUI_CTX.setup = setup;
     GUI_CTX.state = state;
-    GUI_CTX.temp  = GUI_MakeTempDefault();
+    GUI_CTX.temp  = temp;
 }
 
 // To be used out-side this module
@@ -218,6 +222,11 @@ GUI_Icons* GUI_GetIcons()
     return &GUI_CTX.setup->icon_setup.icons;
 }
 
+Rectangle GUI_GetButtonMenu()
+{
+    return GUI_CTX.temp->shape_button_menu;
+}
+
 float GUI_GetIconWidth()
 {
     return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
@@ -232,13 +241,13 @@ float GUI_GetIconSmallWidth()
  // Use this to determine if your game-logic needs to handle mouse input.
 bool GUI_IsPointerOverGui()
 {
-    return GUI_CTX.temp.pointer_over_gui;
+    return GUI_CTX.temp->pointer_over_gui;
 }
 
 // Returns true if window id is the interactable target (pointer is over and z-index is the lowest possible)
 bool GUI_IsCurrentWindowTarget(int window_id)
 {
-    return GUI_CTX.temp.window_target_id == 0 || GUI_CTX.temp.window_target_id == window_id;
+    return GUI_CTX.temp->window_target_id == 0 || GUI_CTX.temp->window_target_id == window_id;
 }
 
 GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type)
@@ -258,7 +267,7 @@ Font GUI_GetFont(EGUI_FontType font_type)
 
 GUI_PointerSetup* GUI_GetPointerSetup()
 {
-    EGUI_Pointer pointer = GUI_CTX.temp.current_pointer;
+    EGUI_Pointer pointer = GUI_CTX.temp->current_pointer;
     return &GUI_CTX.setup->pointer_setups[pointer];
 }
 
@@ -396,6 +405,13 @@ void GUI_WindowUpdateShapeForContent(GUI_Window *window)
     window->shape.height    = current_height;
 }
 
+Rectangle GUI_Workspace()
+{
+    Rectangle workspace = {
+        0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()
+    };
+    return workspace;
+}
 Rectangle GUI_WindowWorkspace(GUI_Window *window)
 {
     Rectangle shape         = window->shape;
@@ -420,12 +436,12 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
 }
 
 #define GUI_MACRO_CONTROL_LAYOUT(shape) \
-    if (GUI_CTX.temp.current_window_idx != GUI_NO_WIN) { \
-        shape = RelativeToRect(shape, GUI_CTX.temp.current_layout_workspace); \
+    if (GUI_CTX.temp->current_layout_workspace.width > 0 && GUI_CTX.temp->current_layout_workspace.height) { \
+        shape = RelativeToRect(shape, GUI_CTX.temp->current_layout_workspace); \
     };
 
 #define GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT() \
-    EGUI_FontType font_type = GUI_CTX.temp.current_font_type;
+    EGUI_FontType font_type = GUI_CTX.temp->current_font_type;
 
 #define GUI_MACRO_CONTROL_ACTIVATED(shape) \
     /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\
@@ -434,14 +450,14 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
     /*   is_active          : control activated                          */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;           \
+    bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;           \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);        \
     bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT); \
     \
     /* Activation */                                           \
     bool is_active = is_pointer_over && is_pointer_active;     \
     /* Update pointer_over_gui */                              \
-    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
+    if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 
 #define GUI_MACRO_CONTROL_FOCUSED(value, shape) \
     /* > GUI_CONTROL_FOCUSED                                             */\
@@ -451,20 +467,20 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   just_focused       : control gained focus on this frame         */\
     /*   is_focused         : control retains focus state                */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
+    bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;    \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
     bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
     /* Gains focus */                                          \
     bool just_focused = is_pointer_over && is_pointer_active;  \
-    if (just_focused) GUI_CTX.temp.control_focus_ptr = value;  \
+    if (just_focused) GUI_CTX.temp->control_focus_ptr = value;  \
     \
     /* Focused control */                                      \
-    bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
+    bool is_focused = GUI_CTX.temp->control_focus_ptr == value; \
     /* Update pointer_over_gui */                              \
-    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
+    if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 
 void GUI_FontType(EGUI_FontType font_type)
 {
-    GUI_CTX.temp.current_font_type = font_type;
+    GUI_CTX.temp->current_font_type = font_type;
 }
