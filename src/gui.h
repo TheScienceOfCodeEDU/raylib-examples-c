@@ -199,15 +199,22 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
     };
     GUI_CTX.temp.mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
 
-
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        GUI_CTX.temp.control_focus_ptr = NULL;
+        GUI_CTX.temp.control_focus_ptr      = NULL;
     }
+
+    // Button menus
+    GUI_CTX.temp.updated_button_menu = false;
 }
 
 void GUI_EndDraw()
 {
     GUI_CTX.temp.mouse_last = GUI_CTX.temp.mouse_current;
+
+    // Button menus
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !GUI_CTX.temp.updated_button_menu) {
+        GUI_CTX.temp.current_button_menu    = NULL;
+    }
 }
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
@@ -415,7 +422,7 @@ void GUI_DrawButton(
 }
 
 bool GUI_Button(
-    Rectangle shape, const char* text,Texture2D* icon,
+    Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
     GUI_MACRO_CONTROL_LAYOUT(shape);
@@ -431,6 +438,25 @@ bool GUI_Button(
         }
     }
     GUI_DrawButton(shape, text, icon, status, colors, font_type);    
+    return is_active;
+}
+
+bool GUI_ButtonMenu(
+    Rectangle shape, const char* text, Texture2D* icon,
+    GUI_ThemeColors colors)
+{
+    bool was_active         = GUI_CTX.temp.current_button_menu == text;
+    bool just_interacted    = GUI_Button(shape, text, icon, colors);
+    if (just_interacted) {
+        if (!was_active) {
+            GUI_CTX.temp.current_button_menu = text;
+        } else {
+            GUI_CTX.temp.current_button_menu = NULL;
+        }
+        GUI_CTX.temp.updated_button_menu = true;
+    }
+
+    bool is_active = GUI_CTX.temp.current_button_menu == text;
     return is_active;
 }
 
@@ -782,20 +808,36 @@ void GUI_LayoutVertical(float size)
     GUI_CTX.temp.vertical_count = 0;
     GUI_CTX.temp.vertical_size  = size;
 }
-Rectangle GUI_NextVertical(void)
+float GUI_VerticalSizeOrDefault()
 {
-    float horizontal_size = GUI_CTX.temp.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp.horizontal_size 
-                                                                    : (float)GetScreenWidth();
-    float vertical_size = GUI_CTX.temp.vertical_size;
-
-    GUI_CTX.temp.layout_used_height += vertical_size;
+    return GUI_CTX.temp.vertical_size != DEFAULT_SIZE   ? GUI_CTX.temp.vertical_size
+                                                        : (float)GetScreenHeight();
+}
+float GUI_HorizontalSizeOrDefault()
+{
+    return GUI_CTX.temp.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp.horizontal_size
+                                                        : (float)GetScreenWidth();
+}
+Rectangle GUI_NextInPlace(int horizontal, int vertical)
+{
+    float horizontal_size   = GUI_HorizontalSizeOrDefault();
+    float vertical_size     = GUI_CTX.temp.vertical_size;
 
     Rectangle shape = {
-        /* X */ horizontal_size * GUI_CTX.temp.horizontal_count,
-        /* Y */ vertical_size * GUI_CTX.temp.vertical_count++,
+        /* X */ horizontal_size * (GUI_CTX.temp.horizontal_count + horizontal),
+        /* Y */ vertical_size * (GUI_CTX.temp.vertical_count + vertical),
         /* W */ horizontal_size,
         /* H */ vertical_size
     };
+    return shape;
+}
+Rectangle GUI_NextVertical()
+{
+    Rectangle shape     = GUI_NextInPlace(0, 0);
+    float vertical_size = GUI_CTX.temp.vertical_size;
+
+    GUI_CTX.temp.layout_used_height += vertical_size;
+    GUI_CTX.temp.vertical_count++;
     return shape;
 }
 float GUI_GetAvailableHorizontal(Rectangle window_workspace)
@@ -807,18 +849,10 @@ void GUI_LayoutHorizontal(float size)
     GUI_CTX.temp.horizontal_count = 0;
     GUI_CTX.temp.horizontal_size = size;
 }
-Rectangle GUI_NextHorizontal(void)
+Rectangle GUI_NextHorizontal()
 {
-    float vertical_size = GUI_CTX.temp.vertical_size != DEFAULT_SIZE   ? GUI_CTX.temp.vertical_size 
-                                                                        : (float)GetScreenHeight();
-    float horizontal_size = GUI_CTX.temp.horizontal_size;
-
-    Rectangle shape = { 
-        /* X */ horizontal_size * GUI_CTX.temp.horizontal_count++,
-        /* Y */ vertical_size * GUI_CTX.temp.vertical_count,
-        /* W */ horizontal_size,
-        /* H */ vertical_size
-    };
+    Rectangle shape = GUI_NextInPlace(0, 0);
+    GUI_CTX.temp.horizontal_count++;
     return shape;
 }
 Rectangle GUI_NextHorizontals(int quantity)

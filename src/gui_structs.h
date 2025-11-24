@@ -133,6 +133,10 @@ typedef struct {
     bool            pointer_over_gui; // True if the pointer is over any of the elements in the GUI
     Vector2         pointer_trail[GUI_MAX_TRAIL];
 
+    // Button menu
+    const char      *current_button_menu;
+    bool            updated_button_menu;
+
     // Window that is being processed right now
     // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
     int             current_window_idx;       // Current window being drawn
@@ -161,6 +165,9 @@ GUI_Temp GUI_MakeTempDefault()
         .mouse_current              = (Vector2){ 0.0f, 0.0f },
         .pointer_over_gui           = false,
         .pointer_trail              = {{0}},
+
+        .current_button_menu        = NULL,
+        .updated_button_menu        = 0,
 
         .current_window_idx         = GUI_NO_WIN,
         .current_scroll             = 0,

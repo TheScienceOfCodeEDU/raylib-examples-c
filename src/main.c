@@ -61,7 +61,6 @@ int main(void) {
     // PREPARE GAME
     Game_State game_state           = Game_MakeState();
     Game_WindowState win_state      = Game_MakeWindowState();
-    PLAYER_Actions player_actions   = PLAYER_MakeActions();
     Game_SetContext(&game_state, &win_state);
 
     // Game canvas
@@ -76,7 +75,8 @@ int main(void) {
 
         //
         // UI
-        static EGUI_Pointer pointer_style = EGUI_Pointer_Default;
+        PLAYER_Actions player_actions       = PLAYER_MakeActions();
+        static EGUI_Pointer pointer_style   = EGUI_Pointer_Default;
         if (IsKeyPressed(KEY_F10)) {
             pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
         }
@@ -93,9 +93,6 @@ int main(void) {
         GUI_BeginDraw(pointer_style);
         BeginTextureMode(state.buffer);
             ClearBackground(BLANK);
-            // Top bar
-            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
-
             // Win-manager
             {
                 static GUI_Window* win_man = NULL;
@@ -110,6 +107,7 @@ int main(void) {
                 }
             }
             GUI_UpdateAndDrawWindows(window_limits);
+            GUI_TopBar(&player_actions, (Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
         EndTextureMode();
         GUI_EndDraw();
 

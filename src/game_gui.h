@@ -28,9 +28,14 @@ void GUI_TopBar(PLAYER_Actions* actions, Rectangle shape)
 
     GUI_LayoutReset();
     GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
-    actions->reset_characters    = GUI_Button(GUI_NextHorizontal(), "Reset",    &icons->New,    theme->red);
-    actions->add_character       = GUI_Button(GUI_NextHorizontal(), "Add",      &icons->Open,   theme->gray);
-    actions->toggle_character    = GUI_Button(GUI_NextHorizontal(), "Change",   &icons->Error,  theme->gray);
+    if (GUI_ButtonMenu(GUI_NextHorizontal(), "File",    &icons->New,    theme->red)) {
+
+    }
+    if (GUI_ButtonMenu(GUI_NextHorizontal(), "Game",    &icons->Dog,    theme->gray)) {
+        actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
+        actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
+        actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
+    }
 }
 
 //
