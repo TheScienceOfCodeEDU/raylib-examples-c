@@ -118,8 +118,29 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     return state;
 }
 
+typedef struct {
+    Rectangle       current_workspace;  // Current available (Use only for layouts)
+    int             vertical_count;
+    float           vertical_size;
+    int             horizontal_count;
+    float           horizontal_size;
+    float           used_height;        // Used to auto calc vertical scroll bar
+} GUI_LayoutTemp;
 
+GUI_LayoutTemp GUI_MakeLayoutTemp()
+{
+    GUI_LayoutTemp layout = {
+        .current_workspace  = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .vertical_count     = 0,
+        .vertical_size      = 0.0f,
+        .horizontal_count   = 0,
+        .horizontal_size    = 0.0f,
+        .used_height        = 0.0f
+    };
+    return layout;
+}
 
+// TODO@dc: fix naming starting w/section_
 typedef struct {
     // Window runtime
     EGUI_Action     current_action;
@@ -137,6 +158,7 @@ typedef struct {
     const char      *current_button_menu;
     bool            updated_button_menu;
     Rectangle       shape_button_menu;
+    GUI_LayoutTemp  buttonmenu_layout;
     void            (*function_button_menu)(void);
 
     // Window that is being processed right now
@@ -147,12 +169,7 @@ typedef struct {
     Rectangle       current_window_workspace; // Current window workspace
 
     // Layout temporary data
-    Rectangle       current_layout_workspace; // Current available (Use only for layouts)
-    int             vertical_count;
-    float           vertical_size;
-    int             horizontal_count;
-    float           horizontal_size;
-    float           layout_used_height;
+    GUI_LayoutTemp  layout;
 } GUI_Temp;
 
 GUI_Temp GUI_MakeTempDefault()
@@ -171,19 +188,14 @@ GUI_Temp GUI_MakeTempDefault()
         .current_button_menu        = NULL,
         .updated_button_menu        = 0,
         .shape_button_menu          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .buttonmenu_layout          = GUI_MakeLayoutTemp(),
         .function_button_menu       = NULL,
 
         .current_window_idx         = GUI_NO_WIN,
         .current_scroll             = 0,
         .current_font_type          = EGUI_FontType_Default,
         .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-
-        .current_layout_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .vertical_count             = 0,
-        .vertical_size              = 0.0f,
-        .horizontal_count           = 0,
-        .horizontal_size            = 0.0f,
-        .layout_used_height         = 0.0f
+        .layout                     =   GUI_MakeLayoutTemp()
     };
     return temp;
 }
@@ -225,6 +237,11 @@ GUI_Icons* GUI_GetIcons()
 Rectangle GUI_GetButtonMenu()
 {
     return GUI_CTX.temp->shape_button_menu;
+}
+
+void GUI_ButtonMenuRestoreLayout()
+{
+    GUI_CTX.temp->layout = GUI_CTX.temp->buttonmenu_layout;
 }
 
 float GUI_GetIconWidth()
@@ -436,8 +453,8 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
 }
 
 #define GUI_MACRO_CONTROL_LAYOUT(shape) \
-    if (GUI_CTX.temp->current_layout_workspace.width > 0 && GUI_CTX.temp->current_layout_workspace.height) { \
-        shape = RelativeToRect(shape, GUI_CTX.temp->current_layout_workspace); \
+    if (GUI_CTX.temp->layout.current_workspace.width > 0 && GUI_CTX.temp->layout.current_workspace.height) { \
+        shape = RelativeToRect(shape, GUI_CTX.temp->layout.current_workspace); \
     };
 
 #define GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT() \

@@ -453,6 +453,14 @@ bool GUI_ButtonMenu(
     GUI_ThemeColors colors, void (*function_button_menu)(void))
 {
     bool was_active         = GUI_CTX.temp->current_button_menu == text;
+    
+    // Activate overflow when it was active
+    int tmp_window_idx      = GUI_CTX.temp->current_window_idx;
+    if (was_active) {
+        tmp_window_idx                      = GUI_CTX.temp->current_window_idx;
+        GUI_CTX.temp->current_window_idx    = GUI_NO_WIN;
+    }
+    
     bool just_interacted    = GUI_Button(shape, text, icon, colors);
     if (just_interacted) {
         if (!was_active) {
@@ -467,7 +475,11 @@ bool GUI_ButtonMenu(
     if (is_active) {
         GUI_CTX.temp->function_button_menu  = function_button_menu;
         GUI_CTX.temp->shape_button_menu     = shape;
+        GUI_CTX.temp->buttonmenu_layout     = GUI_CTX.temp->layout;
     }
+
+    // Restore overrides
+    GUI_CTX.temp->current_window_idx = tmp_window_idx;
     return is_active;
 }
 
@@ -816,27 +828,27 @@ void GUI_Check(
 
 void GUI_LayoutVertical(float size)
 {
-    GUI_CTX.temp->vertical_count = 0;
-    GUI_CTX.temp->vertical_size  = size;
+    GUI_CTX.temp->layout.vertical_count = 0;
+    GUI_CTX.temp->layout.vertical_size  = size;
 }
 float GUI_VerticalSizeOrDefault()
 {
-    return GUI_CTX.temp->vertical_size != DEFAULT_SIZE   ? GUI_CTX.temp->vertical_size
+    return GUI_CTX.temp->layout.vertical_size != DEFAULT_SIZE   ? GUI_CTX.temp->layout.vertical_size
                                                         : (float)GetScreenHeight();
 }
 float GUI_HorizontalSizeOrDefault()
 {
-    return GUI_CTX.temp->horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->horizontal_size
+    return GUI_CTX.temp->layout.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.horizontal_size
                                                         : (float)GetScreenWidth();
 }
 Rectangle GUI_NextInPlace(int horizontal, int vertical)
 {
     float horizontal_size   = GUI_HorizontalSizeOrDefault();
-    float vertical_size     = GUI_CTX.temp->vertical_size;
+    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
 
     Rectangle shape = {
-        /* X */ horizontal_size * (GUI_CTX.temp->horizontal_count + horizontal),
-        /* Y */ vertical_size * (GUI_CTX.temp->vertical_count + vertical),
+        /* X */ horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
+        /* Y */ vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
         /* W */ horizontal_size,
         /* H */ vertical_size
     };
@@ -845,25 +857,25 @@ Rectangle GUI_NextInPlace(int horizontal, int vertical)
 Rectangle GUI_NextVertical()
 {
     Rectangle shape     = GUI_NextInPlace(0, 0);
-    float vertical_size = GUI_CTX.temp->vertical_size;
+    float vertical_size = GUI_CTX.temp->layout.vertical_size;
 
-    GUI_CTX.temp->layout_used_height += vertical_size;
-    GUI_CTX.temp->vertical_count++;
+    GUI_CTX.temp->layout.used_height += vertical_size;
+    GUI_CTX.temp->layout.vertical_count++;
     return shape;
 }
 float GUI_GetAvailableHorizontal(Rectangle window_workspace)
 {
-    return window_workspace.width - (GUI_CTX.temp->horizontal_size * GUI_CTX.temp->horizontal_count);
+    return window_workspace.width - (GUI_CTX.temp->layout.horizontal_size * GUI_CTX.temp->layout.horizontal_count);
 }
 void GUI_LayoutHorizontal(float size)
 {
-    GUI_CTX.temp->horizontal_count = 0;
-    GUI_CTX.temp->horizontal_size = size;
+    GUI_CTX.temp->layout.horizontal_count = 0;
+    GUI_CTX.temp->layout.horizontal_size = size;
 }
 Rectangle GUI_NextHorizontal()
 {
     Rectangle shape = GUI_NextInPlace(0, 0);
-    GUI_CTX.temp->horizontal_count++;
+    GUI_CTX.temp->layout.horizontal_count++;
     return shape;
 }
 Rectangle GUI_NextHorizontals(int quantity)
@@ -906,8 +918,8 @@ Rectangle GUI_NextVerticals(int quantity)
 }
 Rectangle GUI_LayoutAvailable(Rectangle workspace)
 {
-    float used_w = GUI_CTX.temp->horizontal_size * GUI_CTX.temp->horizontal_count;
-    float used_h = GUI_CTX.temp->vertical_size   * GUI_CTX.temp->vertical_count;
+    float used_w = GUI_CTX.temp->layout.horizontal_size * GUI_CTX.temp->layout.horizontal_count;
+    float used_h = GUI_CTX.temp->layout.vertical_size   * GUI_CTX.temp->layout.vertical_count;
     Rectangle result = {
         workspace.x + used_w,
         workspace.y + used_h,
@@ -916,21 +928,21 @@ Rectangle GUI_LayoutAvailable(Rectangle workspace)
     };
 
     // Vertical scroll
-    if (result.height < GUI_CTX.temp->vertical_size)
-        result.height = GUI_CTX.temp->vertical_size;
+    if (result.height < GUI_CTX.temp->layout.vertical_size)
+        result.height = GUI_CTX.temp->layout.vertical_size;
     return result;
 }
 void GUI_LayoutReset(Rectangle workspace)
 {
-    GUI_CTX.temp->current_layout_workspace  = workspace;
-    GUI_CTX.temp->horizontal_count          = 0;
-    GUI_CTX.temp->vertical_count            = 0;
-    GUI_CTX.temp->layout_used_height        = 0; 
+    GUI_CTX.temp->layout.current_workspace      = workspace;
+    GUI_CTX.temp->layout.horizontal_count       = 0;
+    GUI_CTX.temp->layout.vertical_count         = 0;
+    GUI_CTX.temp->layout.used_height            = 0; 
 }
 void GUI_LayoutAutoJump()
 {
     // Add jump if necessary after ONLY horizontal blocks
-    if (GUI_CTX.temp->horizontal_count > 0 && GUI_CTX.temp->vertical_count == 0) {
+    if (GUI_CTX.temp->layout.horizontal_count > 0 && GUI_CTX.temp->layout.vertical_count == 0) {
         GUI_NextVertical();
     }
 }
@@ -944,14 +956,14 @@ void GUI_LayoutBlock(float width, float height)
     } else if (width < 0.0) {
         // width is already negative
         // so this takes avaiable space minus width
-        GUI_LayoutHorizontal(GUI_CTX.temp->current_layout_workspace.width + width);
+        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width + width);
     } else {
-        GUI_LayoutHorizontal(GUI_CTX.temp->current_layout_workspace.width);
+        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width);
     }
 
     // Adjust to get y-available space
-    if (GUI_CTX.temp->vertical_count != 0) {
-        GUI_CTX.temp->current_layout_workspace = GUI_LayoutAvailable(GUI_CTX.temp->current_layout_workspace);
+    if (GUI_CTX.temp->layout.vertical_count != 0) {
+        GUI_CTX.temp->layout.current_workspace = GUI_LayoutAvailable(GUI_CTX.temp->layout.current_workspace);
     }
 
     // Vertical
@@ -960,9 +972,9 @@ void GUI_LayoutBlock(float width, float height)
     } else if (height < 0.0) {
         // height is already negative
         // so this takes avaiable space minus height
-        GUI_LayoutVertical(GUI_CTX.temp->current_layout_workspace.height + height);
+        GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height + height);
     } else {
-        GUI_LayoutVertical(GUI_CTX.temp->current_layout_workspace.height);
+        GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height);
     }
 }
 void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
@@ -973,7 +985,7 @@ void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType f
 }
 void GUI_LayoutDuplicateBlock()
 {
-    GUI_LayoutBlock(GUI_CTX.temp->horizontal_size, GUI_CTX.temp->vertical_size);
+    GUI_LayoutBlock(GUI_CTX.temp->layout.horizontal_size, GUI_CTX.temp->layout.vertical_size);
 }
 Rectangle GUI_Relative(Rectangle shape)
 {
@@ -1344,19 +1356,17 @@ void GUI_EndWindowContents(GUI_Window* window)
     // End window stuff
     GUI_LayoutAutoJump();
 
-    GUI_LayoutReset(GUI_CTX.temp->current_window_workspace );
-    GUI_DrawPendingButtonMenu();
-
-    // Close window stuff
-    rlPopMatrix();    
-
     // Vertical scroll
-    // Stored layout heigth
-    window->content_height                  = GUI_CTX.temp->layout_used_height;
+    // Stored layout height
+    window->content_height                   = GUI_CTX.temp->layout.used_height;
     // Reset temp values    
     GUI_CTX.temp->current_window_idx         = GUI_NO_WIN;
     GUI_CTX.temp->current_scroll             = 0;
     GUI_CTX.temp->current_window_workspace   = (Rectangle){ 0, 0, 0, 0 };
-    GUI_CTX.temp->current_layout_workspace   = (Rectangle){ 0, 0, 0, 0 };
     GUI_CTX.temp->current_font_type          = EGUI_FontType_Default;
+    GUI_CTX.temp->layout                     = GUI_MakeLayoutTemp();
+
+    // Finish draw instructions
+    GUI_DrawPendingButtonMenu();
+    rlPopMatrix();  
 }

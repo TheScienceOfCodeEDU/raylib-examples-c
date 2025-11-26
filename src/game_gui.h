@@ -27,12 +27,11 @@ void GUI_GameMenu()
     PLAYER_Actions *actions = &GAME_CTX.temp->player_actions;
 
     Rectangle shape         = GUI_GetButtonMenu();
-    //GUI_LayoutReset(shape);
-    GUI_LayoutBlock(shape.width, shape.height);
+    GUI_ButtonMenuRestoreLayout();
 
-    actions->reset_characters    = GUI_Button(GUI_NextInPlace(0,1), "Reset",    &icons->New,    theme->gray);
-    actions->add_character       = GUI_Button(GUI_NextInPlace(0,2), "Add",      &icons->Open,   theme->gray);
-    actions->toggle_character    = GUI_Button(GUI_NextInPlace(0,3), "Change",   &icons->Error,  theme->gray);
+    actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
+    actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
+    actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
 }
 
 void GUI_TopBar(Rectangle shape)

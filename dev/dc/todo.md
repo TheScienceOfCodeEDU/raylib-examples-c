@@ -7,7 +7,8 @@ imKairos
 - Resize
 
 - Button menu           OK
-    - Draw at the end
+    - Draw at the end   OK
+    - Overflow          OK
 
 - Close windows
 
