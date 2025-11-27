@@ -26,9 +26,7 @@ void GUI_GameMenu()
     GUI_Theme *theme        = &setup->theme;
     PLAYER_Actions *actions = &GAME_CTX.temp->player_actions;
 
-    Rectangle shape         = GUI_GetButtonMenu();
     GUI_ButtonMenuRestoreLayout();
-
     actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
     actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
     actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);

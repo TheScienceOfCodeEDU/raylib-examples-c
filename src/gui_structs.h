@@ -486,7 +486,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;    \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
-    bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
+    bool is_pointer_active  = is_activable && (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
     /* Gains focus */                                          \
     bool just_focused = is_pointer_over && is_pointer_active;  \
