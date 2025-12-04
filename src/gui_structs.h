@@ -249,6 +249,11 @@ float GUI_GetIconWidth()
     return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
 }
 
+float GUI_GetIconWidthForShape(Rectangle shape, float border)
+{
+    return shape.height - border * 2;
+}
+
 float GUI_GetIconSmallWidth()
 {
     return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;

@@ -9,6 +9,7 @@ imKairos
 - Button menu           OK
     - Draw at the end   OK
     - Overflow          OK
+    - Icon sizes        OK
 
 - Close windows
 

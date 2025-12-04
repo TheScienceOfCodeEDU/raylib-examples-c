@@ -401,6 +401,7 @@ void GUI_DrawButton(
     float scale         = state->scale;
     float color_change  = theme->color_change;
     float bg_alpha      = theme->bg_alpha;
+    float icon_w        = icon != NULL ? GUI_GetIconWidthForShape(shape, border) : 0;
 
     Color bg_color =    status == EGUI_Status_Focused  ? colors.bg_color_3 :
                         status == EGUI_Status_Focused  ? colors.bg_color_3 :
@@ -415,8 +416,6 @@ void GUI_DrawButton(
     GUI_BeginControlScissor();
         DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
         GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
-
-        float icon_w = icon == NULL ? 0 : GUI_GetIconWidth();
 
         GUI_DrawAdjustedTextEx(text, 
             (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
