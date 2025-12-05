@@ -107,12 +107,13 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     bool collide_focused        = CheckCollisionPointRec(mouse, focused_window->shape);
 
     // Vertical scroll data
-    Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->current_scroll };
-    bool collide_scolled        = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
+    Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->layout.current_scroll };
+    bool collide_scrolled       = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
     bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window));
+    bool overflow               = GUI_CTX.temp->layout.force_overflow;
     
     // Collide checks
-    bool collide                = collide_scolled && collide_workspace;
+    bool collide                = collide_scrolled && (collide_workspace || overflow);
     bool result                 = collide && (focused_window_id == window->id || !collide_focused);
 
     return result;
@@ -120,7 +121,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 
 bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape)
 {
-    return GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp->current_window_idx));
+    return GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp->layout.current_window_idx));
 }
 
 
@@ -205,6 +206,7 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
 
     // Button menus
     GUI_CTX.temp->buttonmenu_just_interacted   = false;
+    GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();
 }
 
 void GUI_DrawPendingButtonMenu()
@@ -228,12 +230,12 @@ void GUI_EndDraw()
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
-    if (intersect_window && GUI_CTX.temp->current_window_idx != GUI_NO_WIN) {
-        result.y += GUI_CTX.temp->current_scroll;
-        Rectangle intersection = RectIntersection(result, GUI_CTX.temp->current_window_workspace);
+    if (intersect_window && GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN) {
+        result.y += GUI_CTX.temp->layout.current_scroll;
+        Rectangle intersection = RectIntersection(result, GUI_CTX.temp->layout.current_window_workspace);
         if (DEV_DEBUG_GUI_SCROLL) {
-            if (GUI_CTX.temp->current_window_idx == GUI_CTX.state->z_index[0]) {
-                GUI_DrawBorders(GUI_CTX.temp->current_window_workspace, RED, RED, 1, false);
+            if (GUI_CTX.temp->layout.current_window_idx == GUI_CTX.state->z_index[0]) {
+                GUI_DrawBorders(GUI_CTX.temp->layout.current_window_workspace, RED, RED, 1, false);
                 DrawDebugRect(result, ColorAlpha(GREEN, 0.1));
                 DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9));
             }
@@ -245,8 +247,10 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
 
 void GUI_BeginControlScissor()
 {
-    if (GUI_CTX.temp->current_window_idx != GUI_NO_WIN) { 
-        BeginScissorModeRect(GUI_CTX.temp->current_window_workspace);
+    bool not_overflow   = GUI_CTX.temp->layout.force_overflow == false;
+    bool inside_window  = GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN;
+    if (not_overflow && inside_window) {
+        BeginScissorModeRect(GUI_CTX.temp->layout.current_window_workspace);
     }
 }
 
@@ -457,10 +461,8 @@ bool GUI_ButtonMenu(
     bool was_active         = GUI_CTX.temp->buttonmenu_current == text;
     
     // Activate overflow when it was active
-    int tmp_window_idx      = GUI_CTX.temp->current_window_idx;
     if (was_active) {
-        tmp_window_idx                      = GUI_CTX.temp->current_window_idx;
-        GUI_CTX.temp->current_window_idx    = GUI_NO_WIN;
+        GUI_CTX.temp->layout.force_overflow = true;
     }
     
     bool just_interacted    = GUI_Button(shape, text, icon, colors);
@@ -478,11 +480,10 @@ bool GUI_ButtonMenu(
         GUI_CTX.temp->buttonmenu_draw_function  = draw_function;
         GUI_CTX.temp->buttonmenu_shape          = shape;
         GUI_CTX.temp->buttonmenu_layout         = GUI_CTX.temp->layout;
-        GUI_CTX.temp->buttonmenu_font           = GUI_CTX.temp->current_font_type;
     }
 
-    // Restore overrides
-    GUI_CTX.temp->current_window_idx = tmp_window_idx;
+    // Reset overrides (if any)
+    GUI_CTX.temp->layout.force_overflow = false;
     return is_active;
 }
 
@@ -509,7 +510,7 @@ void GUI_DrawText(
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
     GUI_MACRO_CONTROL_LAYOUT(shape);
-    GUI_DrawText(shape, text, colors, GUI_CTX.temp->current_font_type);
+    GUI_DrawText(shape, text, colors, GUI_CTX.temp->layout.current_font_type);
 }
 
 // > INPUT
@@ -1339,10 +1340,10 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
     Rectangle window_workspace = GUI_WindowWorkspace(window);
     
     // Vertical scroll
-    GUI_CTX.temp->current_window_idx         = window->id;
-    GUI_CTX.temp->current_scroll             = -window->scroll_offset;
-    GUI_CTX.temp->current_window_workspace   = window_workspace;
-    GUI_CTX.temp->current_font_type          = font_type;
+    GUI_CTX.temp->layout.current_window_idx         = window->id;
+    GUI_CTX.temp->layout.current_window_workspace   = window_workspace;
+    GUI_CTX.temp->layout.current_scroll             = -window->scroll_offset;
+    GUI_CTX.temp->layout.current_font_type          = font_type;
     
     // Begin window stuff
     GUI_LayoutReset(window_workspace);
@@ -1362,11 +1363,7 @@ void GUI_EndWindowContents(GUI_Window* window)
     // Vertical scroll
     // Stored layout height
     window->content_height                   = GUI_CTX.temp->layout.used_height;
-    // Reset temp values    
-    GUI_CTX.temp->current_window_idx         = GUI_NO_WIN;
-    GUI_CTX.temp->current_scroll             = 0;
-    GUI_CTX.temp->current_window_workspace   = (Rectangle){ 0, 0, 0, 0 };
-    GUI_CTX.temp->current_font_type          = EGUI_FontType_Default;
+    // Reset temp values
     GUI_CTX.temp->layout                     = GUI_MakeLayoutTemp();
 
     // Finish draw instructions

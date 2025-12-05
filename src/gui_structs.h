@@ -125,17 +125,30 @@ typedef struct {
     int             horizontal_count;
     float           horizontal_size;
     float           used_height;        // Used to auto calc vertical scroll bar
+    float           current_scroll;
+    EGUI_FontType   current_font_type;
+
+    // Window that is being processed right now
+    // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
+    int             current_window_idx;       // Current window being drawn
+    Rectangle       current_window_workspace; // Current window workspace
+    bool            force_overflow;
 } GUI_LayoutTemp;
 
 GUI_LayoutTemp GUI_MakeLayoutTemp()
 {
     GUI_LayoutTemp layout = {
-        .current_workspace  = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .vertical_count     = 0,
-        .vertical_size      = 0.0f,
-        .horizontal_count   = 0,
-        .horizontal_size    = 0.0f,
-        .used_height        = 0.0f
+        .current_workspace          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .vertical_count             = 0,
+        .vertical_size              = 0.0f,
+        .horizontal_count           = 0,
+        .horizontal_size            = 0.0f,
+        .used_height                = 0.0f,
+        .current_scroll             = 0,
+        .current_font_type          = EGUI_FontType_Default,
+        .current_window_idx         = GUI_NO_WIN,
+        .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .force_overflow             = false
     };
     return layout;
 }
@@ -159,15 +172,7 @@ typedef struct {
     bool            buttonmenu_just_interacted;
     Rectangle       buttonmenu_shape;
     GUI_LayoutTemp  buttonmenu_layout;
-    EGUI_FontType   buttonmenu_font;
     void            (*buttonmenu_draw_function)(void);
-
-    // Window that is being processed right now
-    // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
-    int             current_window_idx;       // Current window being drawn
-    float           current_scroll;
-    EGUI_FontType   current_font_type;
-    Rectangle       current_window_workspace; // Current window workspace
 
     // Layout temporary data
     GUI_LayoutTemp  layout;
@@ -190,13 +195,8 @@ GUI_Temp GUI_MakeTempDefault()
         .buttonmenu_just_interacted = 0,
         .buttonmenu_shape           = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .buttonmenu_layout          = GUI_MakeLayoutTemp(),
-        .buttonmenu_font            = EGUI_FontType_Default,
         .buttonmenu_draw_function   = NULL,
 
-        .current_window_idx         = GUI_NO_WIN,
-        .current_scroll             = 0,
-        .current_font_type          = EGUI_FontType_Default,
-        .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .layout                     = GUI_MakeLayoutTemp()
     };
     return temp;
@@ -233,7 +233,7 @@ GUI_Setup* GUI_GetSetup()
 
 void GUI_FontType(EGUI_FontType font_type)
 {
-    GUI_CTX.temp->current_font_type = font_type;
+    GUI_CTX.temp->layout.current_font_type  = font_type;
 }
 
 GUI_Icons* GUI_GetIcons()
@@ -243,9 +243,8 @@ GUI_Icons* GUI_GetIcons()
 
 void GUI_ButtonMenuPrepare()
 {
-    // TODO: Error scroll
     GUI_CTX.temp->layout = GUI_CTX.temp->buttonmenu_layout;
-    GUI_FontType(GUI_CTX.temp->buttonmenu_font);
+    GUI_CTX.temp->layout.force_overflow     = true;
 }
 
 float GUI_GetIconWidth()
@@ -467,7 +466,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     };
 
 #define GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT() \
-    EGUI_FontType font_type = GUI_CTX.temp->current_font_type;
+    EGUI_FontType font_type = GUI_CTX.temp->layout.current_font_type;
 
 #define GUI_MACRO_CONTROL_ACTIVATED(shape) \
     /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\
