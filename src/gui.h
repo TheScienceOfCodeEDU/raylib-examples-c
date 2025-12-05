@@ -204,14 +204,14 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
     }
 
     // Button menus
-    GUI_CTX.temp->updated_button_menu   = false;
+    GUI_CTX.temp->buttonmenu_just_interacted   = false;
 }
 
 void GUI_DrawPendingButtonMenu()
 {
-    if (GUI_CTX.temp->function_button_menu != NULL) {
-        GUI_CTX.temp->function_button_menu();
-        GUI_CTX.temp->function_button_menu  = NULL;
+    if (GUI_CTX.temp->buttonmenu_draw_function != NULL) {
+        GUI_CTX.temp->buttonmenu_draw_function();
+        GUI_CTX.temp->buttonmenu_draw_function  = NULL;
     }
 }
 
@@ -221,8 +221,8 @@ void GUI_EndDraw()
     GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
 
     // Button menus
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !GUI_CTX.temp->updated_button_menu) {
-        GUI_CTX.temp->current_button_menu    = NULL;
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !GUI_CTX.temp->buttonmenu_just_interacted) {
+        GUI_CTX.temp->buttonmenu_current = NULL;
     }
 }
 
@@ -408,11 +408,11 @@ void GUI_DrawButton(
                         status == EGUI_Status_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
                                                          colors.bg_color_2;
 
-    Color b_color_a =   status == EGUI_Status_Focused  ? colors.bg_color_3 :
-                                                         colors.bg_color_1;
+    Color b_color_a =   status == EGUI_Status_Focused  ? colors.bg_color_3:
+                                                         colors.bg_color_0;
 
-    Color b_color_b =   status == EGUI_Status_Focused  ? colors.bg_color_2 :
-                                                         colors.bg_color_3;
+    Color b_color_b =   status == EGUI_Status_Focused  ? colors.bg_color_2:
+                                                         colors.bg_color_2;
     GUI_BeginControlScissor();
         DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
         GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
@@ -431,6 +431,8 @@ bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
+    DrawDebugRect(shape, ColorAlpha(BLUE, 0.2));
+
     GUI_MACRO_CONTROL_LAYOUT(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
@@ -443,15 +445,16 @@ bool GUI_Button(
             status = EGUI_Status_Focused;
         }
     }
-    GUI_DrawButton(shape, text, icon, status, colors, font_type);    
+    GUI_DrawButton(shape, text, icon, status, colors, font_type);
+    DrawDebugRect(shape, ColorAlpha(is_pointer_over? RED : BLUE, 0.2));
     return is_active;
 }
 
 bool GUI_ButtonMenu(
     Rectangle shape, const char* text, Texture2D* icon,
-    GUI_ThemeColors colors, void (*function_button_menu)(void))
+    GUI_ThemeColors colors, void (*draw_function)(void))
 {
-    bool was_active         = GUI_CTX.temp->current_button_menu == text;
+    bool was_active         = GUI_CTX.temp->buttonmenu_current == text;
     
     // Activate overflow when it was active
     int tmp_window_idx      = GUI_CTX.temp->current_window_idx;
@@ -463,18 +466,19 @@ bool GUI_ButtonMenu(
     bool just_interacted    = GUI_Button(shape, text, icon, colors);
     if (just_interacted) {
         if (!was_active) {
-            GUI_CTX.temp->current_button_menu = text;
+            GUI_CTX.temp->buttonmenu_current = text;
         } else {
-            GUI_CTX.temp->current_button_menu = NULL;
+            GUI_CTX.temp->buttonmenu_current = NULL;
         }
-        GUI_CTX.temp->updated_button_menu = true;
+        GUI_CTX.temp->buttonmenu_just_interacted = true;
     }
 
-    bool is_active = GUI_CTX.temp->current_button_menu == text;
+    bool is_active = GUI_CTX.temp->buttonmenu_current == text;
     if (is_active) {
-        GUI_CTX.temp->function_button_menu  = function_button_menu;
-        GUI_CTX.temp->shape_button_menu     = shape;
-        GUI_CTX.temp->buttonmenu_layout     = GUI_CTX.temp->layout;
+        GUI_CTX.temp->buttonmenu_draw_function  = draw_function;
+        GUI_CTX.temp->buttonmenu_shape          = shape;
+        GUI_CTX.temp->buttonmenu_layout         = GUI_CTX.temp->layout;
+        GUI_CTX.temp->buttonmenu_font           = GUI_CTX.temp->current_font_type;
     }
 
     // Restore overrides

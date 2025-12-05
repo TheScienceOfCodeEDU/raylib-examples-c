@@ -155,11 +155,12 @@ typedef struct {
     Vector2         pointer_trail[GUI_MAX_TRAIL];
 
     // Button menu
-    const char      *current_button_menu;
-    bool            updated_button_menu;
-    Rectangle       shape_button_menu;
+    const char      *buttonmenu_current;
+    bool            buttonmenu_just_interacted;
+    Rectangle       buttonmenu_shape;
     GUI_LayoutTemp  buttonmenu_layout;
-    void            (*function_button_menu)(void);
+    EGUI_FontType   buttonmenu_font;
+    void            (*buttonmenu_draw_function)(void);
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
@@ -185,17 +186,18 @@ GUI_Temp GUI_MakeTempDefault()
         .pointer_over_gui           = false,
         .pointer_trail              = {{0}},
 
-        .current_button_menu        = NULL,
-        .updated_button_menu        = 0,
-        .shape_button_menu          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .buttonmenu_current         = NULL,
+        .buttonmenu_just_interacted = 0,
+        .buttonmenu_shape           = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .buttonmenu_layout          = GUI_MakeLayoutTemp(),
-        .function_button_menu       = NULL,
+        .buttonmenu_font            = EGUI_FontType_Default,
+        .buttonmenu_draw_function   = NULL,
 
         .current_window_idx         = GUI_NO_WIN,
         .current_scroll             = 0,
         .current_font_type          = EGUI_FontType_Default,
         .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .layout                     =   GUI_MakeLayoutTemp()
+        .layout                     = GUI_MakeLayoutTemp()
     };
     return temp;
 }
@@ -229,19 +231,21 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
+void GUI_FontType(EGUI_FontType font_type)
+{
+    GUI_CTX.temp->current_font_type = font_type;
+}
+
 GUI_Icons* GUI_GetIcons()
 {
     return &GUI_CTX.setup->icon_setup.icons;
 }
 
-Rectangle GUI_GetButtonMenu()
+void GUI_ButtonMenuPrepare()
 {
-    return GUI_CTX.temp->shape_button_menu;
-}
-
-void GUI_ButtonMenuRestoreLayout()
-{
+    // TODO: Error scroll
     GUI_CTX.temp->layout = GUI_CTX.temp->buttonmenu_layout;
+    GUI_FontType(GUI_CTX.temp->buttonmenu_font);
 }
 
 float GUI_GetIconWidth()
@@ -502,7 +506,3 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /* Update pointer_over_gui */                              \
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 
-void GUI_FontType(EGUI_FontType font_type)
-{
-    GUI_CTX.temp->current_font_type = font_type;
-}
