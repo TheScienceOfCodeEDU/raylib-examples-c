@@ -223,7 +223,8 @@ void GUI_EndDraw()
     GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
 
     // Button menus
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !GUI_CTX.temp->buttonmenu_just_interacted) {
+    bool interacted = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
+    if (interacted && !GUI_CTX.temp->buttonmenu_just_interacted) {
         GUI_CTX.temp->buttonmenu_current = NULL;
     }
 }
@@ -435,8 +436,6 @@ bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
-    DrawDebugRect(shape, ColorAlpha(BLUE, 0.2));
-
     GUI_MACRO_CONTROL_LAYOUT(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
@@ -450,7 +449,7 @@ bool GUI_Button(
         }
     }
     GUI_DrawButton(shape, text, icon, status, colors, font_type);
-    DrawDebugRect(shape, ColorAlpha(is_pointer_over? RED : BLUE, 0.2));
+    // TODO@dc: improve colors DrawDebugRect(shape, ColorAlpha(is_pointer_over? RED : BLUE, 0.2));
     return is_active;
 }
 
@@ -938,10 +937,8 @@ Rectangle GUI_LayoutAvailable(Rectangle workspace)
 }
 void GUI_LayoutReset(Rectangle workspace)
 {
+    GUI_CTX.temp->layout = GUI_MakeLayoutTemp();
     GUI_CTX.temp->layout.current_workspace      = workspace;
-    GUI_CTX.temp->layout.horizontal_count       = 0;
-    GUI_CTX.temp->layout.vertical_count         = 0;
-    GUI_CTX.temp->layout.used_height            = 0; 
 }
 void GUI_LayoutAutoJump()
 {
@@ -1338,16 +1335,15 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
     
     // Data
     Rectangle window_workspace = GUI_WindowWorkspace(window);
-    
+    // Begin window stuff
+    GUI_LayoutReset(window_workspace);
+
     // Vertical scroll
     GUI_CTX.temp->layout.current_window_idx         = window->id;
     GUI_CTX.temp->layout.current_window_workspace   = window_workspace;
     GUI_CTX.temp->layout.current_scroll             = -window->scroll_offset;
     GUI_CTX.temp->layout.current_font_type          = font_type;
-    
-    // Begin window stuff
-    GUI_LayoutReset(window_workspace);
-    
+
     // Vertical scroll    
     rlPushMatrix();
     rlTranslatef(0, -window->scroll_offset, 0);
