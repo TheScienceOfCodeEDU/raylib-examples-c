@@ -205,12 +205,6 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
     }
 
     // Button menus
-    bool interacted         = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
-    bool just_interacted    = GUI_CTX.temp->buttonmenu_just_interacted;
-    if (interacted && just_interacted == false) {
-        //GUI_CTX.temp->buttonmenu_current = NULL;        
-    }
-
     GUI_CTX.temp->buttonmenu_just_interacted   = false;
     GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();    
 }
@@ -224,13 +218,17 @@ void GUI_DrawPendingButtonMenu()
 }
 
 void GUI_EndDraw()
-{
+{   
+    GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;    
     
-    GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
 
-    
-    GUI_DrawPendingButtonMenu();
-    
+    bool interacted         = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
+    bool just_interacted    = GUI_CTX.temp->buttonmenu_just_interacted;
+    if (interacted && just_interacted == false) {
+        GUI_CTX.temp->buttonmenu_current = NULL;        
+    } else {
+        GUI_DrawPendingButtonMenu();
+    }
 }
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {

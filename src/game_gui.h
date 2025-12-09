@@ -27,6 +27,7 @@ void GUI_GameMenu()
     PLAYER_Actions *actions = &GAME_CTX.temp->player_actions;
 
     GUI_ButtonMenuPrepare();
+    GUI_Button(GUI_NextInPlace(-1, 0), "Game [X]", &icons->Dog, theme->gray);
     actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
     actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
     actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
