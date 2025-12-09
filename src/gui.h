@@ -205,8 +205,14 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
     }
 
     // Button menus
+    bool interacted         = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
+    bool just_interacted    = GUI_CTX.temp->buttonmenu_just_interacted;
+    if (interacted && just_interacted == false) {
+        //GUI_CTX.temp->buttonmenu_current = NULL;        
+    }
+
     GUI_CTX.temp->buttonmenu_just_interacted   = false;
-    GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();
+    GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();    
 }
 
 void GUI_DrawPendingButtonMenu()
@@ -219,14 +225,12 @@ void GUI_DrawPendingButtonMenu()
 
 void GUI_EndDraw()
 {
-    GUI_DrawPendingButtonMenu();
+    
     GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
 
-    // Button menus
-    bool interacted = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
-    if (interacted && !GUI_CTX.temp->buttonmenu_just_interacted) {
-        GUI_CTX.temp->buttonmenu_current = NULL;
-    }
+    
+    GUI_DrawPendingButtonMenu();
+    
 }
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
@@ -464,8 +468,8 @@ bool GUI_ButtonMenu(
         GUI_CTX.temp->layout.force_overflow = true;
     }
     
-    bool just_interacted    = GUI_Button(shape, text, icon, colors);
-    if (just_interacted) {
+    bool is_active    = GUI_Button(shape, text, icon, colors);
+    if (is_active) {
         if (!was_active) {
             GUI_CTX.temp->buttonmenu_current = text;
         } else {
@@ -474,8 +478,8 @@ bool GUI_ButtonMenu(
         GUI_CTX.temp->buttonmenu_just_interacted = true;
     }
 
-    bool is_active = GUI_CTX.temp->buttonmenu_current == text;
-    if (is_active) {
+    bool is_open = GUI_CTX.temp->buttonmenu_current == text;
+    if (is_open) {
         GUI_CTX.temp->buttonmenu_draw_function  = draw_function;
         GUI_CTX.temp->buttonmenu_shape          = shape;
         GUI_CTX.temp->buttonmenu_layout         = GUI_CTX.temp->layout;
@@ -483,7 +487,7 @@ bool GUI_ButtonMenu(
 
     // Reset overrides (if any)
     GUI_CTX.temp->layout.force_overflow = false;
-    return is_active;
+    return is_open;
 }
 
 // > TEXT
