@@ -425,15 +425,17 @@ void GUI_DrawButton(
     GUI_BeginControlScissor();
         DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
         GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
+    EndScissorMode();
 
+    GUI_BeginInnerControlScissor(shape, border, scale, false);
         GUI_DrawAdjustedTextEx(text, 
             (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
             colors.tx_color_0, scale, font_type);
-    EndScissorMode();
 
     if (icon_w > 0) {
         GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
     }
+    EndScissorMode();
 }
 
 bool GUI_Button(
