@@ -235,8 +235,9 @@ void GUI_EndDraw()
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
+
+    result.y += GUI_CTX.temp->layout.current_scroll;
     if (intersect_window && GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN) {
-        result.y += GUI_CTX.temp->layout.current_scroll;
         Rectangle intersection = RectIntersection(result, GUI_CTX.temp->layout.current_window_workspace);
         if (DEV_DEBUG_GUI_SCROLL) {
             if (GUI_CTX.temp->layout.current_window_idx == GUI_CTX.state->z_index[0]) {
@@ -261,9 +262,11 @@ void GUI_BeginControlScissor()
 
 // Cut text not only by window but by the control itself
 // Useful to cut text inside a control
-void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale, bool intersect_window)
+void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
 {
-    BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, intersect_window));
+    bool not_overflow   = GUI_CTX.temp->layout.force_overflow == false;
+    bool inside_window  = GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN;
+    BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
 }
 
 
@@ -427,7 +430,7 @@ void GUI_DrawButton(
         GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
     EndScissorMode();
 
-    GUI_BeginInnerControlScissor(shape, border, scale, false);
+    GUI_BeginInnerControlScissor(shape, border, scale);
         GUI_DrawAdjustedTextEx(text, 
             (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
             colors.tx_color_0, scale, font_type);
@@ -572,7 +575,7 @@ void GUI_DrawInput(
         if (auto_scroll_x < 0) auto_scroll_x = 0;
     }
 
-    GUI_BeginInnerControlScissor(shape, border, scale, true);
+    GUI_BeginInnerControlScissor(shape, border, scale);
         GUI_DrawAdjustedTextEx(value, 
             (Vector2) { 
                 shape.x + (border) * scale - auto_scroll_x,
@@ -795,7 +798,7 @@ void GUI_DrawCheckBox(
             GUI_DrawBorders(shape, b1, b2, border * scale, false);
     EndScissorMode();
 
-    GUI_BeginInnerControlScissor(shape, border, scale, true);
+    GUI_BeginInnerControlScissor(shape, border, scale);
         GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
             (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
             tx, scale, font_type);
@@ -1085,7 +1088,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     bool reserve_icon_space = window->icon != NULL || (status == EGUI_Status_Focused && window->focused_face);
     float icon_w = reserve_icon_space ? GUI_GetIconWidth() : 0;
 
-    GUI_BeginInnerControlScissor(shape_title, border, scale, false);
+    GUI_BeginInnerControlScissor(shape_title, border, scale);
         GUI_DrawAdjustedTextEx(window->title,
             (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale }, 
             colors.tx_color_0, scale, EGUI_FontType_GUI);
