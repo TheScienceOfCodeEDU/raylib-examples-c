@@ -55,8 +55,8 @@ int main(void) {
     GUI_State gui_state             = GUI_MakeStateDefault(screen_max);
     GUI_Setup gui_setup             = GUI_MakeSetupDefault();
     GUI_Temp gui_temp               = GUI_MakeTempDefault();
-    GUI_Icons icons             = gui_setup.icon_setup.icons;
-    Texture2D wp_voronoi        = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
+    GUI_Icons icons                 = gui_setup.icon_setup.icons;
+    Texture2D wp_voronoi            = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&gui_state, &gui_setup, &gui_temp);
 
     // PREPARE GAME
@@ -305,6 +305,9 @@ int main(void) {
 
             GUI_DrawPointerTrail();
             GUI_DrawPointer();
+            if (GUI_IsPointerOverGui()) {
+                DrawRectangle(0, 0, 20, 20, RED);
+            }
         EndDrawing();
     }
 

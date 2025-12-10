@@ -5,6 +5,13 @@
  #include "rlgl.h"
 #endif
 
+#define Assert(cond) \
+    do { \
+        if (!(cond)) { \
+            fprintf(stderr, "Assert failed: %s, file %s, line %d\n", #cond, __FILE__, __LINE__); \
+            exit(1); \
+        } \
+    } while (0)
 
 Rectangle LimitRect(Rectangle shape, Rectangle limits) {
     // Restrict size to not exceed limits

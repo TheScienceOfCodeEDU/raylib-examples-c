@@ -17,10 +17,16 @@
 //   NOTES     : Nothing here
 
 typedef enum {
-    EGUI_Status_Default,
-    EGUI_Status_Collide,
-    EGUI_Status_Focused
-} GUI_ElementStatus;
+    EGUI_Status_Off,
+    EGUI_Status_Ready,
+    EGUI_Status_Drawing
+} EGUI_Status;
+
+typedef enum {
+    EGUI_ControlStatus_Default,
+    EGUI_ControlStatus_Collide,
+    EGUI_ControlStatus_Focused
+} EGUI_ControlStatus;
 
 typedef enum {
     EGUI_InputText,      // editable ASCII text
@@ -153,25 +159,41 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
     return layout;
 }
 
+typedef struct {
+    const char      *id_ptr;            // A unique pointer representing the control that owns this overlay call
+    GUI_LayoutTemp  layout;             // Layout state when the overlay draw was queued (used to draw with correct transform the opened menu)
+    void            (*function)(void);  // Draw function
+}  GUI_OverlayDraw;
+
+GUI_OverlayDraw GUI_MakeOverlayDraw() 
+{
+    GUI_OverlayDraw overlay = {
+        .id_ptr      = NULL,
+        .layout      = GUI_MakeLayoutTemp(),
+        .function   = NULL,
+    };
+    return overlay;
+}
+
 // TODO@dc: fix naming starting w/section_
 typedef struct {
+    // Globals
+    EGUI_Status      status;
+
     // Window runtime
     EGUI_Action     current_action;
     void            *control_focus_ptr;
-    int             window_target_id; // Current window as interactable target (pointer is over and z-index is the lowest possible)
+    int             window_target_id;   // Current window as interactable target (pointer is over and z-index is the lowest possible)
 
     // Pointer runtime
     EGUI_Pointer    current_pointer;
     Vector2         mouse_last;
     Vector2         mouse_current;
-    bool            pointer_over_gui; // True if the pointer is over any of the elements in the GUI
+    bool            pointer_over_gui;   // True if the pointer is over any of the elements in the GUI
     Vector2         pointer_trail[GUI_MAX_TRAIL];
 
-    // Button menu
-    const char      *buttonmenu_current;
-    Rectangle       buttonmenu_shape;
-    GUI_LayoutTemp  buttonmenu_layout;
-    void            (*buttonmenu_draw_function)(void);
+    // Overlay draw
+    GUI_OverlayDraw overlay_draw;
 
     // Layout temporary data
     GUI_LayoutTemp  layout;
@@ -180,6 +202,7 @@ typedef struct {
 GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
+        .status                     = EGUI_Status_Off,
         .current_action             = EGUI_ActionNone,
         .control_focus_ptr          = NULL,
         .window_target_id           = 0,
@@ -190,11 +213,7 @@ GUI_Temp GUI_MakeTempDefault()
         .pointer_over_gui           = false,
         .pointer_trail              = {{0}},
 
-        .buttonmenu_current         = NULL,
-        .buttonmenu_shape           = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .buttonmenu_layout          = GUI_MakeLayoutTemp(),
-        .buttonmenu_draw_function   = NULL,
-
+        .overlay_draw               = GUI_MakeOverlayDraw(),
         .layout                     = GUI_MakeLayoutTemp()
     };
     return temp;
@@ -212,6 +231,14 @@ static struct {
 
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp)
 {
+    // Update statuses
+    // Outgoing temp
+    if (GUI_CTX.temp != NULL) {
+        GUI_CTX.temp->status = EGUI_Status_Off;
+    }
+    // Incoming
+    temp->status = EGUI_Status_Ready;
+
     GUI_CTX.setup = setup;
     GUI_CTX.state = state;
     GUI_CTX.temp  = temp;
@@ -239,12 +266,6 @@ GUI_Icons* GUI_GetIcons()
     return &GUI_CTX.setup->icon_setup.icons;
 }
 
-void GUI_ButtonMenuPrepare()
-{
-    GUI_CTX.temp->layout = GUI_CTX.temp->buttonmenu_layout;
-    GUI_CTX.temp->layout.force_overflow     = true;
-}
-
 float GUI_GetIconWidth()
 {
     return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
@@ -260,10 +281,11 @@ float GUI_GetIconSmallWidth()
     return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
 }
 
- // GUI_IsPointerOverGui() is not safe to be called by a Window. It requires ALL windows to be processed beforehand.
- // Use this to determine if your game-logic needs to handle mouse input.
+// GUI_IsPointerOverGui() is meant to be called after EndDraw
+// If you need it internally, it means that you're creating and internal component so you could use GUI_CTX.temp->pointer_over_gui
 bool GUI_IsPointerOverGui()
 {
+    Assert(GUI_CTX.temp->status == EGUI_Status_Ready);
     return GUI_CTX.temp->pointer_over_gui;
 }
 

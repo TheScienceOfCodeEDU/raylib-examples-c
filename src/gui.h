@@ -6,14 +6,6 @@
  #include "gui_structs.h"
 #endif
 
-#define GUI_Assert(cond) \
-    do { \
-        if (!(cond)) { \
-            fprintf(stderr, "GUI_Assert failed: %s, file %s, line %d\n", #cond, __FILE__, __LINE__); \
-            exit(1); \
-        } \
-    } while (0)
-
 
 // > POINTER
 //   STABILITY : █████████░  90%
@@ -189,6 +181,9 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
 
 void GUI_BeginDraw(EGUI_Pointer pointer_style)
 {
+    Assert(GUI_CTX.temp->status == EGUI_Status_Ready);
+    GUI_CTX.temp->status = EGUI_Status_Drawing;
+
     GUI_CTX.temp->current_pointer        = pointer_style;
     GUI_CTX.temp->pointer_over_gui       = false;
 
@@ -207,18 +202,27 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
     GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();
 }
 
-void GUI_DrawPendingButtonMenu()
+void GUI_DrawOverlay()
 {
-    if (GUI_CTX.temp->buttonmenu_current != NULL && GUI_CTX.temp->buttonmenu_draw_function != NULL) {
-        GUI_CTX.temp->buttonmenu_draw_function();
-        GUI_CTX.temp->buttonmenu_draw_function  = NULL;
+    GUI_OverlayDraw *overlay    = &GUI_CTX.temp->overlay_draw;
+    bool is_enabled             = overlay->function != NULL && overlay->id_ptr != NULL;
+    
+    if (is_enabled) {
+        GUI_CTX.temp->layout                    = overlay->layout;
+        GUI_CTX.temp->layout.force_overflow     = true;
+
+        overlay->function();
+        overlay->function = NULL;
     }
 }
 
 void GUI_EndDraw()
-{   
+{
     GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
-    GUI_DrawPendingButtonMenu();
+    GUI_DrawOverlay();
+
+    Assert(GUI_CTX.temp->status == EGUI_Status_Drawing);
+    GUI_CTX.temp->status = EGUI_Status_Ready;
 }
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
@@ -276,7 +280,7 @@ float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 
 float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 {
-    GUI_Assert(height > 0);
+    Assert(height > 0);
     Rectangle shape = RectFromVector2(position, height, height);
     return GUI_DrawIcon(shape, texture2d, tint);
 }
@@ -307,7 +311,7 @@ void GUI_Face(Vector2 position, float height)
     GUI_MACRO_CONTROL_LAYOUT(shape);
     position.x = shape.x;
     position.y = shape.y;
-    GUI_Assert(height > 0);
+    Assert(height > 0);
 
     GUI_Icons *icons = GUI_GetIcons();
     Vector2 mouse = GUI_CTX.temp->mouse_current;
@@ -333,7 +337,7 @@ void GUI_Face(Vector2 position, float height)
         255
     };
     float texture_scale = GUI_DrawIcon(shape, &icons->Face, color);
-    GUI_Assert(texture_scale > 0);    
+    Assert(texture_scale > 0);    
 
     // Determine quadrant relative to center
     int px = 0, py = 0;
@@ -391,7 +395,7 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 //   NOTES     : Nothing here
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
-    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type) 
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type) 
 {
     GUI_State *state            = GUI_CTX.state;
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
@@ -403,15 +407,15 @@ void GUI_DrawButton(
     float bg_alpha      = theme->bg_alpha;
     float icon_w        = icon != NULL ? GUI_GetIconWidthForShape(shape, border) : 0;
 
-    Color bg_color =    status == EGUI_Status_Focused  ? colors.bg_color_3 :
-                        status == EGUI_Status_Focused  ? colors.bg_color_3 :
-                        status == EGUI_Status_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
+    Color bg_color =    status == EGUI_ControlStatus_Focused  ? colors.bg_color_3 :
+                        status == EGUI_ControlStatus_Focused  ? colors.bg_color_3 :
+                        status == EGUI_ControlStatus_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
                                                          colors.bg_color_2;
 
-    Color b_color_a =   status == EGUI_Status_Focused  ? colors.bg_color_3:
+    Color b_color_a =   status == EGUI_ControlStatus_Focused  ? colors.bg_color_3:
                                                          colors.bg_color_0;
 
-    Color b_color_b =   status == EGUI_Status_Focused  ? colors.bg_color_2:
+    Color b_color_b =   status == EGUI_ControlStatus_Focused  ? colors.bg_color_2:
                                                          colors.bg_color_2;
     GUI_BeginControlScissor();
         DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
@@ -437,12 +441,12 @@ bool GUI_Button(
     GUI_MACRO_CONTROL_ACTIVATED(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
-    GUI_ElementStatus status    = EGUI_Status_Default;
+    EGUI_ControlStatus status    = EGUI_ControlStatus_Default;
     if (is_pointer_over && is_activable) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            status = EGUI_Status_Collide;
+            status = EGUI_ControlStatus_Collide;
         } else {
-            status = EGUI_Status_Focused;
+            status = EGUI_ControlStatus_Focused;
         }
     }
     GUI_DrawButton(shape, text, icon, status, colors, font_type);
@@ -451,41 +455,30 @@ bool GUI_Button(
 }
 
 bool GUI_ButtonMenu(
-    Rectangle shape, const char* text, Texture2D* icon,
+    Rectangle shape, const char* text_id, Texture2D* icon,
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
-    bool interacted         = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
-    bool is_owner           = GUI_CTX.temp->buttonmenu_current == text;
-    bool is_active          = GUI_Button(shape, text, icon, colors);
+    GUI_OverlayDraw *overlay    = &GUI_CTX.temp->overlay_draw;
+    bool interacted             = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
+    bool is_owner               = overlay->id_ptr == text_id;
     
-    // Activate overflow
-    if (is_owner) {
-        GUI_CTX.temp->layout.force_overflow = true;
-    }
-
-    if (is_active) {
+    if (GUI_Button(shape, text_id, icon, colors)) {
         if (is_owner == false) {
-            GUI_CTX.temp->buttonmenu_current = text;
+            overlay->id_ptr = text_id;
         } else {
-            GUI_CTX.temp->buttonmenu_current = NULL;
+            overlay->id_ptr = NULL;
         }
     } else {
         if (interacted && is_owner) {
-            GUI_CTX.temp->buttonmenu_current = NULL;
+            overlay->id_ptr = NULL;
         }
     }
 
-    
-
-    bool is_open = GUI_CTX.temp->buttonmenu_current == text;
+    bool is_open = overlay->id_ptr == text_id;
     if (is_open) {
-        GUI_CTX.temp->buttonmenu_draw_function  = draw_function;
-        GUI_CTX.temp->buttonmenu_shape          = shape;
-        GUI_CTX.temp->buttonmenu_layout         = GUI_CTX.temp->layout;
+        overlay->function  = draw_function;
+        overlay->layout    = GUI_CTX.temp->layout;
     }
-
-    // Reset overrides (if any)
-    GUI_CTX.temp->layout.force_overflow = false;
     return is_open;
 }
 
@@ -520,7 +513,7 @@ void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 //   NOTES     : Nothing here
 void GUI_DrawInput(
     Rectangle shape, char* value, int blink_cursor,
-    GUI_ElementStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
+    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
@@ -532,14 +525,14 @@ void GUI_DrawInput(
     float bg_alpha      = theme->bg_alpha;
 
     GUI_BeginControlScissor();
-        if (status == EGUI_Status_Default) 
+        if (status == EGUI_ControlStatus_Default) 
             DrawRectangleRec(shape, ColorAlpha(colors.bg_color_1, bg_alpha));
-        else if (status == EGUI_Status_Collide) 
+        else if (status == EGUI_ControlStatus_Collide) 
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, color_change), bg_alpha));
-        else if (status == EGUI_Status_Focused) 
+        else if (status == EGUI_ControlStatus_Focused) 
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));    
 
-        if (status == EGUI_Status_Focused) 
+        if (status == EGUI_ControlStatus_Focused) 
             GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
         else
             GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
@@ -547,7 +540,7 @@ void GUI_DrawInput(
 
     // Auto horizontal scroll
     float auto_scroll_x = 0.0f;
-    if (status == EGUI_Status_Focused) {
+    if (status == EGUI_ControlStatus_Focused) {
         float auto_scroll_right = 0.9f;
         float auto_scroll_left = 0.1f;
         Vector2 cursor_pos = {0};
@@ -577,7 +570,7 @@ void GUI_DrawInput(
             }, colors.tx_color_0, scale, font_type);
     
 
-        if (status == EGUI_Status_Focused && blink) {
+        if (status == EGUI_ControlStatus_Focused && blink) {
             Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
             // TODO@dc: max text size
             char tmp[256] = {0};
@@ -746,10 +739,10 @@ void GUI_Input(
             blink_state = 1;
     }
 
-    GUI_ElementStatus status =
-        is_focused      ? EGUI_Status_Focused :
-        is_pointer_over ? EGUI_Status_Collide :
-                          EGUI_Status_Default;
+    EGUI_ControlStatus status =
+        is_focused      ? EGUI_ControlStatus_Focused :
+        is_pointer_over ? EGUI_ControlStatus_Collide :
+                          EGUI_ControlStatus_Default;
 
     GUI_DrawInput(shape, value, blink_cursor, status, colors, blink_state, font_type);
 }
@@ -761,7 +754,7 @@ void GUI_Input(
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt, 
-    GUI_ElementStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
@@ -778,15 +771,15 @@ void GUI_DrawCheckBox(
     Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
 
     GUI_BeginControlScissor();
-        if (status == EGUI_Status_Default) 
+        if (status == EGUI_ControlStatus_Default) 
             DrawRectangleRec(shape, ColorAlpha(bg, bg_alpha));
-        else if (status == EGUI_Status_Collide) 
+        else if (status == EGUI_ControlStatus_Collide) 
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, color_change), bg_alpha));
-        else if (status == EGUI_Status_Focused) 
+        else if (status == EGUI_ControlStatus_Focused) 
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, -color_change), bg_alpha));
         
 
-        if (status == EGUI_Status_Focused) 
+        if (status == EGUI_ControlStatus_Focused) 
             GUI_DrawBorders(shape, ColorBrightness(b1, -color_change), ColorBrightness(b2, color_change), border * scale, false);
         else
             GUI_DrawBorders(shape, b1, b2, border * scale, false);
@@ -815,10 +808,10 @@ void GUI_Check(
         }
     }
 
-    GUI_ElementStatus status =
-        is_focused      ? EGUI_Status_Focused :
-        is_pointer_over ? EGUI_Status_Collide :
-                          EGUI_Status_Default;
+    EGUI_ControlStatus status =
+        is_focused      ? EGUI_ControlStatus_Focused :
+        is_pointer_over ? EGUI_ControlStatus_Collide :
+                          EGUI_ControlStatus_Default;
     GUI_DrawCheckBox(shape, *value, on_txt, off_txt, status, colors, font_type);
 }
 
@@ -886,7 +879,7 @@ Rectangle GUI_NextHorizontal()
 }
 Rectangle GUI_NextHorizontals(int quantity)
 {
-    GUI_Assert(quantity > 1);
+    Assert(quantity > 1);
     
     // Push value for next element
     Rectangle first = GUI_NextHorizontal();
@@ -905,7 +898,7 @@ Rectangle GUI_NextHorizontals(int quantity)
 }
 Rectangle GUI_NextVerticals(int quantity)
 {
-    GUI_Assert(quantity > 1);
+    Assert(quantity > 1);
 
     // Push value for next element
     Rectangle first = GUI_NextVertical();
@@ -1045,7 +1038,7 @@ void GUI_WindowEndingPanel(GUI_Window* window, EGUI_FontType font_type)
     }, colors.bg_color_0);
 }
 
-void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType font_type)
+void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
@@ -1066,20 +1059,20 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     DrawRectangleRec((Rectangle){shape.x + border * scale, shape.y + border * scale, shape.width - border * scale, shape.height - 2 * border * scale}, ColorAlpha(colors.bg_color_1, bg_alpha));
     GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, border * scale, true);
 
-    if (status == EGUI_Status_Default) {
+    if (status == EGUI_ControlStatus_Default) {
         DrawRectangleRec(shape_title, ColorAlpha(colors.bg_color_2, bg_alpha));
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
-    } if (status == EGUI_Status_Focused) {
+    } if (status == EGUI_ControlStatus_Focused) {
         DrawRectangleRec(shape_title, ColorAlpha(ColorBrightness(colors.bg_color_3, -color_change), bg_alpha));
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
         GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-color_change), border * scale, true);
-    } if (status == EGUI_Status_Collide) {
+    } if (status == EGUI_ControlStatus_Collide) {
         DrawRectangleRec(shape_title, ColorAlpha(ColorBrightness(colors.bg_color_3, color_change), bg_alpha));
         GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
         GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, color_change), border * scale, true);
     }
 
-    bool reserve_icon_space = window->icon != NULL || (status == EGUI_Status_Focused && window->focused_face);
+    bool reserve_icon_space = window->icon != NULL || (status == EGUI_ControlStatus_Focused && window->focused_face);
     float icon_w = reserve_icon_space ? GUI_GetIconWidth() : 0;
 
     GUI_BeginInnerControlScissor(shape_title, border, scale);
@@ -1092,7 +1085,7 @@ void GUI_DrawWindow(GUI_Window* window,  GUI_ElementStatus status, EGUI_FontType
     if (window->icon != NULL && icon_w > 0) {
         GUI_Icon(window->icon, icon_position, icon_w, WHITE);
     }
-    if (status == EGUI_Status_Focused && icon_w > 0 && window->focused_face) {
+    if (status == EGUI_ControlStatus_Focused && icon_w > 0 && window->focused_face) {
         GUI_Face((Vector2) { shape_title.x + border * scale, shape_title.y + border * scale }, icon_w);
     }
 
@@ -1161,8 +1154,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Active
     if (is_z_priority) {
-        bool interacting = IsMouseButtonDown(MOUSE_BUTTON_LEFT);        
-        if (interacting == false) {
+        bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);        
+        if (is_mouse_down == false) {
             GUI_CTX.temp->current_action = EGUI_ActionNone;
         } else {
             // Movement
@@ -1176,14 +1169,14 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
             }
             // Resizing
             if (GUI_CTX.temp->current_action == EGUI_ActionResizing) {
-                if (interacting) {
+                if (is_mouse_down) {
                     Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
                     window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
                     window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
                 }
             }
             // Handled by GUI, as move/resize can make that is_pointer_over is false during frames
-            GUI_CTX.temp->pointer_over_gui = true;
+            GUI_CTX.temp->pointer_over_gui = GUI_CTX.temp->current_action != EGUI_ActionNone;
         }
     }
 
@@ -1204,10 +1197,10 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     }
 
     // Draw
-    GUI_ElementStatus status = 
-        is_z_priority           ? EGUI_Status_Focused :
-        is_pointer_over_title   ? EGUI_Status_Collide :
-                                  EGUI_Status_Default;
+    EGUI_ControlStatus status = 
+        is_z_priority           ? EGUI_ControlStatus_Focused :
+        is_pointer_over_title   ? EGUI_ControlStatus_Collide :
+                                  EGUI_ControlStatus_Default;
     GUI_DrawWindow(window, status, font_type);
     // Generate button panel
     GUI_WindowButtonPanel(window, font_type);
@@ -1366,6 +1359,6 @@ void GUI_EndWindowContents(GUI_Window* window)
     GUI_CTX.temp->layout                     = GUI_MakeLayoutTemp();
 
     // Finish draw instructions
-    GUI_DrawPendingButtonMenu();
+    GUI_DrawOverlay();
     rlPopMatrix();  
 }
