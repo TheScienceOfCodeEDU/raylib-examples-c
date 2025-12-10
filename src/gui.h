@@ -204,14 +204,12 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
         GUI_CTX.temp->control_focus_ptr      = NULL;
     }
 
-    // Button menus
-    GUI_CTX.temp->buttonmenu_just_interacted   = false;
-    GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();    
+    GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();
 }
 
 void GUI_DrawPendingButtonMenu()
 {
-    if (GUI_CTX.temp->buttonmenu_draw_function != NULL) {
+    if (GUI_CTX.temp->buttonmenu_current != NULL && GUI_CTX.temp->buttonmenu_draw_function != NULL) {
         GUI_CTX.temp->buttonmenu_draw_function();
         GUI_CTX.temp->buttonmenu_draw_function  = NULL;
     }
@@ -219,16 +217,8 @@ void GUI_DrawPendingButtonMenu()
 
 void GUI_EndDraw()
 {   
-    GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;    
-    
-
-    bool interacted         = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
-    bool just_interacted    = GUI_CTX.temp->buttonmenu_just_interacted;
-    if (interacted && just_interacted == false) {
-        GUI_CTX.temp->buttonmenu_current = NULL;        
-    } else {
-        GUI_DrawPendingButtonMenu();
-    }
+    GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
+    GUI_DrawPendingButtonMenu();
 }
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
@@ -464,22 +454,28 @@ bool GUI_ButtonMenu(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
-    bool was_active         = GUI_CTX.temp->buttonmenu_current == text;
+    bool interacted         = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
+    bool is_owner           = GUI_CTX.temp->buttonmenu_current == text;
+    bool is_active          = GUI_Button(shape, text, icon, colors);
     
-    // Activate overflow when it was active
-    if (was_active) {
+    // Activate overflow
+    if (is_owner) {
         GUI_CTX.temp->layout.force_overflow = true;
     }
-    
-    bool is_active    = GUI_Button(shape, text, icon, colors);
+
     if (is_active) {
-        if (!was_active) {
+        if (is_owner == false) {
             GUI_CTX.temp->buttonmenu_current = text;
         } else {
             GUI_CTX.temp->buttonmenu_current = NULL;
         }
-        GUI_CTX.temp->buttonmenu_just_interacted = true;
+    } else {
+        if (interacted && is_owner) {
+            GUI_CTX.temp->buttonmenu_current = NULL;
+        }
     }
+
+    
 
     bool is_open = GUI_CTX.temp->buttonmenu_current == text;
     if (is_open) {

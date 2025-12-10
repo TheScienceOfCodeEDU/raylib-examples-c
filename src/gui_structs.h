@@ -169,7 +169,6 @@ typedef struct {
 
     // Button menu
     const char      *buttonmenu_current;
-    bool            buttonmenu_just_interacted;
     Rectangle       buttonmenu_shape;
     GUI_LayoutTemp  buttonmenu_layout;
     void            (*buttonmenu_draw_function)(void);
@@ -192,7 +191,6 @@ GUI_Temp GUI_MakeTempDefault()
         .pointer_trail              = {{0}},
 
         .buttonmenu_current         = NULL,
-        .buttonmenu_just_interacted = 0,
         .buttonmenu_shape           = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .buttonmenu_layout          = GUI_MakeLayoutTemp(),
         .buttonmenu_draw_function   = NULL,
