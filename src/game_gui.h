@@ -32,6 +32,13 @@ void GUI_GameMenu()
     actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
     actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
     actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
+
+    
+    bool interacted = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GUI_CTX.temp->overlay_draw.just_interacted == false;
+    bool any_action = actions->reset_characters || actions->add_character || actions->toggle_character;
+    if (interacted || any_action) {
+        GUI_CTX.temp->overlay_draw.id_ptr = NULL;
+    }
 }
 
 void GUI_TopBar(Rectangle shape)

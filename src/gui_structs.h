@@ -162,15 +162,17 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
 typedef struct {
     const char      *id_ptr;            // A unique pointer representing the control that owns this overlay call
     GUI_LayoutTemp  layout;             // Layout state when the overlay draw was queued (used to draw with correct transform the opened menu)
+    bool            just_interacted;    // Just interacted ocurred on this frame
     void            (*function)(void);  // Draw function
 }  GUI_OverlayDraw;
 
 GUI_OverlayDraw GUI_MakeOverlayDraw() 
 {
     GUI_OverlayDraw overlay = {
-        .id_ptr      = NULL,
-        .layout      = GUI_MakeLayoutTemp(),
-        .function   = NULL,
+        .id_ptr             = NULL,
+        .layout             = GUI_MakeLayoutTemp(),
+        .just_interacted    = false,
+        .function           = NULL,
     };
     return overlay;
 }
@@ -497,7 +499,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;           \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);        \
-    bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT); \
+    bool is_pointer_active  = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT); \
     \
     /* Activation */                                           \
     bool is_active = is_pointer_over && is_pointer_active;     \
@@ -514,7 +516,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;    \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
-    bool is_pointer_active  = is_activable && (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
+    bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
     /* Gains focus */                                          \
     bool just_focused = is_pointer_over && is_pointer_active;  \

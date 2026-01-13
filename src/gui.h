@@ -459,26 +459,35 @@ bool GUI_ButtonMenu(
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
     GUI_OverlayDraw *overlay    = &GUI_CTX.temp->overlay_draw;
-    bool interacted             = IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || GetMouseWheelMove() != 0;
-    bool is_owner               = overlay->id_ptr == text_id;
-    
-    if (GUI_Button(shape, text_id, icon, colors)) {
-        if (is_owner == false) {
+
+    bool scrolled           = GetMouseWheelMove() != 0;
+    bool is_open            = overlay->id_ptr == text_id;
+    bool just_interacted    = GUI_Button(shape, text_id, icon, colors);
+    if (just_interacted) {
+        if (is_open == false) {
             overlay->id_ptr = text_id;
         } else {
             overlay->id_ptr = NULL;
         }
-    } else {
-        if (interacted && is_owner) {
+    }
+
+    // Update condition
+    is_open = overlay->id_ptr == text_id;
+
+    // Process changes if this control is the owner
+    if (is_open) {        
+        if (scrolled) {
             overlay->id_ptr = NULL;
+        } else {
+            // Set overlay call
+            overlay->just_interacted = just_interacted;
+            overlay->function  = draw_function;
+            overlay->layout    = GUI_CTX.temp->layout;
         }
     }
 
-    bool is_open = overlay->id_ptr == text_id;
-    if (is_open) {
-        overlay->function  = draw_function;
-        overlay->layout    = GUI_CTX.temp->layout;
-    }
+    // Update condition
+    is_open = overlay->id_ptr == text_id;
     return is_open;
 }
 
