@@ -491,6 +491,15 @@ bool GUI_ButtonMenu(
     return is_open;
 }
 
+void GUI_ButtonMenuCloseOnInteraction(bool force)
+{
+    bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool interactable   = GUI_CTX.temp->overlay_draw.just_interacted == false;
+    if (force || (interacted && interactable)) {
+        GUI_CTX.temp->overlay_draw.id_ptr = NULL;
+    }
+}
+
 // > TEXT
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here

@@ -33,12 +33,8 @@ void GUI_GameMenu()
     actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
     actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
 
-    
-    bool interacted = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && GUI_CTX.temp->overlay_draw.just_interacted == false;
-    bool any_action = actions->reset_characters || actions->add_character || actions->toggle_character;
-    if (interacted || any_action) {
-        GUI_CTX.temp->overlay_draw.id_ptr = NULL;
-    }
+    bool force = actions->reset_characters || actions->add_character || actions->toggle_character;
+    GUI_ButtonMenuCloseOnInteraction(force);
 }
 
 void GUI_TopBar(Rectangle shape)
@@ -50,8 +46,8 @@ void GUI_TopBar(Rectangle shape)
 
     GUI_LayoutReset(GUI_Workspace());
     GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
-    GUI_ButtonMenu(GUI_NextHorizontal(), "File",    &icons->New,    theme->red, GUI_GameMenu);
-    GUI_ButtonMenu(GUI_NextHorizontal(), "Game",    &icons->Dog,    theme->gray, GUI_GameMenu);
+    GUI_ButtonMenu(GUI_NextHorizontal(), "File",    &icons->New,    theme->red,     GUI_GameMenu);
+    GUI_ButtonMenu(GUI_NextHorizontal(), "Game",    &icons->Dog,    theme->gray,    GUI_GameMenu);
 }
 
 //
