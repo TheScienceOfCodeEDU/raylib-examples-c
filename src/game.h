@@ -1,11 +1,14 @@
-
-#ifndef UNITY_BUILD
+#ifndef UNITY_BUILD 
  #define UNITY_BUILD 0
- #define INCLUDE_GUI
  #include "common.h"
+ #include "gui_setup.h"
+ #include "gui_structs.h"
+ #include "gui.h"
  #include "game_structs.h"
- #include "game_gui.h" 
+ #include "game_gui.h"
 #endif
+
+
 
 
 void GAME_UpdateNextCharacter()

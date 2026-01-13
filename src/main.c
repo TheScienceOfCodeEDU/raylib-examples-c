@@ -1,7 +1,12 @@
 #define UNITY_BUILD 1
-#define INCLUDE_GUI
-#define INCLUDE_GAME
+
 #include "common.h"
+#include "gui_setup.h"
+#include "gui_structs.h"
+#include "gui.h"
+#include "game_structs.h"
+#include "game_gui.h"
+#include "game.h"
 #include "lab.h"
 
 #define GAME_RES_W          320
