@@ -28,6 +28,7 @@ void GUI_GameMenu()
     GUI_Theme *theme        = &setup->theme;
     PLAYER_Actions *actions = &GAME_CTX.temp->player_actions;
 
+    // TODO@dc: overflow behind a window fails -> update window to do not collide with latest overflow region
     GUI_Button(GUI_NextInPlace(-1, 0), "Game [X]", &icons->Dog, theme->gray);
     actions->reset_characters    = GUI_Button(GUI_NextInPlace(-1,1), "Reset",    &icons->New,    theme->gray);
     actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
