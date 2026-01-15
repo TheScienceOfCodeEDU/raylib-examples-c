@@ -987,7 +987,12 @@ void GUI_LayoutBlock(float width, float height)
     } else if (height < 0.0) {
         // height is already negative
         // so this takes avaiable space minus height
-        GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height + height);
+        float available  = GUI_CTX.temp->layout.current_workspace.height + height;
+        if (available > 0) {
+            GUI_LayoutVertical(available);
+        } else {
+            GUI_LayoutVertical(height * -1);
+        }
     } else {
         GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height);
     }
