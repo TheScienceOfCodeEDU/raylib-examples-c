@@ -310,9 +310,6 @@ int main(void) {
 
             GUI_DrawPointerTrail();
             GUI_DrawPointer();
-            if (GUI_IsPointerOverGui()) {
-                DrawRectangle(0, 0, 20, 20, RED);
-            }
         EndDrawing();
     }
 

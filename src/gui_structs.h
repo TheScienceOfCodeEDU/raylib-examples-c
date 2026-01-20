@@ -492,6 +492,7 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     return shape_workspace;
 }
 
+// TODO@dc: rename
 #define GUI_MACRO_CONTROL_LAYOUT(shape) \
     if (GUI_CTX.temp->layout.current_workspace.width > 0 && GUI_CTX.temp->layout.current_workspace.height) { \
         shape = RelativeToRect(shape, GUI_CTX.temp->layout.current_workspace); \
@@ -507,13 +508,13 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
     /*   is_active          : control activated                          */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;           \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);        \
+    bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;         \
+    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);       \
     bool is_pointer_active  = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT); \
     \
-    /* Activation */                                           \
-    bool is_active = is_pointer_over && is_pointer_active;     \
-    /* Update pointer_over_gui */                              \
+    /* Activation */                                            \
+    bool is_active = is_pointer_over && is_pointer_active;      \
+    /* Update pointer_over_gui */                               \
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 
 #define GUI_MACRO_CONTROL_FOCUSED(value, shape) \
@@ -528,12 +529,12 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
     bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
-    /* Gains focus */                                          \
-    bool just_focused = is_pointer_over && is_pointer_active;  \
+    /* Gains focus */                                           \
+    bool just_focused = is_pointer_over && is_pointer_active;   \
     if (just_focused) GUI_CTX.temp->control_focus_ptr = value;  \
     \
-    /* Focused control */                                      \
+    /* Focused control */                                       \
     bool is_focused = GUI_CTX.temp->control_focus_ptr == value; \
-    /* Update pointer_over_gui */                              \
+    /* Update pointer_over_gui */                               \
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 

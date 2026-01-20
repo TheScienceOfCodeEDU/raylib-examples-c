@@ -43,7 +43,7 @@ Vector2 LimitVector2Rect(Vector2 point, Rectangle limits) {
 
 void DrawDebugRect(Rectangle rect, Color color)
 {
-    DrawRectangleRec(rect, color);
+    DrawRectangleRec(rect, ColorAlpha(color, 0.5));
     DrawRectangleLinesEx(rect, 1.0, color);
 }
 

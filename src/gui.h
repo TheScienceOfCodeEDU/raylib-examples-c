@@ -509,9 +509,12 @@ void GUI_ButtonMenuCloseOnInteraction(bool force, Rectangle shape)
         Rectangle shape_drawed = shape;
         // Relativize position (just position) to control layout
         GUI_MACRO_CONTROL_LAYOUT(shape);
-        shape_drawed.x += shape.x;
-        shape_drawed.y += shape.y;
+        shape_drawed.x = shape.x;
+        shape_drawed.y = shape.y;
         GUI_CTX.temp->overlay_draw.shape_drawed = shape_drawed;
+        if (DEV_DEBUG_GUI) {
+            DrawDebugRect(shape_drawed, RED);
+        }
     }
 }
 
