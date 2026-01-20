@@ -664,7 +664,8 @@ void GUI_Input(
                 int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, blink_cursor), font_type).x;
                 if (mouse_x < w) break;
             }
-            blink_cursor = IntMax(0, --blink_cursor); // Move one position left for a more accurate mouse-to-text alignment
+            // Move one position to the left for a more accurate mouse-to-text alignment
+            blink_cursor = IntMax(0, --blink_cursor); 
         }
     }
 
@@ -1191,8 +1192,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     // Update pointer_over_gui
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true;
 
-    // FOCUS
-    // Focus Overlay
+    // Focus?
     if (is_focusable && just_interacted && is_z_priority) {            
         GUI_CTX.temp->current_action =  is_pointer_over_title   ? EGUI_ActionMoving :
                                         is_pointer_over_bottom  ? EGUI_ActionResizing
