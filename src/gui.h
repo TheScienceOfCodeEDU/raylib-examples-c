@@ -464,8 +464,10 @@ bool GUI_ButtonMenu(
     bool is_open            = overlay->id_ptr == text_id;
     bool just_interacted    = GUI_Button(shape, text_id, icon, colors);
     if (just_interacted) {
+        // Open it
         if (is_open == false) {
             overlay->id_ptr = text_id;
+        // Close it
         } else {
             overlay->id_ptr = NULL;
         }
@@ -480,9 +482,10 @@ bool GUI_ButtonMenu(
             overlay->id_ptr = NULL;
         } else {
             // Set overlay call
-            overlay->just_interacted = just_interacted;
-            overlay->function  = draw_function;
-            overlay->layout    = GUI_CTX.temp->layout;
+            overlay->window_target_id   = GUI_CTX.temp->window_target_id;
+            overlay->just_interacted    = just_interacted;
+            overlay->function           = draw_function;
+            overlay->layout             = GUI_CTX.temp->layout;
         }
     }
 
@@ -491,12 +494,24 @@ bool GUI_ButtonMenu(
     return is_open;
 }
 
-void GUI_ButtonMenuCloseOnInteraction(bool force)
+void GUI_ButtonMenuCloseOnInteraction(bool force, Rectangle shape)
 {
     bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool interactable   = GUI_CTX.temp->overlay_draw.just_interacted == false;
+
     if (force || (interacted && interactable)) {
+        // Free overlay ownership
         GUI_CTX.temp->overlay_draw.id_ptr = NULL;
+        GUI_CTX.temp->overlay_draw.window_target_id = 0;
+        GUI_CTX.temp->overlay_draw.shape_drawed = (Rectangle){ 0, 0, 0, 0, };
+        GUI_ForceZindex(GUI_CTX.temp->overlay_draw.window_target_id);
+    } else {
+        Rectangle shape_drawed = shape;
+        // Relativize position (just position) to control layout
+        GUI_MACRO_CONTROL_LAYOUT(shape);
+        shape_drawed.x += shape.x;
+        shape_drawed.y += shape.y;
+        GUI_CTX.temp->overlay_draw.shape_drawed = shape_drawed;
     }
 }
 
@@ -864,12 +879,24 @@ Rectangle GUI_NextInPlace(int horizontal, int vertical)
     float vertical_size     = GUI_CTX.temp->layout.vertical_size;
 
     Rectangle shape = {
-        /* X */ horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
-        /* Y */ vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
-        /* W */ horizontal_size,
-        /* H */ vertical_size
+        .x      = horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
+        .y      = vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
+        .width  = horizontal_size,
+        .height = vertical_size
     };
     return shape;
+}
+Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical)
+{
+    Rectangle begin     = GUI_NextInPlace(horizontal, vertical);
+    Rectangle end       = GUI_NextInPlace(end_horizontal, end_vertical);
+    Rectangle result    = {
+        .x      = begin.x,
+        .y      = begin.y,
+        .width  = IntAbs(end.x + end.width) - (begin.x),
+        .height = IntAbs(end.y + end.height) - (begin.y)
+    };
+    return result;
 }
 Rectangle GUI_NextVertical()
 {
@@ -1022,16 +1049,15 @@ void GUI_WindowButtonPanel(GUI_Window* window, EGUI_FontType font_type)
     GUI_Icons *icons            = GUI_GetIcons();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
     GUI_ThemeColors colors      = window->colors;
-    
 
-    float border        = font_setup->border;
-    float scale         = GUI_CTX.state->scale;
-    float icon_sm_width = GUI_GetIconSmallWidth();
+    float border                = font_setup->border;
+    float scale                 = GUI_CTX.state->scale;
+    float icon_sm_width         = GUI_GetIconSmallWidth();
 
-    Rectangle shape_panel   = GUI_WindowPanel(window->shape);
-    Vector2 position_button = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
+    Rectangle shape_panel       = GUI_WindowPanel(window->shape);
+    Vector2 position_button     = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
+
     DrawRectangleRec(shape_panel, colors.bg_color_0);
-
     if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, WHITE)) {
         GUI_RemoveWindow(window->id);
     }
@@ -1153,7 +1179,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Conditions
     bool is_window_target       = GUI_IsCurrentWindowTarget(window->id);
-    bool is_focusable           = is_window_target && GUI_CTX.temp->current_action == EGUI_ActionNone;
+    bool is_pointer_overlay     = GUI_IsPointerOverOverlay();
+    bool is_focusable           = is_window_target && GUI_CTX.temp->current_action == EGUI_ActionNone && is_pointer_overlay == false;
     bool is_pointer_over        = CheckCollisionPointRec(mouse, window->shape);
     bool is_pointer_over_panel  = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
     bool is_pointer_over_title  = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_pointer_over_panel;
@@ -1164,9 +1191,10 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     // Update pointer_over_gui
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true;
 
-    // Focus ?
+    // FOCUS
+    // Focus Overlay
     if (is_focusable && just_interacted && is_z_priority) {            
-        GUI_CTX.temp->current_action =   is_pointer_over_title   ? EGUI_ActionMoving :
+        GUI_CTX.temp->current_action =  is_pointer_over_title   ? EGUI_ActionMoving :
                                         is_pointer_over_bottom  ? EGUI_ActionResizing
                                                                 : EGUI_ActionNone;
     }
@@ -1230,8 +1258,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     GUI_WindowEndingPanel(window, font_type);
 }
 
-// TODO@dc: cleaup
-void GUI_UpdateAndDrawWindows(Rectangle limits)
+
+void GUI_CleanAndPrepareZIndex()
 {
     GUI_State* state = GUI_CTX.state;
 
@@ -1276,10 +1304,20 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
             state->z_index[first_zero] = window->id;
         }
     }
+}
+
+void GUI_UpdateAndDrawWindows(Rectangle limits)
+{
+    GUI_State* state = GUI_CTX.state;
+
+    GUI_CleanAndPrepareZIndex();
     
     // This variable allows to set force the z_index during the current frame
-    bool force_z_index  = state->force_z_index > 0;
-    bool interacting    = !force_z_index && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool is_pointer_overlay = GUI_IsPointerOverOverlay();
+    bool force_z_index      = state->force_z_index > 0;
+    bool interacting        = !force_z_index 
+                                && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)
+                                && is_pointer_overlay == false;
 
     if (interacting || force_z_index) {
         // Find ID
@@ -1319,17 +1357,27 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     // Check collisions to determine current window_target_id (not only z-index priority but actual collision for this frame
     // you can be pointing to a 2nd window with a lower z-index priority.
     GUI_CTX.temp->window_target_id = 0;
-    for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
-        int id = state->z_index[j];
-        if (id == 0) continue;
+    // If overlay is displayed then force window_target_id
+    // This allows to click on the overlay when its in front of other window(s).
+    if (GUI_CTX.temp->overlay_draw.window_target_id != 0) {
+        GUI_CTX.temp->window_target_id = GUI_CTX.temp->overlay_draw.window_target_id;
+    }
+    // Normal windows
+    if (GUI_CTX.temp->window_target_id  == 0) {
+        for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
+            int id = state->z_index[j];
+            if (id == 0) continue;
 
-        GUI_Window  *window         = GUI_GetWindow(id);
-        bool        is_pointer_over = CheckCollisionPointRec(GUI_CTX.temp->mouse_current, window->shape);
-        if (is_pointer_over) {
-            GUI_CTX.temp->window_target_id = window->id;
-            break;
+            GUI_Window  *window         = GUI_GetWindow(id);
+            bool        is_pointer_over = CheckCollisionPointRec(GUI_CTX.temp->mouse_current, window->shape);
+            if (is_pointer_over) {
+                GUI_CTX.temp->window_target_id = window->id;
+                break;
+            }
         }
     }
+
+    
 
     // Process
     for (int j = GUI_MAX_OPEN_WINS - 1; j >= 0 ; --j) { 

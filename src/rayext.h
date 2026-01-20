@@ -50,10 +50,10 @@ void DrawDebugRect(Rectangle rect, Color color)
 Rectangle RelativeToRect(Rectangle rectangle, Rectangle relativeTo)
 {
     Rectangle result = {
-        rectangle.x + relativeTo.x,
-        rectangle.y + relativeTo.y,
-        rectangle.width > relativeTo.width ? relativeTo.width : rectangle.width,
-        rectangle.height > relativeTo.height ? relativeTo.height : rectangle.height
+        .x      = rectangle.x + relativeTo.x,
+        .y      = rectangle.y + relativeTo.y,
+        .width  = rectangle.width > relativeTo.width ? relativeTo.width : rectangle.width,
+        .height = rectangle.height > relativeTo.height ? relativeTo.height : rectangle.height
     };
     return result;
 }

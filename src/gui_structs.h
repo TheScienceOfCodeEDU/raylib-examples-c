@@ -160,9 +160,11 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
 }
 
 typedef struct {
-    const char      *id_ptr;            // A unique pointer representing the control that owns this overlay call
+    const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
+    int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
     GUI_LayoutTemp  layout;             // Layout state when the overlay draw was queued (used to draw with correct transform the opened menu)
     bool            just_interacted;    // Just interacted ocurred on this frame
+    Rectangle       shape_drawed;       // Final shape
     void            (*function)(void);  // Draw function
 }  GUI_OverlayDraw;
 
@@ -170,8 +172,10 @@ GUI_OverlayDraw GUI_MakeOverlayDraw()
 {
     GUI_OverlayDraw overlay = {
         .id_ptr             = NULL,
+        .window_target_id   = 0,
         .layout             = GUI_MakeLayoutTemp(),
         .just_interacted    = false,
+        .shape_drawed       = (Rectangle){0,0,0,0},
         .function           = NULL,
     };
     return overlay;
@@ -295,6 +299,12 @@ bool GUI_IsPointerOverGui()
 bool GUI_IsCurrentWindowTarget(int window_id)
 {
     return GUI_CTX.temp->window_target_id == 0 || GUI_CTX.temp->window_target_id == window_id;
+}
+
+bool GUI_IsPointerOverOverlay()
+{
+    bool is_pointer_over = CheckCollisionPointRec(GUI_CTX.temp->mouse_current, GUI_CTX.temp->overlay_draw.shape_drawed);
+    return is_pointer_over;
 }
 
 GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type)
