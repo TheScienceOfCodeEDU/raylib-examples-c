@@ -288,7 +288,7 @@ float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint)
 {
     Rectangle shape = RectFromVector2(position, height, height);
-    GUI_MACRO_CONTROL_LAYOUT(shape);
+    shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
 
     GUI_Theme *theme    = &GUI_CTX.setup->theme;
@@ -308,7 +308,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 void GUI_Face(Vector2 position, float height)
 {
     Rectangle shape = { position.x, position.y, height, height };
-    GUI_MACRO_CONTROL_LAYOUT(shape);
+    shape = GUI_Relative(shape);
     position.x = shape.x;
     position.y = shape.y;
     Assert(height > 0);
@@ -360,7 +360,7 @@ void GUI_Face(Vector2 position, float height)
 //   NOTES     : Nothing here
 void GUI_Image(Texture2D texture, Rectangle shape)
 {
-    GUI_MACRO_CONTROL_LAYOUT(shape);
+    shape = GUI_Relative(shape);
 
     if (texture.id == 0) return;
 
@@ -437,7 +437,7 @@ bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
-    GUI_MACRO_CONTROL_LAYOUT(shape);
+    shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
 
@@ -458,60 +458,52 @@ bool GUI_ButtonMenu(
     Rectangle shape, const char* text_id, Texture2D* icon,
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
-    GUI_OverlayDraw *overlay    = &GUI_CTX.temp->overlay_draw;
-
     bool scrolled           = GetMouseWheelMove() != 0;
-    bool is_open            = overlay->id_ptr == text_id;
+    bool is_open            = GUI_OverlayIsOpenBy(text_id);
     bool just_interacted    = GUI_Button(shape, text_id, icon, colors);
     if (just_interacted) {
         // Open it
         if (is_open == false) {
-            overlay->id_ptr = text_id;
+            GUI_OverlayOpenFor(text_id);
         // Close it
         } else {
-            overlay->id_ptr = NULL;
+            GUI_OverlayClose();
         }
     }
 
     // Update condition
-    is_open = overlay->id_ptr == text_id;
+    is_open = GUI_OverlayIsOpenBy(text_id);
 
     // Process changes if this control is the owner
     if (is_open) {        
         if (scrolled) {
-            overlay->id_ptr = NULL;
+            GUI_OverlayClose();
         } else {
             // Set overlay call
-            overlay->window_target_id   = GUI_CTX.temp->window_target_id;
-            overlay->just_interacted    = just_interacted;
-            overlay->function           = draw_function;
-            overlay->layout             = GUI_CTX.temp->layout;
+            GUI_OverlaySetDrawCall(just_interacted, draw_function);
         }
     }
 
     // Update condition
-    is_open = overlay->id_ptr == text_id;
+    is_open = GUI_OverlayIsOpenBy(text_id);
     return is_open;
 }
 
-void GUI_ButtonMenuCloseOnInteraction(bool force, Rectangle shape)
+
+void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
 {
     bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool interactable   = GUI_CTX.temp->overlay_draw.just_interacted == false;
+    bool interactable   = GUI_OverlayGetJustInteracted() == false;
 
     if (force || (interacted && interactable)) {
-        // Free overlay ownership
-        GUI_CTX.temp->overlay_draw.id_ptr = NULL;
-        GUI_CTX.temp->overlay_draw.window_target_id = 0;
-        GUI_CTX.temp->overlay_draw.shape_drawed = (Rectangle){ 0, 0, 0, 0, };
         GUI_ForceZindex(GUI_CTX.temp->overlay_draw.window_target_id);
+        GUI_OverlayClose();
     } else {
-        Rectangle shape_drawed = shape;
-        // Relativize position (just position) to control layout
-        GUI_MACRO_CONTROL_LAYOUT(shape);
-        shape_drawed.x = shape.x;
-        shape_drawed.y = shape.y;
-        GUI_CTX.temp->overlay_draw.shape_drawed = shape_drawed;
+        // Relativize position (just position, keep dimensions)
+        Rectangle shape_drawed  = GUI_Relative(shape);
+        shape_drawed.width      = shape.width;
+        shape_drawed.height     = shape.height;        
+        GUI_OverlaySetShapeDrawed(shape_drawed);
         if (DEV_DEBUG_GUI) {
             DrawDebugRect(shape_drawed, RED);
         }
@@ -540,7 +532,7 @@ void GUI_DrawText(
 
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
-    GUI_MACRO_CONTROL_LAYOUT(shape);
+    shape = GUI_Relative(shape);
     GUI_DrawText(shape, text, colors, GUI_CTX.temp->layout.current_font_type);
 }
 
@@ -627,7 +619,7 @@ void GUI_Input(
     Rectangle shape, char *value,
     EGUI_InputType type, GUI_ThemeColors colors)
 {
-    GUI_MACRO_CONTROL_LAYOUT(shape)
+    shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
@@ -833,7 +825,7 @@ void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt, 
     GUI_ThemeColors colors)
 {
-    GUI_MACRO_CONTROL_LAYOUT(shape)
+    shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
@@ -1037,11 +1029,6 @@ void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType f
 void GUI_LayoutDuplicateBlock()
 {
     GUI_LayoutBlock(GUI_CTX.temp->layout.horizontal_size, GUI_CTX.temp->layout.vertical_size);
-}
-Rectangle GUI_Relative(Rectangle shape)
-{
-    GUI_MACRO_CONTROL_LAYOUT(shape);
-    return shape;
 }
 
 // > WINDOW

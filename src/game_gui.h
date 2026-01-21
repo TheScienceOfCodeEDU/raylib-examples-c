@@ -34,7 +34,7 @@ void GUI_GameMenu()
     actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
 
     bool force = actions->reset_characters || actions->add_character || actions->toggle_character;
-    GUI_ButtonMenuCloseOnInteraction(force, GUI_NextInPlaceBetween(-1, 0, -1, 3));
+    GUI_CloseOverlayOnInteraction(force, GUI_NextInPlaceBetween(-1, 0, -1, 3));
 }
 
 void GUI_TopBar(Rectangle shape)

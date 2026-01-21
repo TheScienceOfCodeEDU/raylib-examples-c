@@ -492,11 +492,16 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     return shape_workspace;
 }
 
-// TODO@dc: rename
-#define GUI_MACRO_CONTROL_LAYOUT(shape) \
-    if (GUI_CTX.temp->layout.current_workspace.width > 0 && GUI_CTX.temp->layout.current_workspace.height) { \
-        shape = RelativeToRect(shape, GUI_CTX.temp->layout.current_workspace); \
-    };
+
+static inline Rectangle GUI_Relative(Rectangle shape)
+{
+    bool is_active_layout = GUI_CTX.temp->layout.current_workspace.width  > 0 &&
+                            GUI_CTX.temp->layout.current_workspace.height > 0;
+    if (is_active_layout) {
+        shape = RelativeToRect(shape, GUI_CTX.temp->layout.current_workspace);
+    }
+    return shape;
+}
 
 #define GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT() \
     EGUI_FontType font_type = GUI_CTX.temp->layout.current_font_type;
@@ -538,3 +543,48 @@ Rectangle GUI_WindowWorkspace(GUI_Window *window)
     /* Update pointer_over_gui */                               \
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 
+
+// > OVERLAY
+//   STABILITY : █████████░  90%
+
+static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner)
+{
+    return GUI_CTX.temp->overlay_draw.id_ptr == text_id_owner;
+}
+
+static inline GUI_OverlayDraw* GUI_OverlayGetDraw()
+{
+    return &GUI_CTX.temp->overlay_draw;
+}
+
+static inline bool GUI_OverlayGetJustInteracted()
+{
+    return GUI_CTX.temp->overlay_draw.just_interacted;
+}
+
+static inline void GUI_OverlayClose()
+{
+    GUI_CTX.temp->overlay_draw = GUI_MakeOverlayDraw();
+}
+
+static inline void GUI_OverlayOpenFor(const char* id)
+{
+    Assert(id != NULL);
+    GUI_CTX.temp->overlay_draw.id_ptr = id;
+}
+
+static inline void GUI_OverlaySetDrawCall(
+    bool just_interacted,
+    void (*draw_function)(void))
+{
+    GUI_CTX.temp->overlay_draw.layout           = GUI_CTX.temp->layout;
+    GUI_CTX.temp->overlay_draw.window_target_id = GUI_CTX.temp->window_target_id;
+    GUI_CTX.temp->overlay_draw.just_interacted  = just_interacted;
+    GUI_CTX.temp->overlay_draw.function         = draw_function;
+}
+
+static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed)
+{
+    Assert(GUI_CTX.temp->overlay_draw.id_ptr != NULL);
+    GUI_CTX.temp->overlay_draw.shape_drawed = shape_drawed;
+}
