@@ -10,7 +10,8 @@
 //
 // INDEX
 //
-
+void GUI_ProgramMenu();
+void GUI_GameMenu();
 void GUI_TopBar(Rectangle shape);
 void WIN_Window(GUI_Window* window);
 void WIN_Layouts(GUI_Window* window);
@@ -20,6 +21,23 @@ void WIN_Winman(GUI_Window* window);
 //
 // FUNCTIONS
 //
+
+
+void GUI_ProgramMenu()
+{
+    GUI_Setup *setup        = GUI_GetSetup();
+    GUI_Icons *icons        = GUI_GetIcons();
+    GUI_Theme *theme        = &setup->theme;
+
+    //GUI_Button(GUI_NextInPlace(-1, 0), "Game [X]", &icons->Dog, theme->gray);
+    bool force = false;
+    GUI_Button(GUI_NextInPlace(-1,1), "New",        &icons->New,    theme->gray);
+    GUI_Button(GUI_NextInPlace(-1,2), "Open",       &icons->Open,   theme->gray);
+    if (GUI_Button(GUI_NextInPlace(-1,3), "Close",  &icons->New,    theme->gray))
+        exit(0);
+
+    GUI_CloseOverlayOnInteraction(force, GUI_NextInPlaceBetween(-1, 0, -1, 3));
+}
 
 void GUI_GameMenu()
 {
@@ -46,8 +64,8 @@ void GUI_TopBar(Rectangle shape)
 
     GUI_LayoutReset(GUI_Workspace());
     GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
-    GUI_ButtonMenu(GUI_NextHorizontal(), "File",    &icons->New,    theme->red,     GUI_GameMenu);
-    GUI_ButtonMenu(GUI_NextHorizontal(), "Game",    &icons->Dog,    theme->gray,    GUI_GameMenu);
+    GUI_ButtonMenu(GUI_NextHorizontal(), "Project",     NULL,           theme->red,     GUI_ProgramMenu);
+    GUI_ButtonMenu(GUI_NextHorizontal(), "Game",        &icons->Dog,    theme->gray,    GUI_GameMenu);
 }
 
 //

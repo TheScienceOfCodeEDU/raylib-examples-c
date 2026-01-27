@@ -6,7 +6,11 @@ imKairos
         - BUG: Poner textbox en 2da columna del layout -> scrolling no se ve bien.
     - copy/paste
     - jump between spaces
-    
+
+- Program menu
+    - New (design)
+    - Open
+    - Close             OK
 
 - Tabs!
     - Inside window
