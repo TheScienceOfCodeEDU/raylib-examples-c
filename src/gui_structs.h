@@ -80,14 +80,14 @@ GUI_Window GUI_MakeEmptyWindow(void)
 {
     GUI_Window window = {
         .id             = 0,
-        .shape          = (Rectangle){0, 0, 0, 0},
-        .colors         = {{0}},
+        .shape          = (Rectangle){ 0, 0, 0, 0 },
+        .colors         = {{ 0 }},
         .title          = NULL,
         .icon           = NULL,
         .scroll_offset  = 0.0f,
         .content_height = 0.0f,
         .focused_face   = true,
-        .contents       = NULL,        
+        .contents       = NULL,
     };
     return window;
 }
@@ -99,9 +99,9 @@ GUI_Window GUI_MakeEmptyWindow(void)
 typedef struct {
     RenderTexture2D buffer;
     float           scale;
+    int             force_z_index;
 
     GUI_Window      window_s[GUI_MAX_OPEN_WINS];
-    int             force_z_index;
 
     // z_index stores windows indexes or zero as empty.
     int             z_index[GUI_MAX_OPEN_WINS];
@@ -110,17 +110,16 @@ typedef struct {
 GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
     GUI_State state = {
-        .buffer                 = LoadRenderTexture((int)screen_max.x, (int)screen_max.y),
-        .scale                  = 1.0f
+        .buffer         = LoadRenderTexture((int)screen_max.x, (int)screen_max.y),
+        .scale          = 2.0f,
+        .force_z_index  = 0
     };
 
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
         state.window_s[i] = GUI_MakeEmptyWindow();
     }
 
-    state.force_z_index = 0;
     memset(state.z_index, 0, sizeof(state.z_index));
-    // SetTextureFilter(state.font.texture, TEXTURE_FILTER_POINT);
     return state;
 }
 
@@ -262,7 +261,7 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
-void GUI_FontType(EGUI_FontType font_type)
+void GUI_SetFontType(EGUI_FontType font_type)
 {
     GUI_CTX.temp->layout.current_font_type  = font_type;
 }
@@ -503,8 +502,12 @@ static inline Rectangle GUI_Relative(Rectangle shape)
     return shape;
 }
 
-#define GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT() \
+static inline EGUI_FontType GUI_GetFontType()
+{
     EGUI_FontType font_type = GUI_CTX.temp->layout.current_font_type;
+    return font_type;
+}
+
 
 #define GUI_MACRO_CONTROL_ACTIVATED(shape) \
     /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\

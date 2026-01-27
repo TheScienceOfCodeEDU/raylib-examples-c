@@ -437,11 +437,12 @@ bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
+    
     shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
-    GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT();
-
-    EGUI_ControlStatus status    = EGUI_ControlStatus_Default;
+    
+    EGUI_FontType font_type     = GUI_GetFontType();
+    EGUI_ControlStatus status   = EGUI_ControlStatus_Default;
     if (is_pointer_over && is_activable) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = EGUI_ControlStatus_Collide;
@@ -620,7 +621,6 @@ void GUI_Input(
     EGUI_InputType type, GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
-    GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
     // Blink (text cursor)
@@ -635,6 +635,9 @@ void GUI_Input(
     static float    blink_timer     = 0.0f;
     static bool     blink_state     = 0;
     static int      blink_cursor    = 0;
+
+    // Font type
+    EGUI_FontType font_type         = GUI_GetFontType();
 
     // Gain focus
     if (just_focused) {
@@ -826,7 +829,6 @@ void GUI_Check(
     GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
-    GUI_MACRO_CONTROL_FONT_TYPE_FROM_CONTEXT()
     GUI_MACRO_CONTROL_FOCUSED(value, shape)
 
     // Focused
@@ -837,6 +839,7 @@ void GUI_Check(
         }
     }
 
+    EGUI_FontType font_type   = GUI_GetFontType();
     EGUI_ControlStatus status =
         is_focused      ? EGUI_ControlStatus_Focused :
         is_pointer_over ? EGUI_ControlStatus_Collide :
@@ -1024,7 +1027,7 @@ void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType f
 {
     float default_height = GUI_CalcDefaultHeightScaled(font_type);
     GUI_LayoutBlock(window_workspace.width / cols, default_height);
-    GUI_FontType(font_type);
+    GUI_SetFontType(font_type);
 }
 void GUI_LayoutDuplicateBlock()
 {
