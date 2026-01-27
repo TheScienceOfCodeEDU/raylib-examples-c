@@ -10,6 +10,15 @@ imKairos
     - Draw at the end   OK
     - Overflow          OK
     - Icon sizes        OK
+    - Generalize
+        - Postrender    OK
+        - Macros        OK
+
+- Add statuses  OK
+
+- Fix IsPointerOverGui()    OK
+
+- Asserts to be project-wise (rayext)   OK
 
 - Close windows
 
