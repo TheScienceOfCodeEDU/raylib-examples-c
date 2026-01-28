@@ -188,7 +188,7 @@ typedef struct {
     // Window runtime
     EGUI_Action     current_action;
     void            *control_focus_ptr;
-    int             window_target_id;   // Current window as interactable target (pointer is over and z-index is the lowest possible)
+    int             window_target_id; // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
 
     // Pointer runtime
     EGUI_Pointer    current_pointer;

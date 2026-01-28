@@ -996,7 +996,7 @@ void GUI_LayoutBlock(float width, float height)
         GUI_LayoutHorizontal(width);
     } else if (width < 0.0) {
         // width is already negative
-        // so this takes avaiable space minus width
+        // so this takes available space minus width
         GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width + width);
     } else {
         GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width);
@@ -1012,7 +1012,7 @@ void GUI_LayoutBlock(float width, float height)
         GUI_LayoutVertical(height);
     } else if (height < 0.0) {
         // height is already negative
-        // so this takes avaiable space minus height
+        // so this takes available space minus height
         float available  = GUI_CTX.temp->layout.current_workspace.height + height;
         if (available > 0) {
             GUI_LayoutVertical(available);
@@ -1347,6 +1347,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
         }
     }
 
+    // UPDATE WINDOW TARGET ID
     // Check collisions to determine current window_target_id (not only z-index priority but actual collision for this frame
     // you can be pointing to a 2nd window with a lower z-index priority.
     GUI_CTX.temp->window_target_id = 0;
@@ -1369,8 +1370,6 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
             }
         }
     }
-
-    
 
     // Process
     for (int j = GUI_MAX_OPEN_WINS - 1; j >= 0 ; --j) { 

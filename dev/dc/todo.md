@@ -8,7 +8,7 @@ imKairos
     - jump between spaces
 
 - Program menu
-    - New (design)
+    - New
     - Open
     - Close             OK
 
