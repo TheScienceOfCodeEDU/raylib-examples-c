@@ -1,5 +1,4 @@
 #define UNITY_BUILD 1
-
 #include "common.h"
 #include "gui_setup.h"
 #include "gui_structs.h"

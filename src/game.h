@@ -8,7 +8,11 @@
  #include "game_gui.h"
 #endif
 
-
+void                GAME_UpdateNextCharacter();
+void                GAME_AddCharacter();
+GAME_Character*     GAME_GetCurrentCharacter();
+bool                GAME_CheckRingCollision(GAME_Character* character1, GAME_Character* character2, float radius);
+void                GAME_UpdateCollisions(bool collisions[], float radius);
 
 
 void GAME_UpdateNextCharacter()

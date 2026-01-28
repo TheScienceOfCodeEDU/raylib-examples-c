@@ -1,11 +1,11 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
+ #define IMPLEMENT_ALL 1
  #include "common.h"
 #endif
 
-// > ICON SETUP
-//   STABILITY : ███░░░░░░░  30%
-//   NOTES     : Save and restore
+// > STRUCTS
+//   ICONS
 
 typedef struct {
     Texture2D New;
@@ -21,6 +21,109 @@ typedef struct {
     Texture2D Layouts;
 } GUI_Icons;
 
+typedef struct {
+    float       icon_size;
+    float       icon_size_sm;
+    Vector2     icon_delta; 
+    GUI_Icons   icons;
+} GUI_IconSetup;
+
+
+// > STRUCTS
+//   THEME
+
+typedef struct {
+    Color tx_color_0;
+    Color tx_color_1;
+    Color bg_color_0;
+    Color bg_color_1;
+    Color bg_color_2;
+    Color bg_color_3;
+} GUI_ThemeColors;
+
+typedef struct {
+    GUI_ThemeColors     gray;
+    GUI_ThemeColors     red;
+    GUI_ThemeColors     green;
+    float               bg_alpha;
+    float               color_change;
+} GUI_Theme;
+
+
+// > STRUCTS
+//   FONTS
+
+typedef enum {
+    EGUI_FontType_Default,
+    EGUI_FontType_GUI,
+    EGUI_FontType_Count
+} EGUI_FontType;
+
+typedef struct {
+    float           default_height;
+    float           border;
+
+    float           font_scale;
+    Vector2         font_delta;             // Delta adjustement
+    Font            font_custom;
+    bool            font_use_custom;        // Indicates if a custom font is used
+    float           font_spacing;           
+    Vector2         blink_size;             // Size of the blinking cursor
+    Vector2         blink_delta;            // Blink adjustment
+    float           blink_alpha;
+} GUI_FontSetup;
+
+
+// > STRUCTS
+//   POINTER
+
+typedef enum {
+    EGUI_Pointer_None,
+    EGUI_Pointer_Default,
+    EGUI_Pointer_AGS,
+    EGUI_Pointer_Text,
+    EGUI_Pointer_Resize,    
+    EGUI_Pointer_Count,    
+} EGUI_Pointer;
+
+typedef struct {
+    Texture2D       pointer_texture;
+    Vector2         pointer_delta_normalized;
+    float           pointer_scale;
+    float           pointer_alpha;
+    Vector2         trail_delta_normalized;
+    EGUI_Pointer    additional;
+} GUI_PointerSetup;
+
+
+// > STRUCTS
+//   SETUP
+
+typedef struct {
+    GUI_Theme           theme;
+    GUI_IconSetup       icon_setup;
+    GUI_FontSetup       font_setups[EGUI_FontType_Count];
+    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
+} GUI_Setup;
+
+
+// > FUNCTIONS
+//   INDEX
+
+GUI_Icons           GUI_LoadIcons();
+GUI_IconSetup       GUI_MakeIconSetupDefault();
+Color               GUI_GetThemeColorFromHue(float hue, float t);
+GUI_ThemeColors     GUI_MakeThemeColors(float hue);
+GUI_Theme           GUI_MakeThemeDefault();
+GUI_FontSetup       GUI_MakeFontSetupDefault(EGUI_FontType content);
+GUI_PointerSetup    GUI_MakePointerSetupForType(EGUI_Pointer pointer_type);
+GUI_Setup           GUI_MakeSetupDefault();
+
+
+// > FUNCTIONS
+//   IMPLEMENTATION
+
+#ifdef IMPLEMENT_ALL
 GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
@@ -39,13 +142,6 @@ GUI_Icons GUI_LoadIcons()
     return icons;
 }
 
-typedef struct {
-    float       icon_size;
-    float       icon_size_sm;
-    Vector2     icon_delta; 
-    GUI_Icons   icons;
-} GUI_IconSetup;
-
 GUI_IconSetup GUI_MakeIconSetupDefault()
 {
     GUI_IconSetup setup = {
@@ -56,26 +152,6 @@ GUI_IconSetup GUI_MakeIconSetupDefault()
     };
     return setup;
 }
-
-// > THEME SETUP
-//   STABILITY : ███░░░░░░░  30%
-//   NOTES     : Edit and more themes.
-
-typedef enum {
-    EGUI_FontType_Default,
-    EGUI_FontType_GUI,
-    EGUI_FontType_Count
-} EGUI_FontType;
-
-
-typedef struct {
-    Color tx_color_0;
-    Color tx_color_1;
-    Color bg_color_0;
-    Color bg_color_1;
-    Color bg_color_2;
-    Color bg_color_3;
-} GUI_ThemeColors;
 
 // Generates a color with a specified hue and interpolated saturation and value.
 // Parameters:
@@ -110,15 +186,6 @@ GUI_ThemeColors GUI_MakeThemeColors(float hue)
     return colors;
 }
 
-typedef struct {
-    GUI_ThemeColors     gray;
-    GUI_ThemeColors     red;
-    GUI_ThemeColors     green;
-    float               bg_alpha;
-    float               color_change;
-} GUI_Theme;
-
-
 GUI_Theme GUI_MakeThemeDefault()
 {
     /*// Background colors for another theme...
@@ -146,25 +213,6 @@ GUI_Theme GUI_MakeThemeDefault()
 
     return theme;
 }
-
-
-// > STATE
-//   STABILITY : █████░░░░░  50%
-//   NOTES     : Review naming
-
-typedef struct {
-    float           default_height;
-    float           border;
-
-    float           font_scale;
-    Vector2         font_delta;             // Delta adjustement
-    Font            font_custom;
-    bool            font_use_custom;        // Indicates if a custom font is used
-    float           font_spacing;           
-    Vector2         blink_size;             // Size of the blinking cursor
-    Vector2         blink_delta;            // Blink adjustment
-    float           blink_alpha;
-} GUI_FontSetup;
 
 GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content) 
 {
@@ -210,36 +258,9 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content)
 }
 
 
-
 // > POINTER SETUP (MOUSE CURSORS)
 //   STABILITY : █████░░░░░  50%
 //   NOTES     : Add more
-
-typedef enum {
-    EGUI_Pointer_None,
-    EGUI_Pointer_Default,
-    EGUI_Pointer_AGS,
-    EGUI_Pointer_Text,
-    EGUI_Pointer_Resize,    
-    EGUI_Pointer_Count,    
-} EGUI_Pointer;
-
-typedef struct {
-    Texture2D       pointer_texture;
-    Vector2         pointer_delta_normalized;
-    float           pointer_scale;
-    float           pointer_alpha;
-    Vector2         trail_delta_normalized;
-    EGUI_Pointer    additional;
-} GUI_PointerSetup;
-
-typedef struct {
-    GUI_Theme           theme;
-    GUI_IconSetup       icon_setup;
-    GUI_FontSetup       font_setups[EGUI_FontType_Count];
-    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
-} GUI_Setup;
-
 
 GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
 {
@@ -314,3 +335,4 @@ GUI_Setup GUI_MakeSetupDefault()
     }
     return setup;
 }
+#endif

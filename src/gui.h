@@ -1,4 +1,4 @@
-
+#pragma once
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
  #include "common.h"
@@ -79,6 +79,9 @@ void GUI_DrawPointerTrail()
 
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
+
+    ///
+    /// TODO: fix collission ovelay same window and outside window
     GUI_State *state            = GUI_CTX.state;
     int focused_window_id       = state->z_index[0];
     Vector2 mouse               = GUI_CTX.temp->mouse_current;
@@ -408,7 +411,6 @@ void GUI_DrawButton(
     float icon_w        = icon != NULL ? GUI_GetIconWidthForShape(shape, border) : 0;
 
     Color bg_color =    status == EGUI_ControlStatus_Focused  ? colors.bg_color_3 :
-                        status == EGUI_ControlStatus_Focused  ? colors.bg_color_3 :
                         status == EGUI_ControlStatus_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
                                                          colors.bg_color_2;
 
@@ -779,6 +781,13 @@ void GUI_Input(
     GUI_DrawInput(shape, value, blink_cursor, status, colors, blink_state, font_type);
 }
 
+/*
+void GUI_Number(
+    Rectangle shape, ,
+    EGUI_InputType type, GUI_ThemeColors colors)
+{
+
+} */
 
 
 // > CHECKBOX
@@ -809,7 +818,6 @@ void GUI_DrawCheckBox(
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, color_change), bg_alpha));
         else if (status == EGUI_ControlStatus_Focused) 
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, -color_change), bg_alpha));
-        
 
         if (status == EGUI_ControlStatus_Focused) 
             GUI_DrawBorders(shape, ColorBrightness(b1, -color_change), ColorBrightness(b2, color_change), border * scale, false);
@@ -864,26 +872,25 @@ void GUI_LayoutVertical(float size)
 }
 float GUI_VerticalSizeOrDefault()
 {
-    return GUI_CTX.temp->layout.vertical_size != DEFAULT_SIZE   ? GUI_CTX.temp->layout.vertical_size
-                                                        : (float)GetScreenHeight();
+    return GUI_CTX.temp->layout.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.vertical_size
+                                                              : (float)GetScreenHeight();
 }
 float GUI_HorizontalSizeOrDefault()
 {
     return GUI_CTX.temp->layout.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.horizontal_size
-                                                        : (float)GetScreenWidth();
+                                                                : (float)GetScreenWidth();
 }
 Rectangle GUI_NextInPlace(int horizontal, int vertical)
 {
     float horizontal_size   = GUI_HorizontalSizeOrDefault();
     float vertical_size     = GUI_CTX.temp->layout.vertical_size;
-
-    Rectangle shape = {
+    Rectangle result        = {
         .x      = horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
         .y      = vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
         .width  = horizontal_size,
         .height = vertical_size
     };
-    return shape;
+    return result;
 }
 Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical)
 {
@@ -899,8 +906,8 @@ Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizonta
 }
 Rectangle GUI_NextVertical()
 {
-    Rectangle shape     = GUI_NextInPlace(0, 0);
-    float vertical_size = GUI_CTX.temp->layout.vertical_size;
+    Rectangle shape         = GUI_NextInPlace(0, 0);
+    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
 
     GUI_CTX.temp->layout.used_height += vertical_size;
     GUI_CTX.temp->layout.vertical_count++;
@@ -924,14 +931,14 @@ Rectangle GUI_NextHorizontal()
 Rectangle GUI_NextHorizontals(int quantity)
 {
     Assert(quantity > 1);
-    
+
     // Push value for next element
     Rectangle first = GUI_NextHorizontal();
     Rectangle last = {0};
     for (int i = 1; i < quantity; ++i) {
         last = GUI_NextHorizontal();
     }
-    
+
     Rectangle result = {
         first.x,
         first.y,
