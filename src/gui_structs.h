@@ -12,9 +12,9 @@
 #define GUI_SCROLL_SPEED    16
 #define GUI_NO_WIN          -1
 
+//
 // > ENUMS
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+//
 
 typedef enum {
     EGUI_Status_Off,
