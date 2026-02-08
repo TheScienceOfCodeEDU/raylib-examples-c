@@ -1,8 +1,8 @@
 
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include "common.h"
- #include "gui_setup.h" 
+ #include "../common.h"
+ #include "setup.h" 
 #endif
 
 #define GUI_MAX_TRAIL       30

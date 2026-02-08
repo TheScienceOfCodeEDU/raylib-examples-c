@@ -1,9 +1,9 @@
 #pragma once
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
- #include "common.h"
- #include "gui_setup.h"
- #include "gui_structs.h"
+ #include "../common.h"
+ #include "setup.h"
+ #include "structs.h"
 #endif
 
 
