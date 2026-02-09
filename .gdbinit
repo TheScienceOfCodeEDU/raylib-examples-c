@@ -1,0 +1,2 @@
+-enable-pretty-printing
+-gdb-set disassembly-flavor intel
