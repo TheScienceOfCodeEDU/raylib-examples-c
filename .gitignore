@@ -12,3 +12,7 @@ vs-project
 *.user
 *.userosscache
 *.sln.docstates
+
+.idea/workspace.xml
+.idea/editor.xml
+.idea/misc.xml
