@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="debug-linux" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://root/" PASS_PARENT_ENVS_2="true" PROJECT_NAME="abstractica" TARGET_NAME="build-linux" CONFIG_NAME="build-linux" RUN_PATH="../bin/dbg-linux/run">
+    <envs>
+      <env name="LD_LIBRARY_PATH" value="/usr/local/lib64/:$LD_LIBRARY_PATH" />
+    </envs>
+    <method v="2">
+      <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,9 +1,9 @@
 #define UNITY_BUILD 1
 #define IMPLEMENT_ALL 1
 #include "common.h"
-#include "gui_setup.h"
-#include "gui_structs.h"
-#include "gui.h"
+#include "gui/setup.h"
+#include "gui/structs.h"
+#include "gui/main.h"
 #include "game_structs.h"
 #include "game_gui.h"
 #include "game.h"
