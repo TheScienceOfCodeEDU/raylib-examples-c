@@ -1,0 +1,164 @@
+{
+    "workbench.iconTheme": "vscode-icon-theme",
+    "editor.minimap.enabled": false,
+    "editor.renderWhitespace": "all",
+    "files.hotExit": "off",    
+    "editor.wordWrap": "on",    
+    "window.zoomLevel": 1,
+    "glassit.alpha": 240,
+    "editor.fontFamily": "VT323, Consolas, 'Courier New', monospace",
+    "scm.inputFontFamily": "VT323, Consolas, 'Courier New', monospace",
+    "debug.console.fontFamily": "VT323,Consolas, 'Courier New', monospace",
+    "editor.fontSize": 20,
+    "debug.console.fontSize": 16,
+    "terminal.integrated.fontSize": 16,
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.excludeDirty": true,
+    "workbench.editor.limit.value": 7,
+    "window.titleBarStyle": "custom",
+    "clangd.path": "/home/dacanizares/.config/VSCodium/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/21.1.0/clangd_21.1.0/bin/clangd",
+    "clangd.arguments": [ "--header-insertion=never" ],
+    "editor.stickyScroll.enabled": false,
+    "editor.inlayHints.enabled": "off",
+    "workbench.panel.showLabels": false,
+    "workbench.sideBar.location": "right",
+    "vscode_custom_css.imports": [
+    "file:///home/dacanizares/.config/VSCodium/User/"
+    ],
+    "vscode_custom_css.policy": true,
+    "workbench.editor.labelFormat": "medium",
+    "workbench.editor.tabSizing": "shrink",
+    "breadcrumbs.enabled": true,
+    "workbench.colorCustomizations": {
+  // ============================================================
+  // Editor (base) — se queda cian (zona de trabajo)
+  // ============================================================
+  "editor.background": "#171218",
+  "editor.foreground": "#9cdbe1",
+
+  "editorCursor.foreground": "#df7138",
+
+  "editorLineNumber.foreground": "#b79281",
+  "editorLineNumber.activeForeground": "#d3b859",
+
+  // Selection: azul profundo, sin lavar el texto
+  "editor.selectionBackground": "#0b2f43",
+  "editor.inactiveSelectionBackground": "#17394a83",
+
+  // Line highlight: sutil
+  "editor.lineHighlightBackground": "#17394a",
+
+  // Brackets (ámbar)
+  "editorBracketHighlight.foreground1": "#ff7129",
+  "editorBracketHighlight.foreground2": "#ff7129",
+  "editorBracketHighlight.foreground3": "#ff7129",
+  "editorBracketHighlight.foreground4": "#ff7129",
+  "editorBracketHighlight.foreground5": "#ff7129",
+  "editorBracketHighlight.foreground6": "#ff7129",
+  "editorBracketMatch.background": "#57210d",
+  "editorBracketMatch.border": "#ff7129",
+
+  // ============================================================
+  // Activity Bar — azul normal apagado
+  // ============================================================
+  "activityBar.background": "#3f1d11",
+  "activityBar.foreground": "#8fb6c2",
+  "activityBar.inactiveForeground": "#7b9faa",
+  "activityBar.border": "#df7138",
+
+  // ============================================================
+  // Sidebar (Explorer) — azul normal apagado
+  // ============================================================
+  "sideBar.background": "#191d1f",
+  "sideBar.foreground": "#8fb6c2",
+  "sideBar.inactiveForeground": "#7b9faa",
+  "sideBar.border": "#df7138",
+
+  // Titles / headers inside sidebar
+  "sideBarTitle.foreground": "#df7138",
+  "sideBarSectionHeader.background": "#331408",
+  "sideBarSectionHeader.foreground": "#d3b859",
+
+  // ============================================================
+  // Lists (Explorer, Quick Pick) — contraste integrado
+  // ============================================================
+  "list.foreground": "#8fb6c2",
+
+  "list.activeSelectionBackground": "#102a34",
+  "list.activeSelectionForeground": "#8fb6c2",
+
+  "list.inactiveSelectionBackground": "#0f242d",
+  "list.inactiveSelectionForeground": "#8fb6c2",
+
+  "list.hoverBackground": "#0e2028",
+  "list.hoverForeground": "#8fb6c2",
+
+  "list.focusHighlightForeground": "#df7138",
+
+  // ============================================================
+  // Tabs + Editor group header
+  // ============================================================
+  "editorGroupHeader.border": "#df7138",
+  "editorGroupHeader.tabsBorder": "#df7138",
+  "editorGroup.border": "#df7138",
+
+  "tab.border": "#df7138",
+  "tab.activeBorder": "#df7138",
+  "tab.unfocusedActiveBorder": "#df7138",
+  "tab.activeBorderTop": "#df7138",
+
+  "tab.activeBackground": "#3f1d11",
+  "tab.inactiveBackground": "#191d1f",
+  "tab.activeForeground": "#8fb6c2",
+  "tab.inactiveForeground": "#7b9faa",
+  "tab.inactiveModifiedBorder": "#df7138",
+
+  // ============================================================
+  // Title bar + Menubar + Menus (context menus)
+  // ============================================================
+  "titleBar.border": "#df7138",
+  "menubar.selectionBorder": "#df7138",
+
+  // Menús — azul normal (no fósforo)
+  "menu.background": "#191d1f",
+  "menu.foreground": "#8fb6c2",
+  "menu.border": "#df7138",
+
+  // Selección en menú — legible
+  "menu.selectionBackground": "#0b2f43",
+  "menu.selectionForeground": "#8fb6c2",
+
+  // ============================================================
+  // Status bar + Panel — azul normal
+  // ============================================================
+  "statusBar.background": "#191d1f",
+  "statusBar.foreground": "#8fb6c2",
+  "statusBar.border": "#df7138",
+
+  "panel.border": "#df7138",
+
+  // ============================================================
+  // Git (SCM decorations) — verdes para crear/modificar
+  // ============================================================
+  "gitDecoration.addedResourceForeground": "#8fcf8a",
+  "gitDecoration.untrackedResourceForeground": "#8fcf8a",
+  "gitDecoration.modifiedResourceForeground": "#7fb069",
+  "gitDecoration.deletedResourceForeground": "#b79281",
+  "gitDecoration.renamedResourceForeground": "#4993a7",
+  "gitDecoration.conflictingResourceForeground": "#df7138",
+  "gitDecoration.ignoredResourceForeground": "#7b8889",
+  "gitDecoration.submoduleResourceForeground": "#7b8889",
+
+  // ============================================================
+  // Diff editor + overview ruler
+  // ============================================================
+  "diffEditor.insertedTextBackground": "#2a3a1f60",
+  "diffEditor.removedTextBackground": "#3a1f1f60",
+  "diffEditor.insertedLineBackground": "#22301a60",
+  "diffEditor.removedLineBackground": "#2f1a1a60",
+
+  "editorOverviewRuler.addedForeground": "#d3b859",
+  "editorOverviewRuler.modifiedForeground": "#df7138",
+  "editorOverviewRuler.deletedForeground": "#b79281"
+}
+}
