@@ -64,12 +64,27 @@ int main(void) {
     GUI_Temp gui_temp               = GUI_MakeTempDefault();
     GUI_Icons icons                 = gui_setup.icon_setup.icons;
     Texture2D wp_voronoi            = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
+    static GUI_State gui_state;
+    static GUI_Setup gui_setup;
+    static GUI_Temp  gui_temp;
+    static GUI_Icons icons;
+    static Texture2D wp_voronoi;
+
+    gui_state   = GUI_MakeStateDefault(screen_max);
+    gui_setup   = GUI_MakeSetupDefault();
+    gui_temp    = GUI_MakeTempDefault();
+    icons       = gui_setup.icon_setup.icons;
+    wp_voronoi  = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&gui_state, &gui_setup, &gui_temp);
 
     // PREPARE GAME
-    GAME_State game_state           = GAME_MakeState();
-    GAME_WindowState win_state      = GAME_MakeWindowState();
-    GAME_Temp game_temp             = GAME_MakeTemp();
+    static GAME_State game_state;
+    static GAME_WindowState win_state;
+    static GAME_Temp game_temp;
+
+    game_state  = GAME_MakeState();
+    win_state   = GAME_MakeWindowState();
+    game_temp   = GAME_MakeTemp();
     Game_SetContext(&game_state, &win_state, &game_temp);
 
     // Game canvas
