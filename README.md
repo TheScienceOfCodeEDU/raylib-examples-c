@@ -3,6 +3,19 @@
 EN: [Installation guide](https://thescienceofcode.com/raylib-vscode-c-cpp-debug/).
 ES: [Guía de instalacion](https://thescienceofcode.com/es/raylib-vscode-c-cpp-debug/)
 
+## IDE
+
+* VSCode:
+  * Tasks already created.
+  * dev/dc/settings.json contains some experimental settings for the IDE.
+* CLion:
+  * CMakeLists already created.
+  * Debugger files.
+  * Tasks.
+  * .idea/settings contain a settings backup ready to set yor env.
+  * .idea/editor.xml (remove?)
+  * .idea/colorScheme contains color schemes that you can import. (**Settings/Editor/Color Schemes**)
+
 ## 🧱 Project Structure
 
 **Folders use 3-letter prefixes (except root):**
@@ -277,7 +290,7 @@ It tells the next developer how the logic flows and keeps meaning explicit.
 ```c
 typedef struct {
     int             current_character;
-    int             alive_characters;    
+    int             alive_characters;
     Camera2D        camera2D;
     Game_Character  characters[CHARACTERS];
 } Game_State;
