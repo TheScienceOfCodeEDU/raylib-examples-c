@@ -289,3 +289,27 @@ Vector2 RectCenter(Rectangle shape)
         shape.y + shape.height / 2.0f
     };
 }
+
+static void TrySetTargetMonitor(int targetMonitor, int retries)
+{
+    Assert(targetMonitor >= 0);
+    if (retries < 0) retries = 1;
+
+    int count;
+    bool available;
+
+set_target_monitor:
+    // Availability
+    count       = GetMonitorCount();
+    available   = targetMonitor < count;
+    if (available == false) return;
+
+    // Set target
+    int current     = GetCurrentMonitor();
+    bool needChange = current != targetMonitor;
+    if (needChange == false) return;
+
+    SetWindowMonitor(targetMonitor);
+
+    if (--retries > 0) goto set_target_monitor;
+}

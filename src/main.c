@@ -40,9 +40,6 @@ int main(void) {
     InitWindow(DEV_WINDOW_W, DEV_WINDOW_H, TextFormat("%s - %s - %s", BuildTimeFormatted(), __DATE__, GetWorkingDirectory()));
     SetTargetFPS(60);
 
-    int retries = 10;
-    while (GetCurrentMonitor() != DEV_TARGET_MONITOR && DEV_TARGET_MONITOR < GetMonitorCount() && --retries > 0)
-        SetWindowMonitor(DEV_TARGET_MONITOR);
 
     // TODO@dc: review
     Vector2 screen_max = (Vector2) { GetMonitorWidth(DEV_TARGET_MONITOR),  GetMonitorHeight(DEV_TARGET_MONITOR) };

@@ -19,10 +19,13 @@ void GUI_DrawPointerFor(EGUI_Pointer pointer)
     Texture texture                     = pointer_setup->pointer_texture;
     Vector2 delta_normalized            = pointer_setup->pointer_delta_normalized;
     float scale                         = pointer_setup->pointer_scale * GUI_CTX.state->scale;
+    if (scale == 0) {
+        return;
+    }
 
     Vector2 mouse_shape = (Vector2) {
-        mouse_current.x - (texture.width * delta_normalized.x * scale),
-        mouse_current.y - (texture.height * delta_normalized.y * scale)
+        mouse_current.x - ((float)texture.width * delta_normalized.x * scale),
+        mouse_current.y - ((float)texture.height * delta_normalized.y * scale)
     };
     DrawTextureEx(texture, mouse_shape, 0, scale, ColorAlpha(WHITE, pointer_setup->pointer_alpha));
 }
