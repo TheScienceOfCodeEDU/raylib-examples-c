@@ -142,6 +142,8 @@ int main(void) {
         if (player_actions->reset_characters)    game_state = GAME_MakeState();
         if (player_actions->add_character)       GAME_AddCharacter(&game_state);  
         if (player_actions->toggle_character)    GAME_UpdateNextCharacter(&game_state);
+        if (player_actions->add_character)       GAME_AddCharacter();
+        if (player_actions->toggle_character)    GAME_UpdateNextCharacter();
         if (IsKeyPressed(KEY_F12))              gui_state.scale += 1.0;
         if (IsKeyPressed(KEY_F11))              gui_state.scale -= 1.0;
 
@@ -240,6 +242,7 @@ int main(void) {
         BeginTextureMode(rain_buffer);
             ClearBackground(BLANK);
             DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5, ColorAlpha(BLUE, 0.4f));
+            DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5f, ColorAlpha(BLUE, 0.4f));
         EndTextureMode();
 
         // Draw
