@@ -55,12 +55,6 @@ int main(void) {
         HideCursor();
 
     // PREPARE GUI
-    // Create render texture for the GUI
-    GUI_State gui_state             = GUI_MakeStateDefault(screen_max);
-    GUI_Setup gui_setup             = GUI_MakeSetupDefault();
-    GUI_Temp gui_temp               = GUI_MakeTempDefault();
-    GUI_Icons icons                 = gui_setup.icon_setup.icons;
-    Texture2D wp_voronoi            = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     static GUI_State gui_state;
     static GUI_Setup gui_setup;
     static GUI_Temp  gui_temp;
@@ -124,6 +118,7 @@ int main(void) {
                     win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, gui_setup.theme.gray, &icons.Setup, true, WIN_Winman);
                 } else {
                     float win_forth          = window_limits.width / 4.0;
+                    float win_forth          = window_limits.width / 4.0f;
                     win_man->shape.x         = win_forth * 3;
                     win_man->shape.y         = window_limits.y;
                     win_man->shape.width     = win_forth;
