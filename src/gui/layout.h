@@ -1,0 +1,249 @@
+#pragma once
+#ifndef UNITY_BUILD
+ #define UNITY_BUILD 0
+ #define IMPLEMENT_ALL 1
+ #include "../common.h"
+ #include "setup.h"
+ #include "structs.h"
+#endif
+
+// > LAYOUT
+//   STRUCTS AND DEFINITIONS
+#define RESET_COUNT     0
+#define ADD_COUNT       1
+#define ONLY_GET_COUNT  2
+#define DEFAULT_SIZE    0.0
+
+
+
+// > FUNCTIONS
+//   INDEX
+
+// > MAKE DEFAULTS
+GUI_LayoutTemp  GUI_MakeLayoutTemp();
+
+float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
+
+
+float           GUI_VerticalSizeOrDefault();
+float           GUI_HorizontalSizeOrDefault();
+
+void            GUI_LayoutVertical(float size);
+
+
+Rectangle       GUI_NextInPlace(int horizontal, int vertical);
+Rectangle       GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical);
+Rectangle       GUI_NextVertical();
+
+void            GUI_LayoutHorizontal(float size);
+Rectangle       GUI_NextHorizontal();
+Rectangle       GUI_NextHorizontals(int quantity);
+Rectangle       GUI_NextVerticals(int quantity);
+Rectangle       GUI_LayoutAvailable(Rectangle workspace);
+void            GUI_LayoutReset(Rectangle workspace);
+void            GUI_LayoutAutoJump();
+void            GUI_LayoutBlock(float width, float height);
+void            GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type);
+void            GUI_LayoutDuplicateBlock();
+
+// > FUNCTIONS
+//   IMPLEMENTATION
+#ifdef IMPLEMENT_ALL
+
+GUI_LayoutTemp GUI_MakeLayoutTemp()
+{
+    GUI_LayoutTemp layout = {
+        .current_workspace          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .vertical_count             = 0,
+        .vertical_size              = 0.0f,
+        .horizontal_count           = 0,
+        .horizontal_size            = 0.0f,
+        .used_height                = 0.0f,
+        .current_scroll             = 0,
+        .current_font_type          = EGUI_FontType_Default,
+        .current_window_idx         = GUI_NO_WIN,
+        .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
+        .force_overflow             = false
+    };
+    return layout;
+}
+
+float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
+{
+    GUI_Setup* setup = GUI_CTX.setup;
+    GUI_State* state = GUI_CTX.state;
+    return setup->font_setups[font_type].default_height * state->scale;
+}
+
+void GUI_LayoutVertical(float size)
+{
+    GUI_CTX.temp->layout.vertical_count = 0;
+    GUI_CTX.temp->layout.vertical_size  = size;
+}
+float GUI_VerticalSizeOrDefault()
+{
+    return GUI_CTX.temp->layout.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.vertical_size
+                                                              : (float)GetScreenHeight();
+}
+float GUI_HorizontalSizeOrDefault()
+{
+    return GUI_CTX.temp->layout.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.horizontal_size
+                                                                : (float)GetScreenWidth();
+}
+Rectangle GUI_NextInPlace(int horizontal, int vertical)
+{
+    float horizontal_size   = GUI_HorizontalSizeOrDefault();
+    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
+    Rectangle result        = {
+        .x      = horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
+        .y      = vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
+        .width  = horizontal_size,
+        .height = vertical_size
+    };
+    return result;
+}
+Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical)
+{
+    Rectangle begin     = GUI_NextInPlace(horizontal, vertical);
+    Rectangle end       = GUI_NextInPlace(end_horizontal, end_vertical);
+    Rectangle result    = {
+        .x      = begin.x,
+        .y      = begin.y,
+        .width  = IntAbs(end.x + end.width) - (begin.x),
+        .height = IntAbs(end.y + end.height) - (begin.y)
+    };
+    return result;
+}
+Rectangle GUI_NextVertical()
+{
+    Rectangle shape         = GUI_NextInPlace(0, 0);
+    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
+
+    GUI_CTX.temp->layout.used_height += vertical_size;
+    GUI_CTX.temp->layout.vertical_count++;
+    return shape;
+}
+void GUI_LayoutHorizontal(float size)
+{
+    GUI_CTX.temp->layout.horizontal_count = 0;
+    GUI_CTX.temp->layout.horizontal_size = size;
+}
+Rectangle GUI_NextHorizontal()
+{
+    Rectangle shape = GUI_NextInPlace(0, 0);
+    GUI_CTX.temp->layout.horizontal_count++;
+    return shape;
+}
+Rectangle GUI_NextHorizontals(int quantity)
+{
+    Assert(quantity > 1);
+
+    // Push value for next element
+    Rectangle first = GUI_NextHorizontal();
+    Rectangle last = {0};
+    for (int i = 1; i < quantity; ++i) {
+        last = GUI_NextHorizontal();
+    }
+
+    Rectangle result = {
+        first.x,
+        first.y,
+        first.width + last.width,
+        first.height
+    };
+    return result;
+}
+Rectangle GUI_NextVerticals(int quantity)
+{
+    Assert(quantity > 1);
+
+    // Push value for next element
+    Rectangle first = GUI_NextVertical();
+    Rectangle last = {0};
+    for (int i = 1; i < quantity; ++i) {
+        last = GUI_NextVertical();
+    }
+
+    Rectangle result = {
+        first.x,
+        first.y,
+        first.width,
+        first.height + last.height
+    };
+    return result;
+}
+Rectangle GUI_LayoutAvailable(Rectangle workspace)
+{
+    float used_w = GUI_CTX.temp->layout.horizontal_size * GUI_CTX.temp->layout.horizontal_count;
+    float used_h = GUI_CTX.temp->layout.vertical_size   * GUI_CTX.temp->layout.vertical_count;
+    Rectangle result = {
+        workspace.x + used_w,
+        workspace.y + used_h,
+        workspace.width - used_w,
+        workspace.height - used_h
+    };
+
+    // Vertical scroll
+    if (result.height < GUI_CTX.temp->layout.vertical_size)
+        result.height = GUI_CTX.temp->layout.vertical_size;
+    return result;
+}
+void GUI_LayoutReset(Rectangle workspace)
+{
+    GUI_CTX.temp->layout = GUI_MakeLayoutTemp();
+    GUI_CTX.temp->layout.current_workspace      = workspace;
+}
+void GUI_LayoutAutoJump()
+{
+    // Add jump if necessary after ONLY horizontal blocks
+    if (GUI_CTX.temp->layout.horizontal_count > 0 && GUI_CTX.temp->layout.vertical_count == 0) {
+        GUI_NextVertical();
+    }
+}
+void GUI_LayoutBlock(float width, float height)
+{
+    GUI_LayoutAutoJump();
+
+    // Horizontal
+    if (width > 0.0) {
+        GUI_LayoutHorizontal(width);
+    } else if (width < 0.0) {
+        // width is already negative
+        // so this takes available space minus width
+        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width + width);
+    } else {
+        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width);
+    }
+
+    // Adjust to get y-available space
+    if (GUI_CTX.temp->layout.vertical_count != 0) {
+        GUI_CTX.temp->layout.current_workspace = GUI_LayoutAvailable(GUI_CTX.temp->layout.current_workspace);
+    }
+
+    // Vertical
+    if (height > 0.0) {
+        GUI_LayoutVertical(height);
+    } else if (height < 0.0) {
+        // height is already negative
+        // so this takes available space minus height
+        float available  = GUI_CTX.temp->layout.current_workspace.height + height;
+        if (available > 0) {
+            GUI_LayoutVertical(available);
+        } else {
+            GUI_LayoutVertical(height * -1);
+        }
+    } else {
+        GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height);
+    }
+}
+void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
+{
+    float default_height = GUI_CalcDefaultHeightScaled(font_type);
+    GUI_LayoutBlock(window_workspace.width / cols, default_height);
+    GUI_SetFontType(font_type);
+}
+void GUI_LayoutDuplicateBlock()
+{
+    GUI_LayoutBlock(GUI_CTX.temp->layout.horizontal_size, GUI_CTX.temp->layout.vertical_size);
+}
+#endif

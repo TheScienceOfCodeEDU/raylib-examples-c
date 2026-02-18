@@ -1,8 +1,6 @@
 #define UNITY_BUILD 1
 #define IMPLEMENT_ALL 1
 #include "common.h"
-#include "gui/setup.h"
-#include "gui/structs.h"
 #include "gui/main.h"
 #include "game_structs.h"
 #include "game_gui.h"
@@ -25,7 +23,6 @@ const char* BuildTimeFormatted()
 
     const char* ampm = "am";
     if(h >= 12) ampm = "pm";
-    if(h > 12)  h -= 12; 
     if(h == 0)  h = 12; // midnight edge case
 
     snprintf(buffer, sizeof(buffer), "%02dh:%02dm:%02ds %s", h, m, s, ampm);

@@ -1,32 +1,44 @@
 #pragma once
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
+ #define IMPLEMENT_ALL 1
  #include "../common.h"
- #include "setup.h"
- #include "structs.h"
 #endif
 
+#include "setup.h"
+#include "structs.h"
+#include "layout.h"
 
-// FUNCTION INDEX HERE
+
+
+
+// > FUNCTIONS
+//   INDEX
+
+// > CONSTRUCTORS
+//   DEFAULTS
+
 GUI_Window GUI_MakeEmptyWindow(void);
 GUI_State GUI_MakeStateDefault(Vector2 screen_max);
-GUI_LayoutTemp GUI_MakeLayoutTemp();
+
 GUI_OverlayDraw GUI_MakeOverlayDraw();
 GUI_Temp GUI_MakeTempDefault();
-void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
-GUI_State* GUI_GetState();
-GUI_Setup* GUI_GetSetup();
-void GUI_SetFontType(EGUI_FontType font_type);
-GUI_Icons* GUI_GetIcons();
-float GUI_GetIconWidth();
-float GUI_GetIconWidthForShape(Rectangle shape, float border);
-float GUI_GetIconSmallWidth();
+
+
+
+// > POINTER
+//   STATE
+
 bool GUI_IsPointerOverGui();
 bool GUI_IsCurrentWindowTarget(int window_id);
 bool GUI_IsPointerOverOverlay();
 GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type);
 Font GUI_GetFont(EGUI_FontType font_type);
 GUI_PointerSetup* GUI_GetPointerSetup();
+
+// > WINDOW
+//   MODEL & GEOMETRY
+
 GUI_Window* GUI_GetWindow(int id);
 GUI_Window* GUI_GetWindowByZindex(int z);
 void GUI_ForceZindex(int win_id);
@@ -35,7 +47,7 @@ GUI_Window* GUI_OpenWindow(
     GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
     void (*contents)(GUI_Window*));
 void GUI_RemoveWindow(int id);
-float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
+
 Rectangle GUI_WindowTitle(Rectangle shape);
 Rectangle GUI_WindowPanel(Rectangle shape);
 Rectangle GUI_WindowBottom(Rectangle shape);
@@ -44,6 +56,10 @@ Rectangle GUI_Workspace();
 Rectangle GUI_WindowWorkspace(GUI_Window *window);
 static inline Rectangle GUI_Relative(Rectangle shape);
 static inline EGUI_FontType GUI_GetFontType();
+
+// > OVERLAY
+//   API
+
 static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner);
 static inline GUI_OverlayDraw* GUI_OverlayGetDraw();
 static inline bool GUI_OverlayGetJustInteracted();
@@ -53,17 +69,33 @@ static inline void GUI_OverlaySetDrawCall(
     bool just_interacted,
     void (*draw_function)(void));
 static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed);
+
+// > POINTER
+//   DRAW & COLLISION
+
 void GUI_DrawPointerFor(EGUI_Pointer pointer);
 void GUI_DrawPointer();
 void GUI_DrawPointerTrail();
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window);
 bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape);
+
+// > DRAW
+//   PRIMITIVES
+
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner);
 void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type);
 Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type);
+
+// > FRAME
+//   PIPELINE
+
 void GUI_BeginDraw(EGUI_Pointer pointer_style);
 void GUI_DrawOverlay();
 void GUI_EndDraw();
+
+// > CONTROL
+//   HELPERS
+
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window);
 void GUI_BeginControlScissor();
 void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale);
@@ -72,6 +104,10 @@ float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint);
 void GUI_Face(Vector2 position, float height);
 void GUI_Image(Texture2D texture, Rectangle shape);
+
+// > COMPONENTS
+//   UI
+
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
@@ -98,23 +134,10 @@ void GUI_DrawCheckBox(
 void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
     GUI_ThemeColors colors);
-void GUI_LayoutVertical(float size);
-float GUI_VerticalSizeOrDefault();
-float GUI_HorizontalSizeOrDefault();
-Rectangle GUI_NextInPlace(int horizontal, int vertical);
-Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical);
-Rectangle GUI_NextVertical();
-float GUI_GetAvailableHorizontal(Rectangle window_workspace);
-void GUI_LayoutHorizontal(float size);
-Rectangle GUI_NextHorizontal();
-Rectangle GUI_NextHorizontals(int quantity);
-Rectangle GUI_NextVerticals(int quantity);
-Rectangle GUI_LayoutAvailable(Rectangle workspace);
-void GUI_LayoutReset(Rectangle workspace);
-void GUI_LayoutAutoJump();
-void GUI_LayoutBlock(float width, float height);
-void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type);
-void GUI_LayoutDuplicateBlock();
+
+// > WINDOW
+//   UI COMPOSITION
+
 void GUI_WindowButtonPanel(GUI_Window* window, EGUI_FontType font_type);
 void GUI_WindowEndingPanel(GUI_Window* window, EGUI_FontType font_type);
 void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontType font_type);
@@ -123,6 +146,15 @@ void GUI_CleanAndPrepareZIndex();
 void GUI_UpdateAndDrawWindows(Rectangle limits);
 Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type);
 void GUI_EndWindowContents(GUI_Window* window);
+
+
+// > FUNCTIONS
+//   IMPLEMENTATION
+
+#ifdef IMPLEMENT_ALL
+
+// > CONSTRUCTORS
+//   DEFAULTS
 
 GUI_Window GUI_MakeEmptyWindow(void)
 {
@@ -156,23 +188,7 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     return state;
 }
 
-GUI_LayoutTemp GUI_MakeLayoutTemp()
-{
-    GUI_LayoutTemp layout = {
-        .current_workspace          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .vertical_count             = 0,
-        .vertical_size              = 0.0f,
-        .horizontal_count           = 0,
-        .horizontal_size            = 0.0f,
-        .used_height                = 0.0f,
-        .current_scroll             = 0,
-        .current_font_type          = EGUI_FontType_Default,
-        .current_window_idx         = GUI_NO_WIN,
-        .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
-        .force_overflow             = false
-    };
-    return layout;
-}
+
 
 GUI_OverlayDraw GUI_MakeOverlayDraw()
 {
@@ -191,7 +207,7 @@ GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
         .status                     = EGUI_Status_Off,
-        .current_action             = EGUI_ActionNone,
+        .current_action             = EGUI_WinActionNone,
         .control_focus_ptr          = NULL,
         .window_target_id           = 0,
 
@@ -206,6 +222,9 @@ GUI_Temp GUI_MakeTempDefault()
     };
     return temp;
 }
+
+// > CONTEXT
+//   API
 
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp)
 {
@@ -259,6 +278,9 @@ float GUI_GetIconSmallWidth()
     return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
 }
 
+// > POINTER
+//   STATE
+
 // GUI_IsPointerOverGui() is meant to be called after EndDraw
 // If you need it internally, it means that you're creating and internal component so you could use GUI_CTX.temp->pointer_over_gui
 bool GUI_IsPointerOverGui()
@@ -299,6 +321,9 @@ GUI_PointerSetup* GUI_GetPointerSetup()
     EGUI_Pointer pointer = GUI_CTX.temp->current_pointer;
     return &GUI_CTX.setup->pointer_setups[pointer];
 }
+
+// > WINDOW
+//   MODEL & GEOMETRY
 
 GUI_Window* GUI_GetWindow(int id)
 {
@@ -363,14 +388,10 @@ void GUI_RemoveWindow(int id)
     }
 }
 
-float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
-{
-    GUI_Setup* setup = GUI_CTX.setup;
-    GUI_State* state = GUI_CTX.state;
-    return setup->font_setups[font_type].default_height * state->scale;
-}
 
-// > WINDOW UTILS
+
+// > WINDOW
+//   MODEL & GEOMETRY
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 Rectangle GUI_WindowTitle(Rectangle shape)
@@ -489,7 +510,7 @@ static inline EGUI_FontType GUI_GetFontType()
     /*   is_pointer_active  : user pressed mouse or enter key this frame */\
     /*   is_active          : control activated                          */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;         \
+    bool is_activable       = GUI_CTX.temp->current_action == EGUI_WinActionNone;         \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);       \
     bool is_pointer_active  = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT); \
     \
@@ -506,7 +527,7 @@ static inline EGUI_FontType GUI_GetFontType()
     /*   just_focused       : control gained focus on this frame         */\
     /*   is_focused         : control retains focus state                */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->current_action == EGUI_ActionNone;    \
+    bool is_activable       = GUI_CTX.temp->current_action == EGUI_WinActionNone;    \
     bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
     bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
@@ -521,6 +542,7 @@ static inline EGUI_FontType GUI_GetFontType()
 
 
 // > OVERLAY
+//   API
 //   STABILITY : █████████░  90%
 
 static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner)
@@ -568,6 +590,7 @@ static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed)
 
 
 // > POINTER
+//   DRAW & COLLISION
 //   STABILITY : █████████░  90%
 //   STATUS    : Stable
 //   NOTES     : Nothing here
@@ -575,7 +598,7 @@ static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed)
 void GUI_DrawPointerFor(EGUI_Pointer pointer)
 {
     GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[pointer];
-    Vector2 mouse_current               = GUI_CTX.temp->mouse_current;    
+    Vector2 mouse_current               = GUI_CTX.temp->mouse_current;
     Texture texture                     = pointer_setup->pointer_texture;
     Vector2 delta_normalized            = pointer_setup->pointer_delta_normalized;
     float scale                         = pointer_setup->pointer_scale * GUI_CTX.state->scale;
@@ -623,8 +646,8 @@ void GUI_DrawPointerTrail()
         if ((trail[i].x != 0.0f) || (trail[i].y != 0.0f))
         {
             // Calculate relative trail strength (ratio is near 1.0 for new, near 0.0 for old)
-            float ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL; 
-            
+            float ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL;
+
             // Fade effect: oldest positions are more transparent
             // Fade (color, alpha) - alpha is 0.5 to 1.0 based on ratio
             float alpha_min = 0.001f;
@@ -633,7 +656,7 @@ void GUI_DrawPointerTrail()
             Color trail_color = Fade(WHITE, ratio * (alpha_max - alpha_min) + alpha_min);
 
             // Size effect: oldest positions are smaller
-            float trail_radius = trail_size * ratio; 
+            float trail_radius = trail_size * ratio;
 
             DrawCircleV(trail[i], trail_radius, trail_color);
         }
@@ -669,7 +692,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     bool collide_scrolled       = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
     bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window));
     bool overflow               = GUI_CTX.temp->layout.force_overflow;
-    
+
     // Collide checks
     bool collide                = collide_scrolled && (collide_workspace || overflow);
     bool result                 = collide && (focused_window_id == window->id || !collide_focused);
@@ -683,7 +706,8 @@ bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape)
 }
 
 
-// > UTILS
+// > DRAW
+//   PRIMITIVES
 //   STABILITY : ██████░░░░  60%
 //   NOTES     : Nothing here
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
@@ -745,6 +769,9 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
     return Vector2Add(result, delta_scaled);
 }
 
+// > FRAME
+//   PIPELINE
+
 void GUI_BeginDraw(EGUI_Pointer pointer_style)
 {
     Assert(GUI_CTX.temp->status == EGUI_Status_Ready);
@@ -759,7 +786,7 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
         (float) GetScreenWidth(),
         (float) GetScreenHeight()
     };
-    GUI_CTX.temp->mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);        
+    GUI_CTX.temp->mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         GUI_CTX.temp->control_focus_ptr      = NULL;
@@ -772,7 +799,7 @@ void GUI_DrawOverlay()
 {
     GUI_OverlayDraw *overlay    = &GUI_CTX.temp->overlay_draw;
     bool is_enabled             = overlay->function != NULL && overlay->id_ptr != NULL;
-    
+
     if (is_enabled) {
         GUI_CTX.temp->layout                    = overlay->layout;
         GUI_CTX.temp->layout.force_overflow     = true;
@@ -790,6 +817,9 @@ void GUI_EndDraw()
     Assert(GUI_CTX.temp->status == EGUI_Status_Drawing);
     GUI_CTX.temp->status = EGUI_Status_Ready;
 }
+
+// > CONTROL
+//   HELPERS
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
@@ -835,7 +865,7 @@ void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
 // Returns used texture_scale to draw the texture in the available height
 float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
-    GUI_Setup *setup    = GUI_CTX.setup;    
+    GUI_Setup *setup    = GUI_CTX.setup;
     float texture_scale = (shape.height / texture2d->height);
 
     GUI_BeginControlScissor();
@@ -903,7 +933,7 @@ void GUI_Face(Vector2 position, float height)
         255
     };
     float texture_scale = GUI_DrawIcon(shape, &icons->Face, color);
-    Assert(texture_scale > 0);    
+    Assert(texture_scale > 0);
 
     // Determine quadrant relative to center
     int px = 0, py = 0;
@@ -920,6 +950,9 @@ void GUI_Face(Vector2 position, float height)
     DrawRectangleV(Vector2Add((Vector2){ 4 * texture_scale, 6 * texture_scale }, pixel_pos), (Vector2){ texture_scale, texture_scale }, WHITE);
     DrawRectangleV(Vector2Add((Vector2){ 10 * texture_scale, 6 * texture_scale }, pixel_pos), (Vector2){ texture_scale, texture_scale }, WHITE);
 }
+
+// > COMPONENTS
+//   UI
 
 // > IMAGE
 //   STABILITY : █████████░  90%
@@ -961,7 +994,7 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 //   NOTES     : Nothing here
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type) 
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State *state            = GUI_CTX.state;
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
@@ -988,8 +1021,8 @@ void GUI_DrawButton(
     EndScissorMode();
 
     GUI_BeginInnerControlScissor(shape, border, scale);
-        GUI_DrawAdjustedTextEx(text, 
-            (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale}, 
+        GUI_DrawAdjustedTextEx(text,
+            (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale},
             colors.tx_color_0, scale, font_type);
 
     if (icon_w > 0) {
@@ -1002,10 +1035,10 @@ bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
-    
+
     shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
-    
+
     EGUI_FontType font_type     = GUI_GetFontType();
     EGUI_ControlStatus status   = EGUI_ControlStatus_Default;
     if (is_pointer_over && is_activable) {
@@ -1041,7 +1074,7 @@ bool GUI_ButtonMenu(
     is_open = GUI_OverlayIsOpenBy(text_id);
 
     // Process changes if this control is the owner
-    if (is_open) {        
+    if (is_open) {
         if (scrolled) {
             GUI_OverlayClose();
         } else {
@@ -1068,7 +1101,7 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
         // Relativize position (just position, keep dimensions)
         Rectangle shape_drawed  = GUI_Relative(shape);
         shape_drawed.width      = shape.width;
-        shape_drawed.height     = shape.height;        
+        shape_drawed.height     = shape.height;
         GUI_OverlaySetShapeDrawed(shape_drawed);
         if (DEV_DEBUG_GUI) {
             DrawDebugRect(shape_drawed, RED);
@@ -1080,7 +1113,7 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 void GUI_DrawText(
-    Rectangle shape, const char* text, 
+    Rectangle shape, const char* text,
     GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State *state            = GUI_CTX.state;
@@ -1090,8 +1123,8 @@ void GUI_DrawText(
     float scale     = state->scale;
 
     GUI_BeginControlScissor();
-        GUI_DrawAdjustedTextEx(text, 
-            (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale}, 
+        GUI_DrawAdjustedTextEx(text,
+            (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
             colors.tx_color_0, scale, font_type);
     EndScissorMode();
 }
@@ -1119,14 +1152,14 @@ void GUI_DrawInput(
     float bg_alpha      = theme->bg_alpha;
 
     GUI_BeginControlScissor();
-        if (status == EGUI_ControlStatus_Default) 
+        if (status == EGUI_ControlStatus_Default)
             DrawRectangleRec(shape, ColorAlpha(colors.bg_color_1, bg_alpha));
-        else if (status == EGUI_ControlStatus_Collide) 
+        else if (status == EGUI_ControlStatus_Collide)
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, color_change), bg_alpha));
-        else if (status == EGUI_ControlStatus_Focused) 
-            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));    
+        else if (status == EGUI_ControlStatus_Focused)
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));
 
-        if (status == EGUI_ControlStatus_Focused) 
+        if (status == EGUI_ControlStatus_Focused)
             GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
         else
             GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
@@ -1157,12 +1190,12 @@ void GUI_DrawInput(
     }
 
     GUI_BeginInnerControlScissor(shape, border, scale);
-        GUI_DrawAdjustedTextEx(value, 
-            (Vector2) { 
+        GUI_DrawAdjustedTextEx(value,
+            (Vector2) {
                 shape.x + (border) * scale - auto_scroll_x,
                 shape.y + (border) * scale
             }, colors.tx_color_0, scale, font_type);
-    
+
 
         if (status == EGUI_ControlStatus_Focused && blink) {
             Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
@@ -1173,9 +1206,9 @@ void GUI_DrawInput(
             text_size = GUI_MeasureAdjustedText(tmp, font_type);
             DrawRectangle(
                 shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x - auto_scroll_x,
-                shape.y + (border + font_setup->blink_delta.y) * scale, 
+                shape.y + (border + font_setup->blink_delta.y) * scale,
                 font_setup->blink_size.x * scale,
-                font_setup->blink_size.y * scale, 
+                font_setup->blink_size.y * scale,
                 ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
         }
     EndScissorMode();
@@ -1190,7 +1223,7 @@ void GUI_Input(
 
     // Blink (text cursor)
     static void *last_control_focus_ptr = NULL;
-    
+
     if (is_pointer_over) {
         GUI_CTX.temp->current_pointer = EGUI_Pointer_Text;
     }
@@ -1218,7 +1251,7 @@ void GUI_Input(
 
         // TODO@dc: validate length
         int mouse_x     = GUI_CTX.temp->mouse_current.x - shape.x;
-        int text_size   = StringSize(value);        
+        int text_size   = StringSize(value);
         bool right_test = mouse_x > GUI_MeasureAdjustedText(value, font_type).x;
         if (right_test) {
             blink_cursor = text_size;
@@ -1228,7 +1261,7 @@ void GUI_Input(
                 if (mouse_x < w) break;
             }
             // Move one position to the left for a more accurate mouse-to-text alignment
-            blink_cursor = IntMax(0, --blink_cursor); 
+            blink_cursor = IntMax(0, --blink_cursor);
         }
     }
 
@@ -1357,7 +1390,7 @@ void GUI_Number(
 //   STABILITY : █████████░  90%
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
-    Rectangle shape, bool value, const char *on_txt, const char *off_txt, 
+    Rectangle shape, bool value, const char *on_txt, const char *off_txt,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
 {
     GUI_State       *state          = GUI_CTX.state;
@@ -1375,14 +1408,14 @@ void GUI_DrawCheckBox(
     Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
 
     GUI_BeginControlScissor();
-        if (status == EGUI_ControlStatus_Default) 
+        if (status == EGUI_ControlStatus_Default)
             DrawRectangleRec(shape, ColorAlpha(bg, bg_alpha));
-        else if (status == EGUI_ControlStatus_Collide) 
+        else if (status == EGUI_ControlStatus_Collide)
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, color_change), bg_alpha));
-        else if (status == EGUI_ControlStatus_Focused) 
+        else if (status == EGUI_ControlStatus_Focused)
             DrawRectangleRec(shape, ColorAlpha(ColorBrightness(bg, -color_change), bg_alpha));
 
-        if (status == EGUI_ControlStatus_Focused) 
+        if (status == EGUI_ControlStatus_Focused)
             GUI_DrawBorders(shape, ColorBrightness(b1, -color_change), ColorBrightness(b2, color_change), border * scale, false);
         else
             GUI_DrawBorders(shape, b1, b2, border * scale, false);
@@ -1396,7 +1429,7 @@ void GUI_DrawCheckBox(
 }
 
 void GUI_Check(
-    Rectangle shape, bool *value, const char *on_txt, const char *off_txt, 
+    Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
     GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
@@ -1419,192 +1452,8 @@ void GUI_Check(
 }
 
 
-// > LAYOUT
-//   STABILITY : █████████░  90%
-//   NOTES     : Simplify default usage
-
-#define RESET_COUNT     0
-#define ADD_COUNT       1
-#define ONLY_GET_COUNT  2
-#define DEFAULT_SIZE    0.0
-
-void GUI_LayoutVertical(float size)
-{
-    GUI_CTX.temp->layout.vertical_count = 0;
-    GUI_CTX.temp->layout.vertical_size  = size;
-}
-float GUI_VerticalSizeOrDefault()
-{
-    return GUI_CTX.temp->layout.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.vertical_size
-                                                              : (float)GetScreenHeight();
-}
-float GUI_HorizontalSizeOrDefault()
-{
-    return GUI_CTX.temp->layout.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.horizontal_size
-                                                                : (float)GetScreenWidth();
-}
-Rectangle GUI_NextInPlace(int horizontal, int vertical)
-{
-    float horizontal_size   = GUI_HorizontalSizeOrDefault();
-    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
-    Rectangle result        = {
-        .x      = horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
-        .y      = vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
-        .width  = horizontal_size,
-        .height = vertical_size
-    };
-    return result;
-}
-Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical)
-{
-    Rectangle begin     = GUI_NextInPlace(horizontal, vertical);
-    Rectangle end       = GUI_NextInPlace(end_horizontal, end_vertical);
-    Rectangle result    = {
-        .x      = begin.x,
-        .y      = begin.y,
-        .width  = IntAbs(end.x + end.width) - (begin.x),
-        .height = IntAbs(end.y + end.height) - (begin.y)
-    };
-    return result;
-}
-Rectangle GUI_NextVertical()
-{
-    Rectangle shape         = GUI_NextInPlace(0, 0);
-    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
-
-    GUI_CTX.temp->layout.used_height += vertical_size;
-    GUI_CTX.temp->layout.vertical_count++;
-    return shape;
-}
-float GUI_GetAvailableHorizontal(Rectangle window_workspace)
-{
-    return window_workspace.width - (GUI_CTX.temp->layout.horizontal_size * GUI_CTX.temp->layout.horizontal_count);
-}
-void GUI_LayoutHorizontal(float size)
-{
-    GUI_CTX.temp->layout.horizontal_count = 0;
-    GUI_CTX.temp->layout.horizontal_size = size;
-}
-Rectangle GUI_NextHorizontal()
-{
-    Rectangle shape = GUI_NextInPlace(0, 0);
-    GUI_CTX.temp->layout.horizontal_count++;
-    return shape;
-}
-Rectangle GUI_NextHorizontals(int quantity)
-{
-    Assert(quantity > 1);
-
-    // Push value for next element
-    Rectangle first = GUI_NextHorizontal();
-    Rectangle last = {0};
-    for (int i = 1; i < quantity; ++i) {
-        last = GUI_NextHorizontal();
-    }
-
-    Rectangle result = {
-        first.x,
-        first.y,
-        first.width + last.width,
-        first.height
-    };
-    return result;
-}
-Rectangle GUI_NextVerticals(int quantity)
-{
-    Assert(quantity > 1);
-
-    // Push value for next element
-    Rectangle first = GUI_NextVertical();
-    Rectangle last = {0};
-    for (int i = 1; i < quantity; ++i) {
-        last = GUI_NextVertical();
-    }
-
-    Rectangle result = {
-        first.x,
-        first.y,
-        first.width,
-        first.height + last.height
-    };
-    return result;
-}
-Rectangle GUI_LayoutAvailable(Rectangle workspace)
-{
-    float used_w = GUI_CTX.temp->layout.horizontal_size * GUI_CTX.temp->layout.horizontal_count;
-    float used_h = GUI_CTX.temp->layout.vertical_size   * GUI_CTX.temp->layout.vertical_count;
-    Rectangle result = {
-        workspace.x + used_w,
-        workspace.y + used_h,
-        workspace.width - used_w,
-        workspace.height - used_h
-    };
-
-    // Vertical scroll
-    if (result.height < GUI_CTX.temp->layout.vertical_size)
-        result.height = GUI_CTX.temp->layout.vertical_size;
-    return result;
-}
-void GUI_LayoutReset(Rectangle workspace)
-{
-    GUI_CTX.temp->layout = GUI_MakeLayoutTemp();
-    GUI_CTX.temp->layout.current_workspace      = workspace;
-}
-void GUI_LayoutAutoJump()
-{
-    // Add jump if necessary after ONLY horizontal blocks
-    if (GUI_CTX.temp->layout.horizontal_count > 0 && GUI_CTX.temp->layout.vertical_count == 0) {
-        GUI_NextVertical();
-    }
-}
-void GUI_LayoutBlock(float width, float height)
-{
-    GUI_LayoutAutoJump();
-
-    // Horizontal
-    if (width > 0.0) {
-        GUI_LayoutHorizontal(width);
-    } else if (width < 0.0) {
-        // width is already negative
-        // so this takes available space minus width
-        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width + width);
-    } else {
-        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width);
-    }
-
-    // Adjust to get y-available space
-    if (GUI_CTX.temp->layout.vertical_count != 0) {
-        GUI_CTX.temp->layout.current_workspace = GUI_LayoutAvailable(GUI_CTX.temp->layout.current_workspace);
-    }
-
-    // Vertical
-    if (height > 0.0) {
-        GUI_LayoutVertical(height);
-    } else if (height < 0.0) {
-        // height is already negative
-        // so this takes available space minus height
-        float available  = GUI_CTX.temp->layout.current_workspace.height + height;
-        if (available > 0) {
-            GUI_LayoutVertical(available);
-        } else {
-            GUI_LayoutVertical(height * -1);
-        }
-    } else {
-        GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height);
-    }
-}
-void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
-{
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
-    GUI_LayoutBlock(window_workspace.width / cols, default_height);
-    GUI_SetFontType(font_type);
-}
-void GUI_LayoutDuplicateBlock()
-{
-    GUI_LayoutBlock(GUI_CTX.temp->layout.horizontal_size, GUI_CTX.temp->layout.vertical_size);
-}
-
 // > WINDOW
+//   UI COMPOSITION
 //   STABILITY : █████████░  90%
 //   NOTES     : Nothing here
 
@@ -1632,10 +1481,10 @@ void GUI_WindowEndingPanel(GUI_Window* window, EGUI_FontType font_type)
 {
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
     GUI_ThemeColors colors      = window->colors;
-    
+
     float border        = font_setup->border;
     float scale         = GUI_CTX.state->scale;
-    
+
     Rectangle shape_bottom   = GUI_WindowBottom(window->shape);
     DrawRectangleRec((Rectangle) {
         shape_bottom.x + border * scale,
@@ -1655,7 +1504,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontTyp
 {
     GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
-    
+
     Rectangle        shape          = window->shape;
     Rectangle        shape_title    = GUI_WindowTitle(window->shape);
     Rectangle        shape_panel    = GUI_WindowPanel(window->shape);
@@ -1690,7 +1539,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontTyp
 
     GUI_BeginInnerControlScissor(shape_title, border, scale);
         GUI_DrawAdjustedTextEx(window->title,
-            (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale }, 
+            (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale },
             colors.tx_color_0, scale, EGUI_FontType_GUI);
     EndScissorMode();
 
@@ -1727,7 +1576,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontTyp
     if (DEV_DEBUG_GUI) {
         DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85));
         DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75));
-        DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85));        
+        DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85));
         DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25));
     }
 }
@@ -1744,7 +1593,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     // Conditions
     bool is_window_target       = GUI_IsCurrentWindowTarget(window->id);
     bool is_pointer_overlay     = GUI_IsPointerOverOverlay();
-    bool is_focusable           = is_window_target && GUI_CTX.temp->current_action == EGUI_ActionNone && is_pointer_overlay == false;
+    bool is_focusable           = is_window_target && GUI_CTX.temp->current_action == EGUI_WinActionNone && is_pointer_overlay == false;
     bool is_pointer_over        = CheckCollisionPointRec(mouse, window->shape);
     bool is_pointer_over_panel  = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
     bool is_pointer_over_title  = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_pointer_over_panel;
@@ -1756,24 +1605,24 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true;
 
     // Focus?
-    if (is_focusable && just_interacted && is_z_priority) {            
-        GUI_CTX.temp->current_action =  is_pointer_over_title   ? EGUI_ActionMoving :
-                                        is_pointer_over_bottom  ? EGUI_ActionResizing
-                                                                : EGUI_ActionNone;
+    if (is_focusable && just_interacted && is_z_priority) {
+        GUI_CTX.temp->current_action =  is_pointer_over_title   ? EGUI_WinActionMoving :
+                                        is_pointer_over_bottom  ? EGUI_WinActionResizing
+                                                                : EGUI_WinActionNone;
     }
 
-    if (is_pointer_over_bottom || GUI_CTX.temp->current_action == EGUI_ActionResizing) {
+    if (is_pointer_over_bottom || GUI_CTX.temp->current_action == EGUI_WinActionResizing) {
         GUI_CTX.temp->current_pointer = EGUI_Pointer_Resize;
     }
 
     // Active
     if (is_z_priority) {
-        bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);        
+        bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         if (is_mouse_down == false) {
-            GUI_CTX.temp->current_action = EGUI_ActionNone;
+            GUI_CTX.temp->current_action = EGUI_WinActionNone;
         } else {
             // Movement
-            if (GUI_CTX.temp->current_action == EGUI_ActionMoving) {
+            if (GUI_CTX.temp->current_action == EGUI_WinActionMoving) {
                 Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
                 Vector2 mouse_last_valid        = LimitVector2Rect(GUI_CTX.temp->mouse_last, limits);
                 Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
@@ -1782,7 +1631,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
                 window->shape.y += displacement.y;
             }
             // Resizing
-            if (GUI_CTX.temp->current_action == EGUI_ActionResizing) {
+            if (GUI_CTX.temp->current_action == EGUI_WinActionResizing) {
                 if (is_mouse_down) {
                     Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
                     window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
@@ -1790,7 +1639,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
                 }
             }
             // Handled by GUI, as move/resize can make that is_pointer_over is false during frames
-            GUI_CTX.temp->pointer_over_gui = GUI_CTX.temp->current_action != EGUI_ActionNone;
+            GUI_CTX.temp->pointer_over_gui = GUI_CTX.temp->current_action != EGUI_WinActionNone;
         }
     }
 
@@ -1811,7 +1660,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     }
 
     // Draw
-    EGUI_ControlStatus status = 
+    EGUI_ControlStatus status =
         is_z_priority           ? EGUI_ControlStatus_Focused :
         is_pointer_over_title   ? EGUI_ControlStatus_Collide :
                                   EGUI_ControlStatus_Default;
@@ -1845,7 +1694,7 @@ void GUI_CleanAndPrepareZIndex()
             state->z_index[j] = 0; // Clean
         }
     }
-    
+
     // Grant that all window_s are in the z-index
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
         GUI_Window* window = &state->window_s[i];
@@ -1874,11 +1723,11 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     GUI_State* state = GUI_CTX.state;
 
     GUI_CleanAndPrepareZIndex();
-    
+
     // This variable allows to set force the z_index during the current frame
     bool is_pointer_overlay = GUI_IsPointerOverOverlay();
     bool force_z_index      = state->force_z_index > 0;
-    bool interacting        = !force_z_index 
+    bool interacting        = !force_z_index
                                 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)
                                 && is_pointer_overlay == false;
 
@@ -1886,11 +1735,11 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
         // Find ID
         int interacted_id       = state->force_z_index;
         bool forcing_z_index    = state->force_z_index > 0;
-        // Restore state values -> z-index is being updated       
+        // Restore state values -> z-index is being updated
         state->force_z_index = 0;
 
         int current_zindex  = -1;
-        for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) { 
+        for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
             int id = state->z_index[j];
             if (id == 0) continue;
 
@@ -1911,7 +1760,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
             for (int j = current_zindex; j > 0; --j) {
                 state->z_index[j] = state->z_index[j - 1];
             }
-            
+
             // Add this one
             state->z_index[0] = interacted_id;
         }
@@ -1942,7 +1791,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     }
 
     // Process
-    for (int j = GUI_MAX_OPEN_WINS - 1; j >= 0 ; --j) { 
+    for (int j = GUI_MAX_OPEN_WINS - 1; j >= 0 ; --j) {
         int id = state->z_index[j];
         if (id == 0) continue;
 
@@ -1961,7 +1810,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
     // Grant min dimmensions
     window->shape.width = fmax(GUI_MIN_WIN_SIZE, window->shape.width);
     window->shape.height = fmax(GUI_MIN_WIN_SIZE, window->shape.height);
-    
+
     // Data
     Rectangle window_workspace = GUI_WindowWorkspace(window);
     // Begin window stuff
@@ -1973,7 +1822,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
     GUI_CTX.temp->layout.current_scroll             = -window->scroll_offset;
     GUI_CTX.temp->layout.current_font_type          = font_type;
 
-    // Vertical scroll    
+    // Vertical scroll
     rlPushMatrix();
     rlTranslatef(0, -window->scroll_offset, 0);
 
@@ -1993,5 +1842,7 @@ void GUI_EndWindowContents(GUI_Window* window)
 
     // Finish draw instructions
     GUI_DrawOverlay();
-    rlPopMatrix();  
+    rlPopMatrix();
 }
+
+#endif

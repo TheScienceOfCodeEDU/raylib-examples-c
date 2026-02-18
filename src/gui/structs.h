@@ -2,7 +2,7 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
  #include "../common.h"
- #include "setup.h" 
+ #include "setup.h"
 #endif
 
 #define GUI_MAX_TRAIL       30
@@ -12,10 +12,9 @@
 #define GUI_SCROLL_SPEED    16
 #define GUI_NO_WIN          -1
 
-//
+
 // > ENUMS
 //
-
 typedef enum {
     EGUI_Status_Off,
     EGUI_Status_Ready,
@@ -34,12 +33,11 @@ typedef enum {
     EGUI_InputFloat      // floating numeric input
 } EGUI_InputType;
 
-
 typedef enum {
-    EGUI_ActionNone,
-    EGUI_ActionMoving,
-    EGUI_ActionResizing
-} EGUI_Action;
+    EGUI_WinActionNone,
+    EGUI_WinActionMoving,
+    EGUI_WinActionResizing
+} EGUI_WinAction;
 
 /*
 EXAMPLE: Enum order matters
@@ -49,7 +47,7 @@ typedef enum {
     EGUI_Focus_Granted
 } EGUI_Focus;
 
-// NOTE: define a function near the type instead of using it everywhere. 
+// NOTE: define a function near the type instead of using it everywhere.
 //       Now, we know that the order matters for this Enum.
 bool FocusOverridable(EGUI_Focus focus)
 {
@@ -75,6 +73,7 @@ typedef struct GUI_Window {
     bool            focused_face;
     void (*contents) (struct GUI_Window*);
 } GUI_Window;
+
 
 // > STATE
 //   STABILITY : ███░░░░░░░  30%
@@ -108,7 +107,6 @@ typedef struct {
     bool            force_overflow;
 } GUI_LayoutTemp;
 
-
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
     int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
@@ -124,7 +122,7 @@ typedef struct {
     EGUI_Status      status;
 
     // Window runtime
-    EGUI_Action     current_action;
+    EGUI_WinAction  current_action;
     void            *control_focus_ptr;
     int             window_target_id; // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
 
@@ -154,3 +152,14 @@ static struct {
     GUI_Temp*    temp;
 } GUI_CTX = { 0 };
 
+// > CONTEXT
+//   API
+
+void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
+GUI_State* GUI_GetState();
+GUI_Setup* GUI_GetSetup();
+void GUI_SetFontType(EGUI_FontType font_type);
+GUI_Icons* GUI_GetIcons();
+float GUI_GetIconWidth();
+float GUI_GetIconWidthForShape(Rectangle shape, float border);
+float GUI_GetIconSmallWidth();
