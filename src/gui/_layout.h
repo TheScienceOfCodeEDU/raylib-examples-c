@@ -3,7 +3,7 @@
  #define UNITY_BUILD 0
  #define IMPLEMENT_ALL 1
  #include "../common.h"
- #include "setup.h"
+ #include "_setup.h"
  #include "structs.h"
 #endif
 
@@ -22,7 +22,7 @@
 // > MAKE DEFAULTS
 GUI_LayoutTemp  GUI_MakeLayoutTemp();
 
-float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
+float           GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
 
 
 float           GUI_VerticalSizeOrDefault();

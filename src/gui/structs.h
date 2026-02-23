@@ -56,9 +56,100 @@ bool FocusOverridable(EGUI_Focus focus)
 */
 
 
-// > WINDOW STRUCTS
-//   STABILITY : █████████░  90%
-//   NOTES     : Resize. Close and open.
+
+// > STRUCTS
+//   SUBMODULE: SETUP
+
+typedef struct {
+    Texture2D New;
+    Texture2D Open;
+    Texture2D Save;
+    Texture2D Setup;
+    Texture2D Error;
+    Texture2D Face;
+    Texture2D Dog;
+    Texture2D Close;
+    Texture2D CloseSmall;
+    Texture2D MinimizeSmall;
+    Texture2D Layouts;
+} GUI_Icons;
+
+typedef struct {
+    float       icon_size;
+    float       icon_size_sm;
+    Vector2     icon_delta;
+    GUI_Icons   icons;
+} GUI_IconSetup;
+
+typedef struct {
+    Color tx_color_0;
+    Color tx_color_1;
+    Color bg_color_0;
+    Color bg_color_1;
+    Color bg_color_2;
+    Color bg_color_3;
+} GUI_ThemeColors;
+
+typedef struct {
+    GUI_ThemeColors     gray;
+    GUI_ThemeColors     red;
+    GUI_ThemeColors     green;
+    float               bg_alpha;
+    float               color_change;
+} GUI_Theme;
+
+typedef enum {
+    EGUI_FontType_Default,
+    EGUI_FontType_GUI,
+    EGUI_FontType_Count
+} EGUI_FontType;
+
+typedef struct {
+    float           default_height;
+    float           border;
+
+    float           font_scale;
+    Vector2         font_delta;             // Delta adjustement
+    Font            font_custom;
+    bool            font_use_custom;        // Indicates if a custom font is used
+    float           font_spacing;
+    Vector2         blink_size;             // Size of the blinking cursor
+    Vector2         blink_delta;            // Blink adjustment
+    float           blink_alpha;
+} GUI_FontSetup;
+
+typedef enum {
+    EGUI_Pointer_None,
+    EGUI_Pointer_Default,
+    EGUI_Pointer_AGS,
+    EGUI_Pointer_Text,
+    EGUI_Pointer_Resize,
+    EGUI_Pointer_Count,
+} EGUI_Pointer;
+
+typedef struct {
+    Texture2D       pointer_texture;
+    Vector2         pointer_delta_normalized;
+    float           pointer_scale;
+    float           pointer_alpha;
+    Vector2         trail_delta_normalized;
+    EGUI_Pointer    additional;
+} GUI_PointerSetup;
+
+
+// > STRUCTS
+//   SETUP
+
+typedef struct {
+    GUI_Theme           theme;
+    GUI_IconSetup       icon_setup;
+    GUI_FontSetup       font_setups[EGUI_FontType_Count];
+    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
+} GUI_Setup;
+
+
+// > STRUCTS
+//   SUBMODULE : WIN
 
 #define MAX_WINDOW_TITLE 16
 

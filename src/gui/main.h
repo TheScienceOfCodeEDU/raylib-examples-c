@@ -5,9 +5,10 @@
  #include "../common.h"
 #endif
 
-#include "setup.h"
+
 #include "structs.h"
-#include "layout.h"
+#include "_layout.h"
+#include "_setup.h"
 
 
 
