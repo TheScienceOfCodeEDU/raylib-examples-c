@@ -5,24 +5,30 @@
 #include "structs.h"
 #endif
 
+// > SUBMODULE
+//   SETUP
+
 
 // > FUNCTIONS
 //   INDEX
-
+//   >> Icons
 GUI_Icons           GUI_LoadIcons();
-GUI_IconSetup       GUI_MakeIconSetupDefault();
-Color               GUI_GetThemeColorFromHue(float hue, float t);
-GUI_ThemeColors     GUI_MakeThemeColors(float hue);
-GUI_Theme           GUI_MakeThemeDefault();
-GUI_FontSetup       GUI_MakeFontSetupDefault(EGUI_FontType content);
-GUI_PointerSetup    GUI_MakePointerSetupForType(EGUI_Pointer pointer_type);
-GUI_Setup           GUI_MakeSetupDefault();
+GUI_IconSetup       GUI_MakeIconSetup(GUI_Icons icons);
+//   >> Theme
+Color               GUI_GenerateThemeColor(float hue, float intensity);
+GUI_ThemeColors     GUI_GenerateThemeColors(float hue);
+GUI_Theme           GUI_GenerateTheme();
+//   >> Other
+GUI_FontSetup       GUI_LoadFontSetupDefault(EGUI_FontType content);
+GUI_PointerSetup    GUI_LoadPointerSetupForType(EGUI_Pointer pointer_type);
+GUI_Setup           GUI_LoadSetupDefault();
 
 
 // > FUNCTIONS
 //   IMPLEMENTATION
 
 #ifdef IMPLEMENT_ALL
+//   >> Icons
 GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
@@ -41,51 +47,56 @@ GUI_Icons GUI_LoadIcons()
     return icons;
 }
 
-GUI_IconSetup GUI_MakeIconSetupDefault()
+GUI_IconSetup GUI_MakeIconSetup(GUI_Icons icons)
 {
     GUI_IconSetup setup = {
         .icon_size      = 32,
         .icon_size_sm   = 16,
-        .icon_delta     = (Vector2){0, 0},
-        .icons          = GUI_LoadIcons()
+        .icon_delta     = (Vector2){ 0, 0 },
+        .icons          = icons
     };
     return setup;
 }
 
+//   >> Theme
+
 // Generates a color with a specified hue and interpolated saturation and value.
 // Parameters:
 //   hue: Hue value in degrees (e.g., 180.0f for cyan).
-//   t: Interpolation factor [0.0, 1.0] controlling saturation (0.13 to 0.24) and value (0.89 to 0.33).
+//   intensity: Interpolation factor [0.0, 1.25] controlling saturation and value .
 // Returns:
 //   A Raylib Color struct with RGB values (0-255) and full alpha (255).
-Color GUI_GetThemeColorFromHue(float hue, float t) {
-    if (t < 0.0f)  t = 0.0f;
-    if (t > 1.25f) t = 1.25f;
+Color GUI_GenerateThemeColor(float hue, float intensity) {
+    // Normalize hue
+    hue = fmodf(hue, 360.0f);
+    if (hue < 0.0f) hue += 360.0f;
 
-    float s = 0.13f + t * (0.24f - 0.13f); // 0.13 → 0.24
-    float v = 0.89f - t * (0.89f - 0.33f); // 0.89 → 0.33
+    // Clamp intensity
+    if (intensity < 0.0f)  intensity = 0.0f;
+    if (intensity > 1.25f) intensity = 1.25f;
 
-    // Normaliza hue al rango [0, 360)
-    while (hue < 0.0f)   hue += 360.0f;
-    while (hue >= 360.0f) hue -= 360.0f;
+    // Interpolation
+    float saturation    = 0.13f + intensity * (0.24f - 0.13f); // 0.13 → 0.24
+    float value         = 0.89f - intensity * (0.89f - 0.33f); // 0.89 → 0.33
 
-    return ColorFromHSV(hue, s, v);
+    return ColorFromHSV(hue, saturation, value);
 }
 
-GUI_ThemeColors GUI_MakeThemeColors(float hue)
+
+GUI_ThemeColors GUI_GenerateThemeColors(float hue)
 {
     GUI_ThemeColors colors = {
-        .tx_color_0 = GUI_GetThemeColorFromHue(hue, 0.0f),
-        .tx_color_1 = GUI_GetThemeColorFromHue(hue, 1.15f), // darker than bg_color_3
-        .bg_color_0 = GUI_GetThemeColorFromHue(hue, 0.25f),
-        .bg_color_1 = GUI_GetThemeColorFromHue(hue, 0.5f),
-        .bg_color_2 = GUI_GetThemeColorFromHue(hue, 0.75f),
-        .bg_color_3 = GUI_GetThemeColorFromHue(hue, 1.0f)
+        .tx_color_0 = GUI_GenerateThemeColor(hue, 0.0f),
+        .tx_color_1 = GUI_GenerateThemeColor(hue, 1.15f), // darker than bg_color_3
+        .bg_color_0 = GUI_GenerateThemeColor(hue, 0.25f),
+        .bg_color_1 = GUI_GenerateThemeColor(hue, 0.5f),
+        .bg_color_2 = GUI_GenerateThemeColor(hue, 0.75f),
+        .bg_color_3 = GUI_GenerateThemeColor(hue, 1.0f)
     };
     return colors;
 }
 
-GUI_Theme GUI_MakeThemeDefault()
+GUI_Theme GUI_GenerateTheme()
 {
     /*// Background colors for another theme...
         (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
@@ -103,9 +114,9 @@ GUI_Theme GUI_MakeThemeDefault()
 
     GUI_Theme theme = {
         // Theme colors
-        .gray           = GUI_MakeThemeColors(180.0f),
-        .red            = GUI_MakeThemeColors(3.0f),
-        .green          = GUI_MakeThemeColors(97.0f),
+        .gray           = GUI_GenerateThemeColors(180.0f),
+        .red            = GUI_GenerateThemeColors(3.0f),
+        .green          = GUI_GenerateThemeColors(97.0f),
         .bg_alpha       = 1.0f,
         .color_change   = 0.05f
     };
@@ -113,7 +124,9 @@ GUI_Theme GUI_MakeThemeDefault()
     return theme;
 }
 
-GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content)
+
+//   >> Other
+GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_FontType content)
 {
     _Static_assert(EGUI_FontType_Count == 2,  "Update fonts here");
 
@@ -156,12 +169,7 @@ GUI_FontSetup GUI_MakeFontSetupDefault(EGUI_FontType content)
     }
 }
 
-
-// > POINTER SETUP (MOUSE CURSORS)
-//   STABILITY : █████░░░░░  50%
-//   NOTES     : Add more
-
-GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
+GUI_PointerSetup GUI_LoadPointerSetupForType(EGUI_Pointer pointer_type)
 {
     GUI_PointerSetup setup = { 0 };
     _Static_assert(EGUI_Pointer_Count  == 5,  "Update pointers here!");
@@ -210,27 +218,22 @@ GUI_PointerSetup GUI_MakePointerSetupForType(EGUI_Pointer pointer_type)
     return setup;
 }
 
-
-// > STATE
-//   STABILITY : █████░░░░░  50%
-//   NOTES     : Save, restore and edit
-
-GUI_Setup GUI_MakeSetupDefault()
+GUI_Setup GUI_LoadSetupDefault()
 {
     GUI_Setup setup = {
-        .theme      = GUI_MakeThemeDefault(),
-        .icon_setup = GUI_MakeIconSetupDefault()
+        .theme      = GUI_GenerateTheme(),
+        .icon_setup = GUI_MakeIconSetup(GUI_LoadIcons())
     };
 
     // Fonts
     for (int i = 0; i < EGUI_FontType_Count; i++) {
-        setup.font_setups[i] = GUI_MakeFontSetupDefault((EGUI_FontType)i);
+        setup.font_setups[i] = GUI_LoadFontSetupDefault((EGUI_FontType)i);
     }
 
     // Pointers
     // 0 is None
     for (int i = 1; i < EGUI_Pointer_Count; i++) {
-        setup.pointer_setups[i] = GUI_MakePointerSetupForType((EGUI_Pointer)i);
+        setup.pointer_setups[i] = GUI_LoadPointerSetupForType((EGUI_Pointer)i);
     }
     return setup;
 }

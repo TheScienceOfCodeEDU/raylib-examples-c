@@ -10,7 +10,7 @@
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
 #define GUI_SCROLL_SPEED    16
-#define GUI_NO_WIN          -1
+#define GUI_NO_WIN          (-1)
 
 
 // > ENUMS
@@ -54,8 +54,6 @@ bool FocusOverridable(EGUI_Focus focus)
     return focus <= EGUI_Focus_CanOverride;
 }
 */
-
-
 
 // > STRUCTS
 //   SUBMODULE: SETUP
@@ -136,16 +134,13 @@ typedef struct {
     EGUI_Pointer    additional;
 } GUI_PointerSetup;
 
-
-// > STRUCTS
-//   SETUP
-
 typedef struct {
     GUI_Theme           theme;
     GUI_IconSetup       icon_setup;
     GUI_FontSetup       font_setups[EGUI_FontType_Count];
     GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
 } GUI_Setup;
+// > END SUBMODULE: SETUP
 
 
 // > STRUCTS
