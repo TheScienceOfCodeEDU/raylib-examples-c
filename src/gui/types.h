@@ -1,3 +1,4 @@
+#pragma once
 
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
@@ -33,12 +34,6 @@ typedef enum {
     EGUI_InputFloat      // floating numeric input
 } EGUI_InputType;
 
-typedef enum {
-    EGUI_WinActionNone,
-    EGUI_WinActionMoving,
-    EGUI_WinActionResizing
-} EGUI_WinAction;
-
 /*
 EXAMPLE: Enum order matters
 typedef enum {
@@ -55,9 +50,12 @@ bool FocusOverridable(EGUI_Focus focus)
 }
 */
 
-// > STRUCTS
-//   SUBMODULE: SETUP
+//
+// BEGIN SUBMODULES >>>>>>>
+//
 
+// > TYPES
+//   SUBMODULE: SETUP
 typedef struct {
     Texture2D New;
     Texture2D Open;
@@ -140,13 +138,18 @@ typedef struct {
     GUI_FontSetup       font_setups[EGUI_FontType_Count];
     GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
 } GUI_Setup;
-// > END SUBMODULE: SETUP
+// < END SUBMODULE: SETUP
 
 
-// > STRUCTS
-//   SUBMODULE : WIN
-
+// > TYPES
+//   SUBMODULE: WIN
 #define MAX_WINDOW_TITLE 16
+
+typedef enum {
+    EGUI_WinActionNone,
+    EGUI_WinActionMoving,
+    EGUI_WinActionResizing
+} EGUI_WinAction;
 
 typedef struct GUI_Window {
     int             id;
@@ -159,23 +162,11 @@ typedef struct GUI_Window {
     bool            focused_face;
     void (*contents) (struct GUI_Window*);
 } GUI_Window;
+// < END SUBMODULE: WIN
 
 
-// > STATE
-//   STABILITY : ███░░░░░░░  30%
-//   NOTES     : Save and restore
-
-typedef struct {
-    RenderTexture2D buffer;
-    float           scale;
-    int             force_z_index;
-
-    GUI_Window      window_s[GUI_MAX_OPEN_WINS];
-
-    // z_index stores windows indexes or zero as empty.
-    int             z_index[GUI_MAX_OPEN_WINS];
-} GUI_State;
-
+// > TYPES
+//   SUBMODULE: LAYOUT
 typedef struct {
     Rectangle       current_workspace;  // Current available (Use only for layouts)
     int             vertical_count;
@@ -187,12 +178,20 @@ typedef struct {
     EGUI_FontType   current_font_type;
 
     // Window that is being processed right now
-    // This is NOT the active window focused by the player. Active win_idx is ==> GUI_State.z_index[0]
+    // This is NOT the active window focused by the player.
     int             current_window_idx;       // Current window being drawn
     Rectangle       current_window_workspace; // Current window workspace
     bool            force_overflow;
 } GUI_LayoutTemp;
+// < END SUBMODULE: LAYOUT
 
+//
+// <<<<<<< END SUBMODULES
+//
+
+
+// > TYPES
+//
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
     int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
@@ -226,6 +225,16 @@ typedef struct {
     GUI_LayoutTemp  layout;
 } GUI_Temp;
 
+typedef struct {
+    RenderTexture2D buffer;
+    float           scale;
+    int             force_z_index;
+
+    GUI_Window      window_s[GUI_MAX_OPEN_WINS];
+
+    // z_index stores windows indexes or zero as empty.
+    int             z_index[GUI_MAX_OPEN_WINS];
+} GUI_State;
 
 
 // > STATE > CONTEXT

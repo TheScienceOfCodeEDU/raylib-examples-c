@@ -6,12 +6,9 @@
 #endif
 
 
-#include "structs.h"
+#include "types.h"
 #include "_layout.h"
 #include "_setup.h"
-
-
-
 
 // > FUNCTIONS
 //   INDEX
