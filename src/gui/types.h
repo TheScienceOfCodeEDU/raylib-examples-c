@@ -167,6 +167,11 @@ typedef struct GUI_Window {
 
 // > TYPES
 //   SUBMODULE: LAYOUT
+#define RESET_COUNT     0
+#define ADD_COUNT       1
+#define ONLY_GET_COUNT  2
+#define DEFAULT_SIZE    0.0
+
 typedef struct {
     Rectangle       current_workspace;  // Current available (Use only for layouts)
     int             vertical_count;

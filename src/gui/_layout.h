@@ -7,29 +7,14 @@
  #include "structs.h"
 #endif
 
-// > LAYOUT
-//   STRUCTS AND DEFINITIONS
-#define RESET_COUNT     0
-#define ADD_COUNT       1
-#define ONLY_GET_COUNT  2
-#define DEFAULT_SIZE    0.0
+// > SUBMODULE: LAYOUT
+// > INDEX
 
-
-
-// > FUNCTIONS
-//   INDEX
-
-// > MAKE DEFAULTS
 GUI_LayoutTemp  GUI_MakeLayoutTemp();
-
 float           GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
-
-
 float           GUI_VerticalSizeOrDefault();
 float           GUI_HorizontalSizeOrDefault();
-
 void            GUI_LayoutVertical(float size);
-
 
 Rectangle       GUI_NextInPlace(int horizontal, int vertical);
 Rectangle       GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical);
@@ -39,6 +24,7 @@ void            GUI_LayoutHorizontal(float size);
 Rectangle       GUI_NextHorizontal();
 Rectangle       GUI_NextHorizontals(int quantity);
 Rectangle       GUI_NextVerticals(int quantity);
+
 Rectangle       GUI_LayoutAvailable(Rectangle workspace);
 void            GUI_LayoutReset(Rectangle workspace);
 void            GUI_LayoutAutoJump();

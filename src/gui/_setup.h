@@ -1,3 +1,4 @@
+#pragma once
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
  #define IMPLEMENT_ALL 1
@@ -5,30 +6,21 @@
 #include "structs.h"
 #endif
 
-// > SUBMODULE
-//   SETUP
-
-
-// > FUNCTIONS
-//   INDEX
-//   >> Icons
+// > SUBMODULE: SETUP
+// > INDEX
 GUI_Icons           GUI_LoadIcons();
 GUI_IconSetup       GUI_MakeIconSetup(GUI_Icons icons);
-//   >> Theme
+
 Color               GUI_GenerateThemeColor(float hue, float intensity);
 GUI_ThemeColors     GUI_GenerateThemeColors(float hue);
 GUI_Theme           GUI_GenerateTheme();
-//   >> Other
+
 GUI_FontSetup       GUI_LoadFontSetupDefault(EGUI_FontType content);
 GUI_PointerSetup    GUI_LoadPointerSetupForType(EGUI_Pointer pointer_type);
 GUI_Setup           GUI_LoadSetupDefault();
 
-
-// > FUNCTIONS
-//   IMPLEMENTATION
-
+// > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
-//   >> Icons
 GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
@@ -57,8 +49,6 @@ GUI_IconSetup GUI_MakeIconSetup(GUI_Icons icons)
     };
     return setup;
 }
-
-//   >> Theme
 
 // Generates a color with a specified hue and interpolated saturation and value.
 // Parameters:
@@ -125,7 +115,6 @@ GUI_Theme GUI_GenerateTheme()
 }
 
 
-//   >> Other
 GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_FontType content)
 {
     _Static_assert(EGUI_FontType_Count == 2,  "Update fonts here");
