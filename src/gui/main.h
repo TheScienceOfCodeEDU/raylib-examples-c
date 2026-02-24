@@ -626,8 +626,12 @@ void GUI_DrawPointerTrail()
 {
     GUI_PointerSetup *pointer_setup = GUI_GetPointerSetup();
     Vector2 mouse                   = GUI_CTX.temp->mouse_current;
-    Vector2 delta_normalized        = pointer_setup->trail_delta_normalized;
     float scale                     = pointer_setup->pointer_scale * GUI_CTX.state->scale;
+    Vector2 delta_normalized        = pointer_setup->trail_delta_normalized;
+    Vector2 delta                   = (Vector2) {
+        .x = delta_normalized.x * (float)pointer_setup->pointer_texture.width * scale,
+        .y = delta_normalized.y * (float)pointer_setup->pointer_texture.height * scale
+    };
 
     // Shift all existing positions backward by one slot in the array
     // The last element (the oldest position) is dropped
@@ -635,31 +639,20 @@ void GUI_DrawPointerTrail()
     for (int i = GUI_MAX_TRAIL - 1; i > 0; i--) {
         trail[i] = trail[i - 1];
     }
-
-    Vector2 delta   = (Vector2) {
-        delta_normalized.x * pointer_setup->pointer_texture.width * scale,
-        delta_normalized.y * pointer_setup->pointer_texture.height * scale
-    };
     trail[0] = Vector2Add(mouse, delta);
 
     for (int i = 0; i < GUI_MAX_TRAIL; i++) {
         // Ensure we skip drawing if the array hasn't been fully filled on startup
         if ((trail[i].x != 0.0f) || (trail[i].y != 0.0f))
         {
-            // Calculate relative trail strength (ratio is near 1.0 for new, near 0.0 for old)
-            float ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL;
+            #define TRAIL_ALPHA_MIN 0.001f
+            #define TRAIL_ALPHA_MAX 0.05f
+            float current_ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL;
+            float trail_alpha   = current_ratio * (TRAIL_ALPHA_MAX - TRAIL_ALPHA_MIN) + TRAIL_ALPHA_MIN;
+            Color trail_color   = Fade(BLACK, trail_alpha);
+            float trail_radius  = current_ratio * scale;
 
-            // Fade effect: oldest positions are more transparent
-            // Fade (color, alpha) - alpha is 0.5 to 1.0 based on ratio
-            float alpha_min = 0.001f;
-            float alpha_max = 0.05f;
-            float trail_size = scale;
-            Color trail_color = Fade(WHITE, ratio * (alpha_max - alpha_min) + alpha_min);
-
-            // Size effect: oldest positions are smaller
-            float trail_radius = trail_size * ratio;
-
-            DrawCircleV(trail[i], trail_radius, trail_color);
+            DrawCircleV(Vector2AddValue(trail[i], -trail_radius), trail_radius, trail_color);
         }
     }
 }

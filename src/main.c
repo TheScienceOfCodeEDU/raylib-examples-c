@@ -23,6 +23,7 @@ const char* BuildTimeFormatted()
 
     const char* ampm = "am";
     if(h >= 12) ampm = "pm";
+    if(h > 12)  h -= 12;
     if(h == 0)  h = 12; // midnight edge case
 
     snprintf(buffer, sizeof(buffer), "%02dh:%02dm:%02ds %s", h, m, s, ampm);
@@ -37,6 +38,7 @@ int main(void) {
     InitWindow(DEV_WINDOW_W, DEV_WINDOW_H, TextFormat("%s - %s - %s", BuildTimeFormatted(), __DATE__, GetWorkingDirectory()));
     SetTargetFPS(60);
 
+    TrySetTargetMonitor(DEV_TARGET_MONITOR, 3);
 
     // TODO@dc: review
     Vector2 screen_max = (Vector2) { GetMonitorWidth(DEV_TARGET_MONITOR),  GetMonitorHeight(DEV_TARGET_MONITOR) };
@@ -59,7 +61,7 @@ int main(void) {
     static Texture2D wp_voronoi;
 
     gui_state   = GUI_MakeStateDefault(screen_max);
-    gui_setup   = GUI_MakeSetupDefault();
+    gui_setup   = GUI_LoadSetupDefault();
     gui_temp    = GUI_MakeTempDefault();
     icons       = gui_setup.icon_setup.icons;
     wp_voronoi  = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
@@ -94,17 +96,17 @@ int main(void) {
         if (IsKeyPressed(KEY_F10)) {
             pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
         }
-        
+
         float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI);
-        Rectangle window_limits = (Rectangle){ 
+        Rectangle window_limits = (Rectangle){
             0,
             topbar_height,
-            GetScreenWidth(),
-            GetScreenHeight() - topbar_height
+            (float) GetScreenWidth(),
+            (float) GetScreenHeight() - topbar_height
         };
-        
+
         // Draw UI buffer
-        
+
         BeginTextureMode(gui_state.buffer);
         GUI_BeginDraw(pointer_style);
             ClearBackground(BLANK);
@@ -114,7 +116,6 @@ int main(void) {
                 if (win_man == NULL) {
                     win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, gui_setup.theme.gray, &icons.Setup, true, WIN_Winman);
                 } else {
-                    float win_forth          = window_limits.width / 4.0;
                     float win_forth          = window_limits.width / 4.0f;
                     win_man->shape.x         = win_forth * 3;
                     win_man->shape.y         = window_limits.y;
@@ -123,7 +124,7 @@ int main(void) {
                 }
             }
             GUI_UpdateAndDrawWindows(window_limits);
-            GUI_TopBar((Rectangle){ 0, 0, GetScreenWidth(), topbar_height });
+            GUI_TopBar((Rectangle){ 0, 0, (float) GetScreenWidth(), topbar_height });
         GUI_EndDraw();
         EndTextureMode();
 
@@ -131,22 +132,20 @@ int main(void) {
         // CHARACTERS
         GAME_Character *player = GAME_GetCurrentCharacter();
         Camera2D *camera = &game_state.camera2D;
-        camera->target = (Vector2){ player->shape.x, player->shape.y };
+        camera->target = (Vector2) { player->shape.x, player->shape.y };
         camera->offset = (Vector2){ GAME_RES_HALF_W,  GAME_RES_HALF_H };
-        
+
         // GUI Actions
         PLAYER_Actions *player_actions = &GAME_CTX.temp->player_actions;
         if (player_actions->reset_characters)    game_state = GAME_MakeState();
-        if (player_actions->add_character)       GAME_AddCharacter(&game_state);  
-        if (player_actions->toggle_character)    GAME_UpdateNextCharacter(&game_state);
         if (player_actions->add_character)       GAME_AddCharacter();
         if (player_actions->toggle_character)    GAME_UpdateNextCharacter();
-        if (IsKeyPressed(KEY_F12))              gui_state.scale += 1.0;
-        if (IsKeyPressed(KEY_F11))              gui_state.scale -= 1.0;
+        if (IsKeyPressed(KEY_F12))              gui_state.scale = FloatMin(6.0f, gui_state.scale + 1.0f);
+        if (IsKeyPressed(KEY_F11))              gui_state.scale = FloatMax(1.0f, gui_state.scale - 1.0f);
 
         if (GUI_IsPointerOverGui() == false) {
             // Update camera
-            camera->zoom += ((float)GetMouseWheelMove() * 0.1f);
+            camera->zoom += GetMouseWheelMove() * 0.1f;
             if (camera->zoom > 3.0f) camera->zoom = 3.0f;
             else if (camera->zoom < 0.1f) camera->zoom = 0.1f;
         }
@@ -158,29 +157,29 @@ int main(void) {
         player_actions->move_left             = IsKeyDown(KEY_LEFT);
         player_actions->move_right            = IsKeyDown(KEY_RIGHT);
 
-        // Update character            
+        // Update character
         Vector2 move = { 0.0f, 0.0f };
         if (player_actions->move_down)  move.y += 1;
         if (player_actions->move_up)    move.y -= 1;
         if (player_actions->move_left)  move.x -= 1;
         if (player_actions->move_right) move.x += 1;
-        
+
         float dt = GetFrameTime();
 
         // Move
         player->movement    = move;
         player->shape.x     += player->movement.x * CHARACTER_MAX_SPEED * 2 * dt;
         player->shape.y     += player->movement.y * CHARACTER_MAX_SPEED * 2 * dt;
-        
+
         // Animate
         float speed = FloatAbs(player->movement.x);
         if (speed > 0.01f)
             player->anim_time   += dt * speed * 2;
         else
-            player->anim_time   = 0;        
+            player->anim_time   = 0;
 
-        
-        // 
+
+        //
         // RENDER
         //
         BeginTextureMode(game_canvas);
@@ -232,13 +231,12 @@ int main(void) {
 
 
         // FXs
-        static RenderTexture2D rain_buffer  = { 0 };     
+        static RenderTexture2D rain_buffer  = { 0 };
         if (rain_buffer.id == 0) {
             rain_buffer = LoadRenderTexture((int)(GetScreenWidth() / 5), (int)(GetScreenHeight() / 5 + 100));
         }
         BeginTextureMode(rain_buffer);
             ClearBackground(BLANK);
-            DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5, ColorAlpha(BLUE, 0.4f));
             DrawRain(rain_buffer.texture.width, rain_buffer.texture.height, 2.5f, ColorAlpha(BLUE, 0.4f));
         EndTextureMode();
 
@@ -249,7 +247,7 @@ int main(void) {
             // Wallpaper
             if (win_state.checkbox_value == 1) {
                 DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, gui_setup.theme.gray.bg_color_3);
-                DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);
+                /*DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);*/
             }
 
             // TODO@dc: paint each element and scale them separately instead of using this scale. Work here in plain scene coords, this way we can mix pixelperfect sprites (from textures) with the generated pixel characters in game_canvas.texture.
@@ -260,7 +258,7 @@ int main(void) {
             camera->target = (Vector2){ player->shape.x * scale_x, player->shape.y * scale_y};
             camera->offset = (Vector2){ GAME_RES_HALF_W * scale_x,  GAME_RES_HALF_H  * scale_y};
             BeginMode2D(*camera);
-                // Scene with paralax
+                /*// Scene with paralax
                 {
                     float parallax = 1.4f;
 
@@ -303,20 +301,21 @@ int main(void) {
 
                 static Texture2D casaena = {0};
                 if (casaena.id == 0) casaena = LoadTexture("art/casaena.png");
-                DrawTextureEx(casaena, (Vector2){ 10 * scale_x, -100 * scale_y }, 0, scale_x, WHITE);
+                DrawTextureEx(casaena, (Vector2){ 10 * scale_x, -100 * scale_y }, 0, scale_x, WHITE);*/
             EndMode2D();
 
-            DrawTexturePro(game_canvas.texture,
+            /*DrawTexturePro(game_canvas.texture,
                     (Rectangle){0, 0, GAME_RES_W, -GAME_RES_H},
                     (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()},
                     (Vector2){0, 0},
                     0.0f,
                     WHITE
-                );
-            
+                );*/
+
             // Show UI Buffer
             DrawTextureRec(gui_state.buffer.texture, FlipYRec(GetSourceRec(gui_state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
 
+            // Finally, draw the pointer so it appears in the top of anything else
             GUI_DrawPointerTrail();
             GUI_DrawPointer();
         EndDrawing();
