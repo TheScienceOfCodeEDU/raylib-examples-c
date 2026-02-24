@@ -67,8 +67,7 @@ static inline void GUI_OverlaySetDrawCall(
     bool just_interacted,
     void (*draw_function)(void));
 static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed);
-
-
+void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape);
 
 // > FRAME
 //   PIPELINE
@@ -417,6 +416,15 @@ static inline Rectangle GUI_Relative(Rectangle shape)
     return shape;
 }
 
+static inline Rectangle GUI_RelativePositionOnly(Rectangle shape)
+{
+    Rectangle shape_relative    = GUI_Relative(shape);
+    // Keep dimensions
+    shape_relative.width        = shape.width;
+    shape_relative.height       = shape.height;
+    return shape_relative;
+}
+
 static inline EGUI_FontType GUI_GetFontType()
 {
     EGUI_FontType font_type = GUI_CTX.temp->layout.current_font_type;
@@ -470,9 +478,22 @@ static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed)
     GUI_CTX.temp->overlay_draw.shape_drawed = shape_drawed;
 }
 
+void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
+{
+    bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool interactable   = GUI_OverlayGetJustInteracted() == false;
 
-
-#include "_controls.h"
+    if (force || (interacted && interactable)) {
+        GUI_ForceZindex(GUI_CTX.temp->overlay_draw.window_target_id);
+        GUI_OverlayClose();
+    } else {
+        Rectangle relative_shape = GUI_RelativePositionOnly(shape);
+        GUI_OverlaySetShapeDrawed(relative_shape);
+        if (DEV_DEBUG_GUI) {
+            DrawDebugRect(relative_shape, RED);
+        }
+    }
+}
 
 // > FRAME
 //   PIPELINE

@@ -7,7 +7,65 @@
 #endif
 
 
+// > CONTROLS!
 
+// > INDEX
+// > BASE MACROS
+//   - GUI_MACRO_CONTROL_ACTIVATED
+//   - GUI_CONTROL_FOCUSED
+
+// > CONTROL HELPERS
+bool        GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window);
+bool        GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape);
+Rectangle   GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window);
+void        GUI_BeginControlScissor();
+void        GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale);
+// > DRAW PRIMITIVES
+void        GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner);
+void        GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type);
+Vector2     GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type);
+// > POINTERS
+void        GUI_DrawPointerFor(EGUI_Pointer pointer);
+void        GUI_DrawPointer();
+void        GUI_DrawPointerTrail();
+// > ICONS
+float       GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint);
+float       GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint);
+bool        GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint);
+// > IMAGES
+void        GUI_Face(Vector2 position, float height);
+void        GUI_Image(Texture2D texture, Rectangle shape);
+// > BUTTON
+void GUI_DrawButton(
+    Rectangle shape, const char *text, Texture2D *icon,
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
+bool GUI_Button(
+    Rectangle shape, const char* text, Texture2D* icon,
+    GUI_ThemeColors colors);
+bool GUI_ButtonMenu(
+    Rectangle shape, const char* text_id, Texture2D* icon,
+    GUI_ThemeColors colors, void (*draw_function)(void));
+void GUI_DrawText(
+    Rectangle shape, const char* text,
+    GUI_ThemeColors colors, EGUI_FontType font_type);
+void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors);
+void GUI_DrawInput(
+    Rectangle shape, char* value, int blink_cursor,
+    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type);
+void GUI_Input(
+    Rectangle shape, char *value,
+    EGUI_InputType type, GUI_ThemeColors colors);
+void GUI_DrawCheckBox(
+    Rectangle shape, bool value, const char *on_txt, const char *off_txt,
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
+void GUI_Check(
+    Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
+    GUI_ThemeColors colors);
+
+// > IMPLEMENTATION
+#ifdef IMPLEMENT_ALL
+
+// > BASE MACROS
 #define GUI_MACRO_CONTROL_ACTIVATED(shape) \
     /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\
     /*   is_activable       : if there is no resize or moving action     */\
@@ -45,77 +103,7 @@
     /* Update pointer_over_gui */                               \
     if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
 
-
-// > POINTER
-//   DRAW & COLLISION
-
-void GUI_DrawPointerFor(EGUI_Pointer pointer);
-void GUI_DrawPointer();
-void GUI_DrawPointerTrail();
-
-bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window);
-bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape);
-
-// > DRAW
-//   PRIMITIVES
-
-void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner);
-void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type);
-Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type);
-
-// > CONTROL
-//   HELPERS
-
-Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window);
-void GUI_BeginControlScissor();
-void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale);
-float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint);
-float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint);
-bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint);
-void GUI_Face(Vector2 position, float height);
-void GUI_Image(Texture2D texture, Rectangle shape);
-
-// > COMPONENTS
-//   UI
-
-void GUI_DrawButton(
-    Rectangle shape, const char *text, Texture2D *icon,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
-bool GUI_Button(
-    Rectangle shape, const char* text, Texture2D* icon,
-    GUI_ThemeColors colors);
-bool GUI_ButtonMenu(
-    Rectangle shape, const char* text_id, Texture2D* icon,
-    GUI_ThemeColors colors, void (*draw_function)(void));
-void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape);
-void GUI_DrawText(
-    Rectangle shape, const char* text,
-    GUI_ThemeColors colors, EGUI_FontType font_type);
-void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors);
-void GUI_DrawInput(
-    Rectangle shape, char* value, int blink_cursor,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type);
-void GUI_Input(
-    Rectangle shape, char *value,
-    EGUI_InputType type, GUI_ThemeColors colors);
-void GUI_DrawCheckBox(
-    Rectangle shape, bool value, const char *on_txt, const char *off_txt,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
-void GUI_Check(
-    Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
-    GUI_ThemeColors colors);
-
-// > FUNCTIONS
-//   IMPLEMENTATION
-
-#ifdef IMPLEMENT_ALL
-
-// > POINTER
-//   DRAW & COLLISION
-//   STABILITY : █████████░  90%
-//   STATUS    : Stable
-//   NOTES     : Nothing here
-
+// >>>>>> POINTER: DRAW & COLLISION
 void GUI_DrawPointerFor(EGUI_Pointer pointer)
 {
     GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[pointer];
@@ -182,7 +170,6 @@ void GUI_DrawPointerTrail()
 
 bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
 {
-
     ///
     /// TODO: fix collission ovelay same window and outside window
     GUI_State *state            = GUI_CTX.state;
@@ -221,12 +208,10 @@ bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape)
 {
     return GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp->layout.current_window_idx));
 }
+// <<<<<<< POINTER: DRAW & COLLISION
 
 
-// > DRAW
-//   PRIMITIVES
-//   STABILITY : ██████░░░░  60%
-//   NOTES     : Nothing here
+// >>>>>>> DRAW PRIMITIVES
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
 {
     if (!remove_corner) {
@@ -285,10 +270,9 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
     Vector2 delta_scaled = Vector2Scale(setup->font_delta, state->scale);
     return Vector2Add(result, delta_scaled);
 }
+// <<<<<<< DRAW PRIMITIVES
 
-// > CONTROL
-//   HELPERS
-
+// >>>>>>> CONTROL HELPERS
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
 
@@ -325,11 +309,7 @@ void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
     BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
 }
 
-
-// > ICON
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
-
+// >>>>>>> ICON
 // Returns used texture_scale to draw the texture in the available height
 float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
@@ -366,9 +346,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 }
 
 
-// > FACE
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+// >>>>>>> FACE
 void GUI_Face(Vector2 position, float height)
 {
     Rectangle shape = { position.x, position.y, height, height };
@@ -551,27 +529,6 @@ bool GUI_ButtonMenu(
     // Update condition
     is_open = GUI_OverlayIsOpenBy(text_id);
     return is_open;
-}
-
-
-void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
-{
-    bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool interactable   = GUI_OverlayGetJustInteracted() == false;
-
-    if (force || (interacted && interactable)) {
-        GUI_ForceZindex(GUI_CTX.temp->overlay_draw.window_target_id);
-        GUI_OverlayClose();
-    } else {
-        // Relativize position (just position, keep dimensions)
-        Rectangle shape_drawed  = GUI_Relative(shape);
-        shape_drawed.width      = shape.width;
-        shape_drawed.height     = shape.height;
-        GUI_OverlaySetShapeDrawed(shape_drawed);
-        if (DEV_DEBUG_GUI) {
-            DrawDebugRect(shape_drawed, RED);
-        }
-    }
 }
 
 // > TEXT
