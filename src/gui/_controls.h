@@ -231,25 +231,25 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
 {
     if (!remove_corner) {
         // Top
-        DrawRectangle(shape.x, shape.y, shape.width, border, dark);
+        DrawRectangleRec((Rectangle){ shape.x, shape.y, shape.width, border }, dark);
         // Left
-        DrawRectangle(shape.x, shape.y, border, shape.height, dark);
+        DrawRectangleRec((Rectangle){ shape.x, shape.y, border, shape.height }, dark);
         // Bottom
-        DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
+        DrawRectangleRec((Rectangle){ shape.x, shape.y + shape.height - border, shape.width, border }, light);
         // Right
-        DrawRectangle(shape.x + shape.width - border, shape.y, border, shape.height, light);
+        DrawRectangleRec((Rectangle){ shape.x + shape.width - border, shape.y, border, shape.height }, light);
     } else {
         // ─── Top (with corner gaps) ──────────────────────────────
-        DrawRectangle(shape.x + border, shape.y, shape.width - 2 * border, border, dark);
+        DrawRectangleRec((Rectangle){ shape.x + border, shape.y, shape.width - 2 * border, border }, dark);
 
         // │ Left (start after top gap)
-        DrawRectangle(shape.x, shape.y + border, border, shape.height - border, dark);
+        DrawRectangleRec((Rectangle){ shape.x, shape.y + border, border, shape.height - border }, dark);
 
         // │ Right (start after top gap)
-        DrawRectangle(shape.x + shape.width - border, shape.y + border, border, shape.height - border, light);
+        DrawRectangleRec((Rectangle){ shape.x + shape.width - border, shape.y + border, border, shape.height - border }, light);
 
         // └ Bottom (full width)
-        DrawRectangle(shape.x, shape.y + shape.height - border, shape.width, border, light);
+        DrawRectangleRec((Rectangle){ shape.x, shape.y + shape.height - border, shape.width, border }, light);
     }
 }
 
@@ -259,7 +259,7 @@ void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, floa
     GUI_FontSetup *setup    = GUI_GetFontSetup(font_type);
 
     Font font               = GUI_GetFont(font_type);
-    float font_scaled       = font.baseSize * setup->font_scale * scale;
+    float font_scaled       = (float)font.baseSize * setup->font_scale * scale;
     Vector2 delta_scaled    = Vector2Scale(setup->font_delta, state->scale);
     DrawTextEx(font, text, Vector2Add(position, delta_scaled), font_scaled, setup->font_spacing, tint);
 }
@@ -298,8 +298,8 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
         if (DEV_DEBUG_GUI_SCROLL) {
             if (GUI_CTX.temp->layout.current_window_idx == GUI_CTX.state->z_index[0]) {
                 GUI_DrawBorders(GUI_CTX.temp->layout.current_window_workspace, RED, RED, 1, false);
-                DrawDebugRect(result, ColorAlpha(GREEN, 0.1));
-                DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9));
+                DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
+                DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
             }
         }
         result = intersection;
@@ -334,7 +334,7 @@ void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
 float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
     GUI_Setup *setup    = GUI_CTX.setup;
-    float texture_scale = (shape.height / texture2d->height);
+    float texture_scale = shape.height / (float)texture2d->height;
 
     GUI_BeginControlScissor();
         DrawTextureEx(*texture2d, Vector2Add((Vector2) { shape.x, shape.y }, setup->icon_setup.icon_delta), 0, texture_scale, tint);
@@ -411,8 +411,8 @@ void GUI_Face(Vector2 position, float height)
     // Position of pixel (2x2 area)
     // float pixel_size = 2.0f * texture_scale;
     Vector2 pixel_pos = (Vector2){
-        position.x + px * texture_scale,
-        position.y + py * texture_scale
+        position.x + (float)px * texture_scale,
+        position.y + (float)py * texture_scale
     };
 
     DrawRectangleV(Vector2Add((Vector2){ 4 * texture_scale, 6 * texture_scale }, pixel_pos), (Vector2){ texture_scale, texture_scale }, WHITE);
@@ -476,13 +476,10 @@ void GUI_DrawButton(
 
     Color bg_color =    status == EGUI_ControlStatus_Focused  ? colors.bg_color_3 :
                         status == EGUI_ControlStatus_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
-                                                         colors.bg_color_2;
-
+                                                                colors.bg_color_2;
     Color b_color_a =   status == EGUI_ControlStatus_Focused  ? colors.bg_color_3:
-                                                         colors.bg_color_0;
-
-    Color b_color_b =   status == EGUI_ControlStatus_Focused  ? colors.bg_color_2:
-                                                         colors.bg_color_2;
+                                                                colors.bg_color_0;
+    Color b_color_b =   colors.bg_color_2;
     GUI_BeginControlScissor();
         DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
         GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
@@ -672,12 +669,12 @@ void GUI_DrawInput(
             strncpy(tmp, value, blink_cursor);
 
             text_size = GUI_MeasureAdjustedText(tmp, font_type);
-            DrawRectangle(
+            DrawRectangleRec((Rectangle){
                 shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x - auto_scroll_x,
                 shape.y + (border + font_setup->blink_delta.y) * scale,
                 font_setup->blink_size.x * scale,
-                font_setup->blink_size.y * scale,
-                ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
+                font_setup->blink_size.y * scale
+            }, ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
         }
     EndScissorMode();
 }
@@ -718,14 +715,14 @@ void GUI_Input(
         last_control_focus_ptr = value;
 
         // TODO@dc: validate length
-        int mouse_x     = GUI_CTX.temp->mouse_current.x - shape.x;
+        float mouse_x   = GUI_CTX.temp->mouse_current.x - shape.x;
         int text_size   = StringSize(value);
         bool right_test = mouse_x > GUI_MeasureAdjustedText(value, font_type).x;
         if (right_test) {
             blink_cursor = text_size;
         } else {
             for (blink_cursor = 0; blink_cursor < text_size; blink_cursor++) {
-                int w = GUI_MeasureAdjustedText(TextSubtext(value, 0, blink_cursor), font_type).x;
+                float w = GUI_MeasureAdjustedText(TextSubtext(value, 0, blink_cursor), font_type).x;
                 if (mouse_x < w) break;
             }
             // Move one position to the left for a more accurate mouse-to-text alignment

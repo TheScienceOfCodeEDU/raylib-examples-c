@@ -81,8 +81,8 @@ Rectangle GUI_NextInPlace(int horizontal, int vertical)
     float horizontal_size   = GUI_HorizontalSizeOrDefault();
     float vertical_size     = GUI_CTX.temp->layout.vertical_size;
     Rectangle result        = {
-        .x      = horizontal_size * (GUI_CTX.temp->layout.horizontal_count + horizontal),
-        .y      = vertical_size * (GUI_CTX.temp->layout.vertical_count + vertical),
+        .x      = horizontal_size * (float)(GUI_CTX.temp->layout.horizontal_count + horizontal),
+        .y      = vertical_size * (float)(GUI_CTX.temp->layout.vertical_count + vertical),
         .width  = horizontal_size,
         .height = vertical_size
     };
@@ -95,8 +95,8 @@ Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizonta
     Rectangle result    = {
         .x      = begin.x,
         .y      = begin.y,
-        .width  = IntAbs(end.x + end.width) - (begin.x),
-        .height = IntAbs(end.y + end.height) - (begin.y)
+        .width  = FloatAbs(end.x + end.width) - (begin.x),
+        .height = FloatAbs(end.y + end.height) - (begin.y)
     };
     return result;
 }
@@ -132,10 +132,10 @@ Rectangle GUI_NextHorizontals(int quantity)
     }
 
     Rectangle result = {
-        first.x,
-        first.y,
-        first.width + last.width,
-        first.height
+        .x      = first.x,
+        .y      = first.y,
+        .width  = first.width + last.width,
+        .height = first.height
     };
     return result;
 }
@@ -151,22 +151,22 @@ Rectangle GUI_NextVerticals(int quantity)
     }
 
     Rectangle result = {
-        first.x,
-        first.y,
-        first.width,
-        first.height + last.height
+        .x      = first.x,
+        .y      = first.y,
+        .width  = first.width,
+        .height = first.height + last.height
     };
     return result;
 }
 Rectangle GUI_LayoutAvailable(Rectangle workspace)
 {
-    float used_w = GUI_CTX.temp->layout.horizontal_size * GUI_CTX.temp->layout.horizontal_count;
-    float used_h = GUI_CTX.temp->layout.vertical_size   * GUI_CTX.temp->layout.vertical_count;
+    float used_w = GUI_CTX.temp->layout.horizontal_size * (float)GUI_CTX.temp->layout.horizontal_count;
+    float used_h = GUI_CTX.temp->layout.vertical_size   * (float)GUI_CTX.temp->layout.vertical_count;
     Rectangle result = {
-        workspace.x + used_w,
-        workspace.y + used_h,
-        workspace.width - used_w,
-        workspace.height - used_h
+        .x      = workspace.x + used_w,
+        .y      = workspace.y + used_h,
+        .width  = workspace.width - used_w,
+        .height = workspace.height - used_h
     };
 
     // Vertical scroll
