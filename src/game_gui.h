@@ -80,14 +80,14 @@ void WIN_Window(GUI_Window* window)
 
     // Responsive height (if you require it)
     // GUI_WindowUpdateShapeForContent(window);
-    
+
     GUI_Setup *setup            = GUI_GetSetup();
     GUI_Icons *icons            = GUI_GetIcons();
     GUI_Theme theme             = setup->theme;
     // Keep or modify colors
     GUI_ThemeColors colors      = window->colors;
     // Set your font
-    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;    
+    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;
     // And define your UI
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font_type);
@@ -95,8 +95,6 @@ void WIN_Window(GUI_Window* window)
         GUI_LayoutBlockCols(3, window_workspace, font_type);
 
         GUI_LayoutDuplicateBlock();
-        GUI_ButtonMenu(GUI_NextHorizontal(), "Game 1",    &icons->Dog,    theme.gray, GUI_GameMenu);
-
         // 1st input (textbox)
         GUI_Text(GUI_NextHorizontal(), "Text", colors);
         GUI_Input(GUI_NextHorizontals(2), win_state->input_contents, EGUI_InputText, colors);
@@ -145,13 +143,13 @@ void WIN_Layouts(GUI_Window* window)
         // and more verticals of full width (can be written as Horizontals too, but requires
         // an explicit call to GUI_BeginBlock() to end each line)
         GUI_BeginControlScissor();
-            float color_alpha = 0.9;
+            float color_alpha = 0.9f;
             DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BROWN, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextVertical()), ColorAlpha(BEIGE, color_alpha));
 
             // 1/3rd and 2/3rds blocks
             GUI_LayoutBlock(window_workspace.width / 3, default_height);
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));                    
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(YELLOW, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontals(2)), ColorAlpha(GREEN, color_alpha));
 
             // Second block
@@ -160,18 +158,18 @@ void WIN_Layouts(GUI_Window* window)
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(DARKGRAY, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(GRAY, color_alpha));
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(LIGHTGRAY, color_alpha));
-            
+
             // Prepare for a new block with 5 elements per row
             // You can send negative values to use AVAILABLE - YOUR_VALUE
             // Ex:
             // -default_height means take all space minus a default_height to insert a final row
             GUI_LayoutBlock(window_workspace.width / 5, -default_height);
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.4));
-            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5));
-            
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.1f));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.2f));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.3f));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.4f));
+            DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(BLACK, 0.5f));
+
             // Final row
             GUI_LayoutBlock(window_workspace.width / 2, default_height);
             DrawDebugRect(GUI_Relative(GUI_NextHorizontal()), ColorAlpha(RED, color_alpha));
@@ -248,7 +246,7 @@ void WIN_Winman(GUI_Window* window)
         if (GUI_Button(GUI_NextVertical(), "Open sample window", NULL, window->colors)) {
             int win_id = 2;
             if (win_window == NULL || win_window->id == 0) {
-                win_window = GUI_OpenWindow(win_id, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_Window);                
+                win_window = GUI_OpenWindow(win_id, "Sample window", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Dog, false, WIN_Window);
             }
             GUI_ForceZindex(win_id);
         }
@@ -280,9 +278,9 @@ void WIN_Winman(GUI_Window* window)
         }
 
         GUI_Text(GUI_NextVertical(), "--- Global values ---", window->colors);
-        
+
         // NOTE:
-        // GUI_IsPointerOverGui() is not safe to be called by a Window. It requires ALL windows to be processed beforehand. 
+        // GUI_IsPointerOverGui() is not safe to be called by a Window. It requires ALL windows to be processed beforehand.
         // GUI_Text(GUI_NextVertical(), TextFormat("PointerOverGUI: %d", GUI_IsPointerOverGui()),  window->colors);
 
         GUI_Window *active = GUI_GetWindowByZindex(0);
