@@ -10,6 +10,7 @@
 // > SUBMODULE: LAYOUT
 // > INDEX
 GUI_LayoutTemp  GUI_MakeLayoutTemp();
+void            GUI_SetFontType(EGUI_FontType font_type);
 float           GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
 float           GUI_VerticalSizeOrDefault();
 float           GUI_HorizontalSizeOrDefault();
@@ -50,6 +51,11 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
         .force_overflow             = false
     };
     return layout;
+}
+
+void GUI_SetFontType(EGUI_FontType font_type)
+{
+    GUI_CTX.temp->layout.current_font_type = font_type;
 }
 
 float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)

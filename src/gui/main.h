@@ -198,30 +198,6 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
-void GUI_SetFontType(EGUI_FontType font_type)
-{
-    GUI_CTX.temp->layout.current_font_type  = font_type;
-}
-
-GUI_Icons* GUI_GetIcons()
-{
-    return &GUI_CTX.setup->icon_setup.icons;
-}
-
-float GUI_GetIconWidth()
-{
-    return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
-}
-
-float GUI_GetIconWidthForShape(Rectangle shape, float border)
-{
-    return shape.height - border * 2 * GUI_CTX.state->scale;
-}
-
-float GUI_GetIconSmallWidth()
-{
-    return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
-}
 
 // > POINTER
 //   STATE

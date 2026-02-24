@@ -19,6 +19,11 @@ GUI_FontSetup       GUI_LoadFontSetupDefault(EGUI_FontType content);
 GUI_PointerSetup    GUI_LoadPointerSetupForType(EGUI_Pointer pointer_type);
 GUI_Setup           GUI_LoadSetupDefault();
 
+GUI_Icons*          GUI_GetIcons();
+float               GUI_GetIconWidth();
+float               GUI_GetIconWidthForShape(Rectangle shape, float border);
+float               GUI_GetIconSmallWidth();
+
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
 GUI_Icons GUI_LoadIcons()
@@ -225,5 +230,25 @@ GUI_Setup GUI_LoadSetupDefault()
         setup.pointer_setups[i] = GUI_LoadPointerSetupForType((EGUI_Pointer)i);
     }
     return setup;
+}
+
+GUI_Icons* GUI_GetIcons()
+{
+    return &GUI_CTX.setup->icon_setup.icons;
+}
+
+float GUI_GetIconWidth()
+{
+    return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
+}
+
+float GUI_GetIconWidthForShape(Rectangle shape, float border)
+{
+    return shape.height - border * 2 * GUI_CTX.state->scale;
+}
+
+float GUI_GetIconSmallWidth()
+{
+    return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
 }
 #endif

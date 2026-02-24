@@ -242,24 +242,15 @@ typedef struct {
 } GUI_State;
 
 
-// > STATE > CONTEXT
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
-
+// > STATE CONTEXT
 static struct {
     GUI_State*  state;
     GUI_Setup*  setup;
     GUI_Temp*    temp;
 } GUI_CTX = { 0 };
 
-// > CONTEXT
-//   API
+void        GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
+GUI_State*  GUI_GetState();
+GUI_Setup*  GUI_GetSetup();
 
-void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
-GUI_State* GUI_GetState();
-GUI_Setup* GUI_GetSetup();
-void GUI_SetFontType(EGUI_FontType font_type);
-GUI_Icons* GUI_GetIcons();
-float GUI_GetIconWidth();
-float GUI_GetIconWidthForShape(Rectangle shape, float border);
-float GUI_GetIconSmallWidth();
+
