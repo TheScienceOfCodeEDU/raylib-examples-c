@@ -287,7 +287,7 @@ GUI_Window* GUI_GetWindow(int id)
 
 GUI_Window* GUI_GetWindowByZindex(int z)
 {
-    if (z > 0 && z < GUI_MAX_OPEN_WINS)
+    if (z >= 0 && z < GUI_MAX_OPEN_WINS)
         return GUI_GetWindow(GUI_CTX.state->z_index[z]);
     else
         return NULL;
