@@ -78,7 +78,7 @@ bool IsKeyEnterPressed()
 bool CheckCollisionPointRecWithMargin(Vector2 point, Rectangle rect, float margin) {
     Rectangle inner = {
         rect.x + margin,
-        rect.y + margin, 
+        rect.y + margin,
         rect.width - 2 * margin,
         rect.height - 2 * margin
     };
@@ -156,6 +156,14 @@ Rectangle RectFromVector2(Vector2 position, float w, float h)
         h
     };
     return result;
+}
+
+static inline float SnapFloat(float x) { return floorf(x + 0.5f); }
+
+static inline Vector2 SnapVector2(Vector2 v) {
+    v.x = SnapFloat(v.x);
+    v.y = SnapFloat(v.y);
+    return v;
 }
 
 // Helper function to convert HSV to RGB

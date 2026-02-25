@@ -1,10 +1,4 @@
 #pragma once
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #define IMPLEMENT_ALL 1
- #include "../common.h"
-#endif
-
 
 #include "types.h"
 #include "_layout.h"
@@ -489,9 +483,9 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
     } else {
         Rectangle relative_shape = GUI_RelativePositionOnly(shape);
         GUI_OverlaySetShapeDrawed(relative_shape);
-        if (DEV_DEBUG_GUI) {
-            DrawDebugRect(relative_shape, RED);
-        }
+        #ifdef DEV_DEBUG_GUI
+        DrawDebugRect(relative_shape, RED);
+        #endif
     }
 }
 
@@ -667,12 +661,12 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontTyp
         }, colors.tx_color_0);
     }
 
-    if (DEV_DEBUG_GUI) {
-        DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85));
-        DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75));
-        DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85));
-        DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25));
-    }
+    #ifdef DEV_DEBUG_GUI
+    DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85f));
+    DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75f));
+    DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85f));
+    DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25f));
+    #endif
 }
 
 void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
@@ -726,11 +720,9 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
             }
             // Resizing
             if (GUI_CTX.temp->current_action == EGUI_WinActionResizing) {
-                if (is_mouse_down) {
-                    Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
-                    window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
-                    window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
-                }
+                Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
+                window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
+                window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
             }
             // Handled by GUI, as move/resize can make that is_pointer_over is false during frames
             GUI_CTX.temp->pointer_over_gui = GUI_CTX.temp->current_action != EGUI_WinActionNone;
@@ -739,7 +731,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Limit
     window->shape   = LimitRect(window->shape, limits);
-    shape_title     = GUI_WindowTitle(window->shape);
+    // shape_title  = GUI_WindowTitle(window->shape);
 
     // Vertical scroll
     bool horizontal_scroll  = workspace.height < window->content_height;
@@ -865,7 +857,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     // you can be pointing to a 2nd window with a lower z-index priority.
     GUI_CTX.temp->window_target_id = 0;
     // If overlay is displayed then force window_target_id
-    // This allows to click on the overlay when its in front of other window(s).
+    // This allows clicking on the overlay when its in front of other window(s).
     if (GUI_CTX.temp->overlay_draw.window_target_id != 0) {
         GUI_CTX.temp->window_target_id = GUI_CTX.temp->overlay_draw.window_target_id;
     }
@@ -901,20 +893,20 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
 
 Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_FontType font_type)
 {
-    // Grant min dimmensions
-    window->shape.width = fmax(GUI_MIN_WIN_SIZE, window->shape.width);
-    window->shape.height = fmax(GUI_MIN_WIN_SIZE, window->shape.height);
+    // Grant min dimensions
+    window->shape.width     = FloatMax(GUI_MIN_WIN_SIZE, window->shape.width);
+    window->shape.height    = FloatMax(GUI_MIN_WIN_SIZE, window->shape.height);
 
     // Data
     Rectangle window_workspace = GUI_WindowWorkspace(window);
     // Begin window stuff
     GUI_LayoutReset(window_workspace);
+    GUI_SetFontType(font_type);
 
     // Vertical scroll
     GUI_CTX.temp->layout.current_window_idx         = window->id;
     GUI_CTX.temp->layout.current_window_workspace   = window_workspace;
     GUI_CTX.temp->layout.current_scroll             = -window->scroll_offset;
-    GUI_CTX.temp->layout.current_font_type          = font_type;
 
     // Vertical scroll
     rlPushMatrix();

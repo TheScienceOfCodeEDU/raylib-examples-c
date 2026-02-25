@@ -1,10 +1,4 @@
 #pragma once
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #define IMPLEMENT_ALL 1
- #include "../common.h"
-#include "structs.h"
-#endif
 
 // > SUBMODULE: SETUP
 // > INDEX
@@ -26,6 +20,7 @@ float               GUI_GetIconSmallWidth();
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
+
 GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
@@ -129,7 +124,6 @@ GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_FontType content)
         GUI_FontSetup result = {
             .default_height     = 36,
             .border             = 2.0f,
-
             .font_scale         = 2.0f,
             .font_delta         = (Vector2){ 6.0f, 6.0f },
             .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
@@ -147,7 +141,6 @@ GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_FontType content)
         GUI_FontSetup result = {
             .default_height     = 30,
             .border             = 2.0f,
-
             .font_scale         = 1.0f,
             .font_delta         = (Vector2){ 4.f, 4.f },
             .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),

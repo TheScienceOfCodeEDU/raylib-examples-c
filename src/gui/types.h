@@ -4,10 +4,11 @@
  #define UNITY_BUILD 0
  #include "../common.h"
  #include "setup.h"
+ #include "_setup.h"
 #endif
 
 #define GUI_MAX_TRAIL       30
-#define GUI_MIN_WIN_SIZE    128
+#define GUI_MIN_WIN_SIZE    128.f
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
 #define GUI_SCROLL_SPEED    16

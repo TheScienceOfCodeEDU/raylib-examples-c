@@ -1,11 +1,4 @@
 #pragma once
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #define IMPLEMENT_ALL 1
- #include "../common.h"
- #include "main.h"
-#endif
-
 
 // > CONTROLS!
 
