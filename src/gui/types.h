@@ -3,7 +3,6 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
  #include "../common.h"
- #include "setup.h"
  #include "_setup.h"
 #endif
 

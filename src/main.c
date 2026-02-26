@@ -38,7 +38,7 @@ int main(void) {
     InitWindow(DEV_WINDOW_W, DEV_WINDOW_H, TextFormat("%s - %s - %s", BuildTimeFormatted(), __DATE__, GetWorkingDirectory()));
     SetTargetFPS(60);
 
-    TrySetTargetMonitor(DEV_TARGET_MONITOR, 3);
+    TrySetTargetMonitor(DEV_TARGET_MONITOR, 256);
 
     // TODO@dc: review
     Vector2 screen_max = (Vector2) { GetMonitorWidth(DEV_TARGET_MONITOR),  GetMonitorHeight(DEV_TARGET_MONITOR) };
@@ -140,8 +140,8 @@ int main(void) {
         if (player_actions->reset_characters)    game_state = GAME_MakeState();
         if (player_actions->add_character)       GAME_AddCharacter();
         if (player_actions->toggle_character)    GAME_UpdateNextCharacter();
-        if (IsKeyPressed(KEY_F12))              gui_state.scale = FloatMin(6.0f, gui_state.scale + 1.0f);
-        if (IsKeyPressed(KEY_F11))              gui_state.scale = FloatMax(1.0f, gui_state.scale - 1.0f);
+        if (IsKeyPressed(KEY_F8))              gui_state.scale = FloatMin(6.0f, gui_state.scale + 0.25f);
+        if (IsKeyPressed(KEY_F7))              gui_state.scale = FloatMax(0.5f, gui_state.scale - 0.25f);
 
         if (GUI_IsPointerOverGui() == false) {
             // Update camera

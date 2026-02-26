@@ -118,6 +118,9 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
         .force_z_index  = 0
     };
 
+    // IMPORTANT: keep GUI buffer pixel-perfect
+    SetTextureFilter(state.buffer.texture, TEXTURE_FILTER_POINT);
+
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
         state.window_s[i] = GUI_MakeEmptyWindow();
     }
@@ -483,7 +486,7 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
     } else {
         Rectangle relative_shape = GUI_RelativePositionOnly(shape);
         GUI_OverlaySetShapeDrawed(relative_shape);
-        #ifdef DEV_DEBUG_GUI
+        #if DEV_DEBUG_GUI == 1
         DrawDebugRect(relative_shape, RED);
         #endif
     }
@@ -661,7 +664,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontTyp
         }, colors.tx_color_0);
     }
 
-    #ifdef DEV_DEBUG_GUI
+    #if DEV_DEBUG_GUI == 1
     DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85f));
     DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75f));
     DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85f));
