@@ -194,7 +194,7 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->layout.current_scroll };
     bool collide_scrolled       = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
-    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_WindowWorkspace(window));
+    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_GetWindowWorkspace(window));
     bool overflow               = GUI_CTX.temp->layout.force_overflow;
 
     // Collide checks

@@ -61,7 +61,7 @@ void GUI_TopBar(Rectangle shape)
     GUI_Theme *theme    = &setup->theme;
     const int BUTTONS   = 4;
 
-    GUI_LayoutReset(GUI_Workspace());
+    GUI_LayoutReset(GUI_MakeWorkspace());
     GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
     GUI_ButtonMenu(GUI_NextHorizontal(), "Project",     NULL,           theme->red,     GUI_ProgramMenu);
     GUI_ButtonMenu(GUI_NextHorizontal(), "Game",        &icons->Dog,    theme->gray,    GUI_GameMenu);
@@ -310,7 +310,7 @@ void WIN_Winman(GUI_Window* window)
 
         GUI_Window *active = GUI_GetWindowByZindex(0);
         if (active != NULL) {
-            Rectangle t_shape = GUI_WindowTitle(active->shape);
+            Rectangle t_shape = GUI_GetWindowTitle(active->shape);
             Rectangle w_shape = active->shape;
 
             GUI_Text(GUI_NextVertical(), "--- Focused window ---", window->colors);

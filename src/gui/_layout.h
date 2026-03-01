@@ -31,6 +31,9 @@ void            GUI_LayoutBlock(float width, float height);
 void            GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type);
 void            GUI_LayoutDuplicateBlock();
 
+static inline Rectangle GUI_Relative(Rectangle shape);
+static inline Rectangle GUI_RelativePositionOnly(Rectangle shape);
+
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
 
@@ -245,5 +248,24 @@ void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType f
 void GUI_LayoutDuplicateBlock()
 {
     GUI_LayoutBlock(GUI_CTX.temp->layout.horizontal_size, GUI_CTX.temp->layout.vertical_size);
+}
+
+static inline Rectangle GUI_Relative(Rectangle shape)
+{
+    bool is_active_layout = GUI_CTX.temp->layout.current_workspace.width  > 0 &&
+                            GUI_CTX.temp->layout.current_workspace.height > 0;
+    if (is_active_layout) {
+        shape = RelativeToRect(shape, GUI_CTX.temp->layout.current_workspace);
+    }
+    return shape;
+}
+
+static inline Rectangle GUI_RelativePositionOnly(Rectangle shape)
+{
+    Rectangle shape_relative    = GUI_Relative(shape);
+    // Keep dimensions
+    shape_relative.width        = shape.width;
+    shape_relative.height       = shape.height;
+    return shape_relative;
 }
 #endif
