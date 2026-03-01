@@ -8,8 +8,8 @@
 // > SUBMODULE: LAYOUT
 // > INDEX
 GUI_LayoutTemp  GUI_MakeLayoutTemp();
-void            GUI_SetFontType(EGUI_FontType font_type);
-float           GUI_CalcDefaultHeightScaled(EGUI_FontType font_type);
+void            GUI_SetFontType(EGUI_Font font);
+float           GUI_CalcDefaultHeightScaled(EGUI_Font font);
 float           GUI_VerticalSizeOrDefault();
 float           GUI_HorizontalSizeOrDefault();
 void            GUI_LayoutVertical(float size);
@@ -27,7 +27,7 @@ Rectangle       GUI_LayoutAvailable(Rectangle workspace);
 void            GUI_LayoutReset(Rectangle workspace);
 void            GUI_LayoutAutoJump();
 void            GUI_LayoutBlock(float width, float height);
-void            GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type);
+void            GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_Font font);
 void            GUI_LayoutDuplicateBlock();
 
 static inline Rectangle GUI_Relative(Rectangle shape);
@@ -46,7 +46,7 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
         .horizontal_size            = 0.0f,
         .used_height                = 0.0f,
         .current_scroll             = 0,
-        .current_font_type          = EGUI_FontType_Default,
+        .current_font               = EGUI_Font_Default,
         .current_window_idx         = GUI_NO_WIN,
         .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .force_overflow             = false
@@ -54,16 +54,16 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
     return layout;
 }
 
-void GUI_SetFontType(EGUI_FontType font_type)
+void GUI_SetFontType(EGUI_Font font)
 {
-    GUI_CTX.temp->layout.current_font_type = font_type;
+    GUI_CTX.temp->layout.current_font = font;
 }
 
-float GUI_CalcDefaultHeightScaled(EGUI_FontType font_type)
+float GUI_CalcDefaultHeightScaled(EGUI_Font font)
 {
     GUI_Setup* setup = GUI_CTX.setup;
     GUI_State* state = GUI_CTX.state;
-    return setup->font_setups[font_type].default_height * state->scale;
+    return setup->fonts[font].default_height * state->scale;
 }
 
 void GUI_LayoutVertical(float size)
@@ -237,11 +237,11 @@ void GUI_LayoutBlock(float width, float height)
     }
 }
 
-void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_FontType font_type)
+void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_Font font)
 {
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
+    float default_height = GUI_CalcDefaultHeightScaled(font);
     GUI_LayoutBlock(window_workspace.width / cols, default_height);
-    GUI_SetFontType(font_type);
+    GUI_SetFontType(font);
 }
 
 void GUI_LayoutDuplicateBlock()

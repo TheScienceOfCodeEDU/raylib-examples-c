@@ -14,8 +14,8 @@ Color               GUI_GenerateThemeColor(float hue, float intensity);
 GUI_ThemeColors     GUI_GenerateThemeColors(float hue);
 GUI_Theme           GUI_GenerateTheme();
 
-GUI_FontSetup       GUI_LoadFontSetupDefault(EGUI_FontType content);
-GUI_PointerSetup    GUI_LoadPointerSetupForType(EGUI_Pointer pointer_type);
+GUI_FontSetup       GUI_LoadFontSetupDefault(EGUI_Font font);
+GUI_CursorSetup     GUI_LoadCursorSetupForType(EGUI_Cursor cursor);
 GUI_Setup           GUI_LoadSetupDefault();
 
 GUI_Icons*          GUI_GetIcons();
@@ -120,89 +120,89 @@ GUI_Theme GUI_GenerateTheme()
 }
 
 
-GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_FontType content)
+GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_Font content)
 {
-    _Static_assert(EGUI_FontType_Count == 2,  "Update fonts here");
+    _Static_assert(EGUI_Font_Count == 2,  "Update fonts here");
 
     switch (content) {
-    case EGUI_FontType_GUI: {
+    case EGUI_Font_GUI: {
         GUI_FontSetup result = {
-            .default_height     = 36,
-            .border             = 2.0f,
-            .font_scale         = 2.0f,
-            .font_delta         = (Vector2){ 6.0f, 6.0f },
-            .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
-            .font_use_custom    = 0,
-            .font_spacing       = 1.0f,
-            .blink_size         = (Vector2){ 1.0f, 30.0f },
-            .blink_delta        = (Vector2){ 0.0f, 0.0f },
-            .blink_alpha        = 0.95f
+            .default_height = 36,
+            .border         = 2.0f,
+            .scale          = 2.0f,
+            .delta          = (Vector2){ 6.0f, 6.0f },
+            .custom         = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
+            .use_custom     = 0,
+            .spacing        = 1.0f,
+            .blink_size     = (Vector2){ 1.0f, 30.0f },
+            .blink_delta    = (Vector2){ 0.0f, 0.0f },
+            .blink_alpha    = 0.95f
         };
-        SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
+        SetTextureFilter(result.custom.texture, TEXTURE_FILTER_POINT);
         return result;
     }
-    case EGUI_FontType_Default:
+    case EGUI_Font_Default:
     default: {
         GUI_FontSetup result = {
-            .default_height     = 30,
-            .border             = 2.0f,
-            .font_scale         = 1.0f,
-            .font_delta         = (Vector2){ 4.f, 4.f },
-            .font_custom        = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
-            .font_use_custom    = 1,
-            .font_spacing       = 1.0f,
-            .blink_size         = (Vector2){ 1.0f, 24.0f },
-            .blink_delta        = (Vector2){ 0.0f, 0.0f },
-            .blink_alpha        = 0.95f
+            .default_height = 30,
+            .border         = 2.0f,
+            .scale          = 1.0f,
+            .delta          = (Vector2){ 4.f, 4.f },
+            .custom         = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
+            .use_custom     = 1,
+            .spacing        = 1.0f,
+            .blink_size     = (Vector2){ 1.0f, 24.0f },
+            .blink_delta    = (Vector2){ 0.0f, 0.0f },
+            .blink_alpha    = 0.95f
         };
-        SetTextureFilter(result.font_custom.texture, TEXTURE_FILTER_POINT);
+        SetTextureFilter(result.custom.texture, TEXTURE_FILTER_POINT);
         return result;
     }
     }
 }
 
-GUI_PointerSetup GUI_LoadPointerSetupForType(EGUI_Pointer pointer_type)
+GUI_CursorSetup GUI_LoadCursorSetupForType(EGUI_Cursor cursor)
 {
-    GUI_PointerSetup setup = { 0 };
-    _Static_assert(EGUI_Pointer_Count  == 5,  "Update pointers here!");
+    GUI_CursorSetup setup = { 0 };
+    _Static_assert(EGUI_Cursor_Count  == 5,  "Update cursors here!");
 
-    switch (pointer_type)
+    switch (cursor)
     {
-        case EGUI_Pointer_AGS:
-            setup.pointer_texture           = LoadTexture("ico/cursor.png");
-            setup.pointer_delta_normalized  = (Vector2){ 0.5f, 0.5f };
-            setup.pointer_scale             = 2.0f;
-            setup.pointer_alpha             = 1.0f;
+        case EGUI_Cursor_AGS:
+            setup.texture                   = LoadTexture("ico/cursor.png");
+            setup.delta_normalized          = (Vector2){ 0.5f, 0.5f };
+            setup.scale                     = 2.0f;
+            setup.alpha                     = 1.0f;
             setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
-            setup.additional                = EGUI_Pointer_None;
+            setup.additional_cursor         = EGUI_Cursor_None;
             break;
 
-        case EGUI_Pointer_Text:
-            setup.pointer_texture           = LoadTexture("ico/pointer_txt.png");
-            setup.pointer_delta_normalized  = (Vector2){ -1.0f, 0.0f };
-            setup.pointer_scale             = 2.0f;
-            setup.pointer_alpha             = 0.85f;
+        case EGUI_Cursor_Text:
+            setup.texture                   = LoadTexture("ico/pointer_txt.png");
+            setup.delta_normalized          = (Vector2){ -1.0f, 0.0f };
+            setup.scale                     = 2.0f;
+            setup.alpha                     = 0.85f;
             setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
-            setup.additional                = EGUI_Pointer_Default;
+            setup.additional_cursor         = EGUI_Cursor_Default;
             break;
 
-        case EGUI_Pointer_Resize:
-            setup.pointer_texture           = LoadTexture("ico/pointer_resize.png");
-            setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
-            setup.pointer_scale             = 2.0f;
-            setup.pointer_alpha             = 1.0f;
+        case EGUI_Cursor_Resize:
+            setup.texture                   = LoadTexture("ico/pointer_resize.png");
+            setup.delta_normalized          = (Vector2){ 0.0f, 0.0f };
+            setup.scale                     = 2.0f;
+            setup.alpha                     = 1.0f;
             setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
-            setup.additional                = EGUI_Pointer_None;
+            setup.additional_cursor         = EGUI_Cursor_None;
             break;
 
-        case EGUI_Pointer_Default:
+        case EGUI_Cursor_Default:
         default:
-            setup.pointer_texture           = LoadTexture("ico/pointer.png");
-            setup.pointer_delta_normalized  = (Vector2){ 0.0f, 0.0f };
-            setup.pointer_scale             = 2.0f;
-            setup.pointer_alpha             = 1.0f;
+            setup.texture                   = LoadTexture("ico/pointer.png");
+            setup.delta_normalized          = (Vector2){ 0.0f, 0.0f };
+            setup.scale                     = 2.0f;
+            setup.alpha                     = 1.0f;
             setup.trail_delta_normalized    = (Vector2){ 1.0f, 1.0f };
-            setup.additional                = EGUI_Pointer_None;
+            setup.additional_cursor         = EGUI_Cursor_None;
             break;
 
     }
@@ -214,30 +214,30 @@ GUI_Setup GUI_LoadSetupDefault()
 {
     GUI_Setup setup = {
         .theme      = GUI_GenerateTheme(),
-        .icon_setup = GUI_MakeIconSetup(GUI_LoadIcons())
+        .icons      = GUI_MakeIconSetup(GUI_LoadIcons())
     };
 
     // Fonts
-    for (int i = 0; i < EGUI_FontType_Count; i++) {
-        setup.font_setups[i] = GUI_LoadFontSetupDefault((EGUI_FontType)i);
+    for (int i = 0; i < EGUI_Font_Count; i++) {
+        setup.fonts[i] = GUI_LoadFontSetupDefault((EGUI_Font)i);
     }
 
-    // Pointers
+    // Cursors
     // 0 is None
-    for (int i = 1; i < EGUI_Pointer_Count; i++) {
-        setup.pointer_setups[i] = GUI_LoadPointerSetupForType((EGUI_Pointer)i);
+    for (int i = 1; i < EGUI_Cursor_Count; i++) {
+        setup.cursors[i] = GUI_LoadCursorSetupForType((EGUI_Cursor)i);
     }
     return setup;
 }
 
 GUI_Icons* GUI_GetIcons()
 {
-    return &GUI_CTX.setup->icon_setup.icons;
+    return &GUI_CTX.setup->icons.icons;
 }
 
 float GUI_GetIconWidth()
 {
-    return GUI_CTX.setup->icon_setup.icon_size * GUI_CTX.state->scale;
+    return GUI_CTX.setup->icons.icon_size * GUI_CTX.state->scale;
 }
 
 float GUI_GetIconWidthForShape(Rectangle shape, float border)
@@ -247,6 +247,6 @@ float GUI_GetIconWidthForShape(Rectangle shape, float border)
 
 float GUI_GetIconSmallWidth()
 {
-    return GUI_CTX.setup->icon_setup.icon_size_sm * GUI_CTX.state->scale;
+    return GUI_CTX.setup->icons.icon_size_sm * GUI_CTX.state->scale;
 }
 #endif

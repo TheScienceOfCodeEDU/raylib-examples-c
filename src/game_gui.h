@@ -62,7 +62,7 @@ void GUI_TopBar(Rectangle shape)
     const int BUTTONS   = 4;
 
     GUI_LayoutReset(GUI_MakeWorkspace());
-    GUI_LayoutBlockCols(BUTTONS, shape, EGUI_FontType_GUI);
+    GUI_LayoutBlockCols(BUTTONS, shape, EGUI_Font_GUI);
     GUI_ButtonMenu(GUI_NextHorizontal(), "Project",     NULL,           theme->red,     GUI_ProgramMenu);
     GUI_ButtonMenu(GUI_NextHorizontal(), "Game",        &icons->Dog,    theme->gray,    GUI_GameMenu);
 }
@@ -86,28 +86,28 @@ void WIN_Window(GUI_Window* window)
     // Keep or modify colors
     GUI_ThemeColors colors      = window->colors;
     // Set your font
-    EGUI_FontType font_type     = win_state->font_toggle ? EGUI_FontType_GUI: EGUI_FontType_Default;
+    EGUI_Font font     = win_state->font_toggle ? EGUI_Font_GUI: EGUI_Font_Default;
     // And define your UI
     Rectangle window_workspace  =
-    GUI_BeginWindowContents(window, font_type);
+    GUI_BeginWindowContents(window, font);
         // A default layout with 3 columns
-        GUI_LayoutBlockCols(3, window_workspace, font_type);
+        GUI_LayoutBlockCols(3, window_workspace, font);
 
         GUI_LayoutDuplicateBlock();
         // 1st input (textbox)
         GUI_Text(GUI_NextHorizontal(), "Text", colors);
-        GUI_Input(GUI_NextHorizontals(2), win_state->input_contents, EGUI_InputText, colors);
+        GUI_Input(GUI_NextHorizontals(2), win_state->input_contents, EGUI_Input_Text, colors);
 
         // 2nd input for integer
         // TODO@dc: add min, max and parsing
         GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Int", colors);
-        GUI_Input(GUI_NextHorizontals(2), win_state->input_int_contents, EGUI_InputInt, colors);
+        GUI_Input(GUI_NextHorizontals(2), win_state->input_int_contents, EGUI_Input_Int, colors);
 
         // 3rd input for float
         GUI_LayoutDuplicateBlock();
         GUI_Text(GUI_NextHorizontal(), "Float", colors);
-        GUI_Input(GUI_NextHorizontals(2), win_state->input_float_contents, EGUI_InputFloat, colors);
+        GUI_Input(GUI_NextHorizontals(2), win_state->input_float_contents, EGUI_Input_Float, colors);
 
         // Wallpaper check (checkbox/switch)
         // With a theme.red color
@@ -129,11 +129,11 @@ void WIN_Window(GUI_Window* window)
 void WIN_Layouts(GUI_Window* window)
 {
     GUI_Setup* setup = GUI_GetSetup();
-    EGUI_FontType font_type = EGUI_FontType_Default;
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
+    EGUI_Font font = EGUI_Font_Default;
+    float default_height = GUI_CalcDefaultHeightScaled(font);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, EGUI_FontType_Default);
+    GUI_BeginWindowContents(window, EGUI_Font_Default);
 
         // First block
         GUI_LayoutBlock(window_workspace.width, default_height);
@@ -183,10 +183,10 @@ void WIN_CharacterDebug(GUI_Window* window)
     GAME_State *game_state      = GAME_CTX.state;
     GAME_Character *ch          = &game_state->characters[game_state->current_character];
     GUI_ThemeColors colors      = window->colors;
-    EGUI_FontType font_type     = EGUI_FontType_Default;
+    EGUI_Font font     = EGUI_Font_Default;
 
-    Rectangle workspace = GUI_BeginWindowContents(window, font_type);
-        GUI_LayoutBlockCols(2, workspace, font_type);
+    Rectangle workspace = GUI_BeginWindowContents(window, font);
+        GUI_LayoutBlockCols(2, workspace, font);
 
         // Shape
         GUI_Text(GUI_NextHorizontal(), "shape.x", colors);
@@ -232,11 +232,11 @@ void WIN_Settings(GUI_Window* window)
 {
     GUI_State *state            = GUI_GetState();
     GUI_ThemeColors colors      = window->colors;
-    EGUI_FontType font_type     = EGUI_FontType_Default;
+    EGUI_Font font     = EGUI_Font_Default;
 
     Rectangle window_workspace  =
-    GUI_BeginWindowContents(window, font_type);
-        GUI_LayoutBlockCols(3, window_workspace, font_type);
+    GUI_BeginWindowContents(window, font);
+        GUI_LayoutBlockCols(3, window_workspace, font);
         GUI_Text(GUI_NextHorizontal(), "Scale", colors);
         GUI_Float(GUI_NextHorizontals(2), &state->scale, colors, 0.5f, 6.0f);
 
@@ -251,11 +251,11 @@ void WIN_Winman(GUI_Window* window)
     GUI_State *state = GUI_GetState();
     GUI_Setup *setup = GUI_GetSetup();
     GUI_Icons *icons = GUI_GetIcons();
-    EGUI_FontType font_type = EGUI_FontType_Default;
-    float default_height = GUI_CalcDefaultHeightScaled(font_type);
+    EGUI_Font font = EGUI_Font_Default;
+    float default_height = GUI_CalcDefaultHeightScaled(font);
 
     Rectangle window_workspace =
-    GUI_BeginWindowContents(window, font_type);
+    GUI_BeginWindowContents(window, font);
         GUI_LayoutBlock(window_workspace.width, default_height);
 
         static GUI_Window* win_window = NULL;

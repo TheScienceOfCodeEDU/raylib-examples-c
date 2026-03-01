@@ -27,9 +27,9 @@ typedef enum {
 } EGUI_ControlStatus;
 
 typedef enum {
-    EGUI_InputText,      // editable ASCII text
-    EGUI_InputInt,       // integer numeric input
-    EGUI_InputFloat      // floating numeric input
+    EGUI_Input_Text,      // editable ASCII text
+    EGUI_Input_Int,       // integer numeric input
+    EGUI_Input_Float      // floating numeric input
 } EGUI_InputType;
 
 /*
@@ -93,61 +93,60 @@ typedef struct {
 } GUI_Theme;
 
 typedef enum {
-    EGUI_FontType_Default,
-    EGUI_FontType_GUI,
-    EGUI_FontType_Count
-} EGUI_FontType;
+    EGUI_Font_Default,
+    EGUI_Font_GUI,
+    EGUI_Font_Count
+} EGUI_Font;
 
 typedef struct {
     float           default_height;
     float           border;
 
-    float           font_scale;
-    Vector2         font_delta;             // Delta adjustement
-    Font            font_custom;
-    bool            font_use_custom;        // Indicates if a custom font is used
-    float           font_spacing;
-    Vector2         blink_size;             // Size of the blinking cursor
-    Vector2         blink_delta;            // Blink adjustment
+    float           scale;
+    Vector2         delta;             // Delta adjustement
+    Font            custom;
+    bool            use_custom;        // Indicates if a custom font is used
+    float           spacing;
+    Vector2         blink_size;        // Size of the blinking cursor
+    Vector2         blink_delta;      // Blink adjustment
     float           blink_alpha;
 } GUI_FontSetup;
 
 typedef enum {
-    EGUI_Pointer_None,
-    EGUI_Pointer_Default,
-    EGUI_Pointer_AGS,
-    EGUI_Pointer_Text,
-    EGUI_Pointer_Resize,
-    EGUI_Pointer_Count,
-} EGUI_Pointer;
+    EGUI_Cursor_None,
+    EGUI_Cursor_Default,
+    EGUI_Cursor_AGS,
+    EGUI_Cursor_Text,
+    EGUI_Cursor_Resize,
+    EGUI_Cursor_Count,
+} EGUI_Cursor;
 
 typedef struct {
-    Texture2D       pointer_texture;
-    Vector2         pointer_delta_normalized;
-    float           pointer_scale;
-    float           pointer_alpha;
+    Texture2D       texture;
+    Vector2         delta_normalized;
+    float           scale;
+    float           alpha;
     Vector2         trail_delta_normalized;
-    EGUI_Pointer    additional;
-} GUI_PointerSetup;
+    EGUI_Cursor     additional_cursor;
+} GUI_CursorSetup;
 
 typedef struct {
     GUI_Theme           theme;
-    GUI_IconSetup       icon_setup;
-    GUI_FontSetup       font_setups[EGUI_FontType_Count];
-    GUI_PointerSetup    pointer_setups[EGUI_Pointer_Count];
+    GUI_IconSetup       icons;
+    GUI_FontSetup       fonts[EGUI_Font_Count];
+    GUI_CursorSetup     cursors[EGUI_Cursor_Count];
 } GUI_Setup;
 // < END SUBMODULE: SETUP
 
-
 // > TYPES
-//   SUBMODULE: WIN
+//   SUBMODULE: WINDOW
 #define MAX_WINDOW_TITLE 16
 
 typedef enum {
-    EGUI_WinActionNone,
-    EGUI_WinActionMoving,
-    EGUI_WinActionResizing
-} EGUI_WinAction;
+    EGUI_WindowAction_None,
+    EGUI_WindowAction_Moving,
+    EGUI_WindowAction_Resizing
+} EGUI_WindowAction;
 
 typedef struct GUI_Window {
     int             id;
@@ -160,8 +159,13 @@ typedef struct GUI_Window {
     bool            focused_face;
     void (*contents) (struct GUI_Window*);
 } GUI_Window;
-// < END SUBMODULE: WIN
 
+typedef struct {
+    EGUI_WindowAction   current_action;
+    void                *control_focus_ptr; //todo@dc: Needed?
+    int                 window_target_id; // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
+} GUI_WindowTemp;
+// < END SUBMODULE: WINDOW
 
 // > TYPES
 //   SUBMODULE: LAYOUT
@@ -178,7 +182,7 @@ typedef struct {
     float           horizontal_size;
     float           used_height;        // Used to auto calc vertical scroll bar
     float           current_scroll;
-    EGUI_FontType   current_font_type;
+    EGUI_Font       current_font;
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player.
@@ -195,6 +199,8 @@ typedef struct {
 
 // > TYPES
 //
+
+
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
     int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
@@ -209,21 +215,17 @@ typedef struct {
     // Globals
     EGUI_Status      status;
 
-    // Window runtime
-    EGUI_WinAction  current_action;
-    void            *control_focus_ptr;
-    int             window_target_id; // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
-
-    // Pointer runtime
-    EGUI_Pointer    current_pointer;
+    // Cursor
+    EGUI_Cursor     cursor;
     Vector2         mouse_last;
     Vector2         mouse_current;
-    bool            pointer_over_gui;   // True if the pointer is over any of the elements in the GUI
-    Vector2         pointer_trail[GUI_MAX_TRAIL];
+    bool            cursor_over_gui;                    // True if the pointer is over any of the elements in the GUI
+    Vector2         cursor_trail[GUI_MAX_TRAIL];
 
     // Overlay draw
     GUI_Overlay overlay_draw;
-
+    // Window
+    GUI_WindowTemp  window;
     // Layout temporary data
     GUI_LayoutTemp  layout;
 } GUI_Temp;
@@ -244,7 +246,7 @@ typedef struct {
 static struct {
     GUI_State*  state;
     GUI_Setup*  setup;
-    GUI_Temp*    temp;
+    GUI_Temp*   temp;
 } GUI_CTX = { 0 };
 
 void        GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);

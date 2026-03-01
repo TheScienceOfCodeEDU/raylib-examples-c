@@ -13,19 +13,19 @@
 //   - GUI_CONTROL_FOCUSED
 
 // > CONTROL HELPERS
-bool        GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window);
-bool        GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape);
+bool        GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window);
+bool        GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape);
 Rectangle   GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window);
 void        GUI_BeginControlScissor();
 void        GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale);
 // > DRAW PRIMITIVES
 void        GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner);
-void        GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type);
-Vector2     GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type);
+void        GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_Font font);
+Vector2     GUI_MeasureAdjustedText(const char* text, EGUI_Font font);
 // > POINTERS
-void        GUI_DrawPointerFor(EGUI_Pointer pointer);
-void        GUI_DrawPointer();
-void        GUI_DrawPointerTrail();
+void        GUI_DrawCursorFor(EGUI_Cursor cursor);
+void        GUI_DrawCursor();
+void        GUI_DrawCursorTrail();
 // > ICONS
 float       GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint);
 float       GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint);
@@ -36,7 +36,7 @@ void        GUI_Image(Texture2D texture, Rectangle shape);
 // > BUTTON
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
 bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors);
@@ -45,18 +45,18 @@ bool GUI_ButtonMenu(
     GUI_ThemeColors colors, void (*draw_function)(void));
 void GUI_DrawText(
     Rectangle shape, const char* text,
-    GUI_ThemeColors colors, EGUI_FontType font_type);
+    GUI_ThemeColors colors, EGUI_Font font);
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors);
 void GUI_DrawInput(
     Rectangle shape, char* value, int blink_cursor,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type);
+    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font);
 void GUI_Input(
     Rectangle shape, char *value,
     EGUI_InputType type, GUI_ThemeColors colors);
 void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max);
 void GUI_DrawCheckBox(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
 void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
     GUI_ThemeColors colors);
@@ -68,48 +68,48 @@ void GUI_Check(
 #define GUI_MACRO_CONTROL_ACTIVATED(shape) \
     /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\
     /*   is_activable       : if there is no resize or moving action     */\
-    /*   is_pointer_over    : pointer currently within control bounds    */\
-    /*   is_pointer_active  : user pressed mouse or enter key this frame */\
+    /*   is_cursor_over    : cursor currently within control bounds    */\
+    /*   is_cursor_active  : user pressed mouse or enter key this frame */\
     /*   is_active          : control activated                          */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->current_action == EGUI_WinActionNone;         \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);       \
-    bool is_pointer_active  = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT); \
+    bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;         \
+    bool is_cursor_over    = GUI_CheckCollisionCursorControlCurrentWin(shape);       \
+    bool is_cursor_active  = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT); \
     \
     /* Activation */                                            \
-    bool is_active = is_pointer_over && is_pointer_active;      \
-    /* Update pointer_over_gui */                               \
-    if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
+    bool is_active = is_cursor_over && is_cursor_active;      \
+    /* Update cursor_over_gui */                               \
+    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true; \
 
 #define GUI_MACRO_CONTROL_FOCUSED(value, shape) \
     /* > GUI_CONTROL_FOCUSED                                             */\
     /*   is_activable       : if there is no resize or moving action     */\
-    /*   is_pointer_over    : pointer currently within control bounds    */\
-    /*   is_pointer_active  : user pressed mouse or enter key this frame */\
+    /*   is_cursor_over    : cursor currently within control bounds    */\
+    /*   is_cursor_active  : user pressed mouse or enter key this frame */\
     /*   just_focused       : control gained focus on this frame         */\
     /*   is_focused         : control retains focus state                */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->current_action == EGUI_WinActionNone;    \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
-    bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
+    bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;    \
+    bool is_cursor_over    = GUI_CheckCollisionCursorControlCurrentWin(shape);  \
+    bool is_cursor_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
     \
-    /* Gains focus */                                           \
-    bool just_focused = is_pointer_over && is_pointer_active;   \
-    if (just_focused) GUI_CTX.temp->control_focus_ptr = value;  \
+    /* Gains focus todo@dc: window.control_focus_ptr remove?  */                                           \
+    bool just_focused = is_cursor_over && is_cursor_active;   \
+    if (just_focused) GUI_CTX.temp->window.control_focus_ptr = value;  \
     \
     /* Focused control */                                       \
-    bool is_focused = GUI_CTX.temp->control_focus_ptr == value; \
-    /* Update pointer_over_gui */                               \
-    if (is_pointer_over) GUI_CTX.temp->pointer_over_gui = true; \
+    bool is_focused = GUI_CTX.temp->window.control_focus_ptr == value; \
+    /* Update cursor_over_gui */                               \
+    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true; \
 
 // >>>>>> POINTER: DRAW & COLLISION
-void GUI_DrawPointerFor(EGUI_Pointer pointer)
+void GUI_DrawCursorFor(EGUI_Cursor cursor)
 {
-    GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[pointer];
-    Vector2 mouse_current               = GUI_CTX.temp->mouse_current;
-    Texture texture                     = pointer_setup->pointer_texture;
-    Vector2 delta_normalized            = pointer_setup->pointer_delta_normalized;
-    float scale                         = pointer_setup->pointer_scale * GUI_CTX.state->scale;
+    GUI_CursorSetup* setup      = &GUI_CTX.setup->cursors[cursor];
+    Vector2 mouse_current       = GUI_CTX.temp->mouse_current;
+    Texture texture             = setup->texture;
+    Vector2 delta_normalized    = setup->delta_normalized;
+    float scale                 = setup->scale * GUI_CTX.state->scale;
     if (scale == 0) {
         return;
     }
@@ -118,34 +118,34 @@ void GUI_DrawPointerFor(EGUI_Pointer pointer)
         mouse_current.x - ((float)texture.width * delta_normalized.x * scale),
         mouse_current.y - ((float)texture.height * delta_normalized.y * scale)
     };
-    DrawTextureEx(texture, mouse_shape, 0, scale, ColorAlpha(WHITE, pointer_setup->pointer_alpha));
+    DrawTextureEx(texture, mouse_shape, 0, scale, ColorAlpha(WHITE, setup->alpha));
 }
 
-void GUI_DrawPointer()
+void GUI_DrawCursor()
 {
-    EGUI_Pointer current_pointer        = GUI_CTX.temp->current_pointer;
-    GUI_PointerSetup* pointer_setup     = &GUI_CTX.setup->pointer_setups[GUI_CTX.temp->current_pointer];
-    if (pointer_setup->additional != EGUI_Pointer_None) {
-        GUI_DrawPointerFor(pointer_setup->additional);
+    EGUI_Cursor cursor              = GUI_CTX.temp->cursor;
+    GUI_CursorSetup* cursor_setup   = &GUI_CTX.setup->cursors[cursor];
+    if (cursor_setup->additional_cursor != EGUI_Cursor_None) {
+        GUI_DrawCursorFor(cursor_setup->additional_cursor);
     }
-    GUI_DrawPointerFor(current_pointer);
+    GUI_DrawCursorFor(cursor);
 }
 
 // raylib [shapes] example - Draw a mouse trail (position history)
-void GUI_DrawPointerTrail()
+void GUI_DrawCursorTrail()
 {
-    GUI_PointerSetup *pointer_setup = GUI_GetPointerSetup();
+    GUI_CursorSetup *setup          = GUI_GetCursorSetup();
     Vector2 mouse                   = GUI_CTX.temp->mouse_current;
-    float scale                     = pointer_setup->pointer_scale * GUI_CTX.state->scale;
-    Vector2 delta_normalized        = pointer_setup->trail_delta_normalized;
+    float scale                     = setup->scale * GUI_CTX.state->scale;
+    Vector2 delta_normalized        = setup->trail_delta_normalized;
     Vector2 delta                   = (Vector2) {
-        .x = delta_normalized.x * (float)pointer_setup->pointer_texture.width * scale,
-        .y = delta_normalized.y * (float)pointer_setup->pointer_texture.height * scale
+        .x = delta_normalized.x * (float)setup->texture.width * scale,
+        .y = delta_normalized.y * (float)setup->texture.height * scale
     };
 
     // Shift all existing positions backward by one slot in the array
     // The last element (the oldest position) is dropped
-    Vector2 *trail = GUI_CTX.temp->pointer_trail;
+    Vector2 *trail = GUI_CTX.temp->cursor_trail;
     for (int i = GUI_MAX_TRAIL - 1; i > 0; i--) {
         trail[i] = trail[i - 1];
     }
@@ -167,7 +167,7 @@ void GUI_DrawPointerTrail()
     }
 }
 
-bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
+bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 {
     ///
     /// TODO: fix collission ovelay same window and outside window
@@ -203,9 +203,9 @@ bool GUI_CheckCollisionPointerControl(Rectangle shape, GUI_Window *window)
     return result;
 }
 
-bool GUI_CheckCollisionPointerControlCurrentWin(Rectangle shape)
+bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 {
-    return GUI_CheckCollisionPointerControl(shape, GUI_GetWindow(GUI_CTX.temp->layout.current_window_idx));
+    return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->layout.current_window_idx));
 }
 // <<<<<<< POINTER: DRAW & COLLISION
 
@@ -237,36 +237,37 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
     }
 }
 
-void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_FontType font_type)
+void GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_Font font)
 {
     GUI_State *state        = GUI_CTX.state;
-    GUI_FontSetup *setup    = GUI_GetFontSetup(font_type);
+    GUI_FontSetup *setup    = GUI_GetFontSetup(font);
 
-    Font font               = GUI_GetFont(font_type);
-    float font_scaled       = (float)font.baseSize * setup->font_scale * scale;
-    Vector2 delta_scaled    = Vector2Scale(setup->font_delta, state->scale);
-    DrawTextEx(font, text, Vector2Add(position, delta_scaled), font_scaled, setup->font_spacing, tint);
+    Font font_asset         = GUI_GetFontAsset(font);
+    float font_scaled       = (float)font_asset.baseSize * setup->scale * scale;
+    Vector2 delta_scaled    = Vector2Scale(setup->delta, state->scale);
+    Vector2 position_final  = Vector2Add(position, delta_scaled);
+    DrawTextEx(font_asset, text, position_final, font_scaled, setup->spacing, tint);
 }
 
-Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
+Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Font font)
 {
     // Extract data
     GUI_State *state        = GUI_CTX.state;
-    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
-    Font font               = GUI_GetFont(font_type);
+    GUI_FontSetup* setup    = &GUI_GetSetup()->fonts[font];
+    Font font_asset         = GUI_GetFontAsset(font);
 
     // Process it
-    float font_scaled       = (float)font.baseSize * setup->font_scale * state->scale;
-    Vector2 text_measure    = MeasureTextEx(font, text, font_scaled, setup->font_spacing);
+    float font_scaled       = (float)font_asset.baseSize * setup->scale * state->scale;
+    Vector2 text_measure    = MeasureTextEx(font_asset, text, font_scaled, setup->spacing);
 
     // Results (or statements)
     Vector2 result = {
-        text_measure.x + setup->blink_delta.x * state->scale * setup->font_scale,
-        text_measure.y + setup->blink_delta.y * state->scale * setup->font_scale
+        text_measure.x + setup->blink_delta.x * state->scale * setup->scale,
+        text_measure.y + setup->blink_delta.y * state->scale * setup->scale
     };
 
     // Adjust
-    Vector2 delta_scaled = Vector2Scale(setup->font_delta, state->scale);
+    Vector2 delta_scaled = Vector2Scale(setup->delta, state->scale);
     return Vector2Add(result, delta_scaled);
 }
 // <<<<<<< DRAW PRIMITIVES
@@ -314,9 +315,10 @@ float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
     GUI_Setup *setup    = GUI_CTX.setup;
     float texture_scale = shape.height / (float)texture2d->height;
+    Vector2 position    = Vector2Add((Vector2) { shape.x, shape.y }, setup->icons.icon_delta);
 
     GUI_BeginControlScissor();
-        DrawTextureEx(*texture2d, Vector2Add((Vector2) { shape.x, shape.y }, setup->icon_setup.icon_delta), 0, texture_scale, tint);
+        DrawTextureEx(*texture2d, position, 0, texture_scale, tint);
     EndScissorMode();
     return texture_scale;
 }
@@ -337,7 +339,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
     GUI_Theme *theme    = &GUI_CTX.setup->theme;
     float color_change  = theme->color_change;
 
-    if (is_pointer_over)
+    if (is_cursor_over)
         GUI_Icon(texture2d, position, height, tint);
     else
         GUI_Icon(texture2d, position, height, ColorBrightness(tint, -color_change));
@@ -439,10 +441,10 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 //   NOTES     : Nothing here
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
 {
     GUI_State *state            = GUI_CTX.state;
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
     GUI_Theme *theme            = &GUI_CTX.setup->theme;
 
     float border        = font_setup->border;
@@ -465,7 +467,7 @@ void GUI_DrawButton(
     GUI_BeginInnerControlScissor(shape, border, scale);
         GUI_DrawAdjustedTextEx(text,
             (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale},
-            colors.tx_color_0, scale, font_type);
+            colors.tx_color_0, scale, font);
 
     if (icon_w > 0) {
         GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
@@ -481,17 +483,17 @@ bool GUI_Button(
     shape = GUI_Relative(shape);
     GUI_MACRO_CONTROL_ACTIVATED(shape);
 
-    EGUI_FontType font_type     = GUI_GetFontType();
+    EGUI_Font font     = GUI_GetFont();
     EGUI_ControlStatus status   = EGUI_ControlStatus_Default;
-    if (is_pointer_over && is_activable) {
+    if (is_cursor_over && is_activable) {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             status = EGUI_ControlStatus_Collide;
         } else {
             status = EGUI_ControlStatus_Focused;
         }
     }
-    GUI_DrawButton(shape, text, icon, status, colors, font_type);
-    // TODO@dc: improve colors DrawDebugRect(shape, ColorAlpha(is_pointer_over? RED : BLUE, 0.2));
+    GUI_DrawButton(shape, text, icon, status, colors, font);
+    // TODO@dc: improve colors DrawDebugRect(shape, ColorAlpha(is_cursor_over? RED : BLUE, 0.2));
     return is_active;
 }
 
@@ -535,10 +537,10 @@ bool GUI_ButtonMenu(
 //   NOTES     : Nothing here
 void GUI_DrawText(
     Rectangle shape, const char* text,
-    GUI_ThemeColors colors, EGUI_FontType font_type)
+    GUI_ThemeColors colors, EGUI_Font font)
 {
     GUI_State *state            = GUI_CTX.state;
-    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font_type);
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
 
     float border    = font_setup->border;
     float scale     = state->scale;
@@ -546,14 +548,14 @@ void GUI_DrawText(
     GUI_BeginControlScissor();
         GUI_DrawAdjustedTextEx(text,
             (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
-            colors.tx_color_0, scale, font_type);
+            colors.tx_color_0, scale, font);
     EndScissorMode();
 }
 
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
-    GUI_DrawText(shape, text, colors, GUI_CTX.temp->layout.current_font_type);
+    GUI_DrawText(shape, text, colors, GUI_CTX.temp->layout.current_font); // todo@dc: review! temp->layout.current_font?
 }
 
 // > INPUT
@@ -561,10 +563,10 @@ void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 //   NOTES     : Nothing here
 void GUI_DrawInput(
     Rectangle shape, char* value, int blink_cursor,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_FontType font_type)
+    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font)
 {
     GUI_State       *state          = GUI_CTX.state;
-    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
     float border        = font_setup->border;
@@ -595,7 +597,7 @@ void GUI_DrawInput(
         // TODO@dc: max text size
         char tmp[256] = {0};
         strncpy(tmp, value, blink_cursor);
-        cursor_pos = GUI_MeasureAdjustedText(tmp, font_type);
+        cursor_pos = GUI_MeasureAdjustedText(tmp, font);
 
         float visible_w = shape.width - (2.0f * border * scale);
         float cursor_x  = cursor_pos.x;
@@ -615,16 +617,16 @@ void GUI_DrawInput(
             (Vector2) {
                 shape.x + (border) * scale - auto_scroll_x,
                 shape.y + (border) * scale
-            }, colors.tx_color_0, scale, font_type);
+            }, colors.tx_color_0, scale, font);
 
 
         if (status == EGUI_ControlStatus_Focused && blink) {
-            Vector2 text_size = GUI_MeasureAdjustedText(value, font_type);
+            Vector2 text_size = GUI_MeasureAdjustedText(value, font);
             // TODO@dc: max text size
             char tmp[256] = {0};
             strncpy(tmp, value, blink_cursor);
 
-            text_size = GUI_MeasureAdjustedText(tmp, font_type);
+            text_size = GUI_MeasureAdjustedText(tmp, font);
             DrawRectangleRec((Rectangle){
                 shape.x + (border + font_setup->blink_delta.x) * scale + text_size.x - auto_scroll_x,
                 shape.y + (border + font_setup->blink_delta.y) * scale,
@@ -645,8 +647,8 @@ void GUI_Input(
     // Blink (text cursor)
     static void *last_control_focus_ptr = NULL;
 
-    if (is_pointer_over) {
-        GUI_CTX.temp->current_pointer = EGUI_Pointer_Text;
+    if (is_cursor_over) {
+        GUI_CTX.temp->cursor = EGUI_Cursor_Text;
     }
 
     // Blink data
@@ -656,7 +658,7 @@ void GUI_Input(
     static int      blink_cursor    = 0;
 
     // Font type
-    EGUI_FontType font_type         = GUI_GetFontType();
+    EGUI_Font font         = GUI_GetFont();
 
     // Gain focus
     if (just_focused) {
@@ -673,12 +675,12 @@ void GUI_Input(
         // TODO@dc: validate length
         float mouse_x   = GUI_CTX.temp->mouse_current.x - shape.x;
         int text_size   = StringSize(value);
-        bool right_test = mouse_x > GUI_MeasureAdjustedText(value, font_type).x;
+        bool right_test = mouse_x > GUI_MeasureAdjustedText(value, font).x;
         if (right_test) {
             blink_cursor = text_size;
         } else {
             for (blink_cursor = 0; blink_cursor < text_size; blink_cursor++) {
-                float w = GUI_MeasureAdjustedText(TextSubtext(value, 0, blink_cursor), font_type).x;
+                float w = GUI_MeasureAdjustedText(TextSubtext(value, 0, blink_cursor), font).x;
                 if (mouse_x < w) break;
             }
             // Move one position to the left for a more accurate mouse-to-text alignment
@@ -696,7 +698,7 @@ void GUI_Input(
         while (key > 0) {
             // Special cases
             //
-            if (type == EGUI_InputInt || type == EGUI_InputFloat) {
+            if (type == EGUI_Input_Int || type == EGUI_Input_Float) {
                 if (key == '-') {
                     // Remove minus
                     if (value[0] == '-') {
@@ -725,15 +727,15 @@ void GUI_Input(
             // Default cases
             bool valid = false;
             switch (type) {
-            case EGUI_InputText:
+            case EGUI_Input_Text:
                 valid = (key >= 32 && key <= 126);
                 break;
-            case EGUI_InputInt:
+            case EGUI_Input_Int:
                 if ((key >= '0' && key <= '9')) {
                     valid = true;
                 }
                 break;
-            case EGUI_InputFloat:
+            case EGUI_Input_Float:
                 if ((key >= '0' && key <= '9') ||
                     (key == '.' && strchr(value, '.') == NULL)) {
                     valid = true;
@@ -792,10 +794,10 @@ void GUI_Input(
 
     EGUI_ControlStatus status =
         is_focused      ? EGUI_ControlStatus_Focused :
-        is_pointer_over ? EGUI_ControlStatus_Collide :
+        is_cursor_over ? EGUI_ControlStatus_Collide :
                           EGUI_ControlStatus_Default;
 
-    GUI_DrawInput(shape, value, blink_cursor, status, colors, blink_state, font_type);
+    GUI_DrawInput(shape, value, blink_cursor, status, colors, blink_state, font);
 }
 
 void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max)
@@ -813,7 +815,7 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
         snprintf(buf_default, sizeof(buf_default), "%.6g", (double)*value);
     }
     char *buf = is_focused ? buf_focused : buf_default;
-    GUI_Input(shape_original, buf, EGUI_InputFloat , colors);
+    GUI_Input(shape_original, buf, EGUI_Input_Float , colors);
 
     if (is_focused) {
         //GUI_CTX.temp->control_focus_ptr = value;
@@ -830,10 +832,10 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
 //   NOTES     : Improve draw
 void GUI_DrawCheckBox(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type)
+    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
 {
     GUI_State       *state          = GUI_CTX.state;
-    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font_type);
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
 
     float border        = font_setup->border;
@@ -863,7 +865,7 @@ void GUI_DrawCheckBox(
     GUI_BeginInnerControlScissor(shape, border, scale);
         GUI_DrawAdjustedTextEx(value ? on_txt : off_txt,
             (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
-            tx, scale, font_type);
+            tx, scale, font);
     EndScissorMode();
 }
 
@@ -876,18 +878,18 @@ void GUI_Check(
 
     // Focused
     if (is_focused) {
-        if (is_pointer_active) {
+        if (is_cursor_active) {
             // Toggle checkbox
             *value = !(*value);
         }
     }
 
-    EGUI_FontType font_type   = GUI_GetFontType();
+    EGUI_Font font   = GUI_GetFont();
     EGUI_ControlStatus status =
         is_focused      ? EGUI_ControlStatus_Focused :
-        is_pointer_over ? EGUI_ControlStatus_Collide :
+        is_cursor_over ? EGUI_ControlStatus_Collide :
                           EGUI_ControlStatus_Default;
-    GUI_DrawCheckBox(shape, *value, on_txt, off_txt, status, colors, font_type);
+    GUI_DrawCheckBox(shape, *value, on_txt, off_txt, status, colors, font);
 }
 
 #endif

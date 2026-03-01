@@ -63,7 +63,7 @@ int main(void) {
     gui_state   = GUI_MakeStateDefault(screen_max);
     gui_setup   = GUI_LoadSetupDefault();
     gui_temp    = GUI_MakeTempDefault();
-    icons       = gui_setup.icon_setup.icons;
+    icons       = gui_setup.icons.icons;
     wp_voronoi  = GenerateVoronoiTexture((int)screen_max.x, (int)screen_max.y);
     GUI_SetContext(&gui_state, &gui_setup, &gui_temp);
 
@@ -92,12 +92,12 @@ int main(void) {
 
         //
         // UI
-        static EGUI_Pointer pointer_style   = EGUI_Pointer_Default;
+        static EGUI_Cursor pointer_style   = EGUI_Cursor_Default;
         if (IsKeyPressed(KEY_F10)) {
-            pointer_style = pointer_style == EGUI_Pointer_Default ? EGUI_Pointer_AGS : EGUI_Pointer_Default;
+            pointer_style = pointer_style == EGUI_Cursor_Default ? EGUI_Cursor_AGS : EGUI_Cursor_Default;
         }
 
-        float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_FontType_GUI);
+        float topbar_height = GUI_CalcDefaultHeightScaled(EGUI_Font_GUI);
         Rectangle window_limits = (Rectangle){
             0,
             topbar_height,
@@ -143,7 +143,7 @@ int main(void) {
         if (IsKeyPressed(KEY_F8))              gui_state.scale = FloatMin(6.0f, gui_state.scale + 0.25f);
         if (IsKeyPressed(KEY_F7))              gui_state.scale = FloatMax(0.5f, gui_state.scale - 0.25f);
 
-        if (GUI_IsPointerOverGui() == false) {
+        if (GUI_IsCursorOverGui() == false) {
             // Update camera
             camera->zoom += GetMouseWheelMove() * 0.1f;
             if (camera->zoom > 3.0f) camera->zoom = 3.0f;
@@ -316,8 +316,8 @@ int main(void) {
             DrawTextureRec(gui_state.buffer.texture, FlipYRec(GetSourceRec(gui_state.buffer.texture)), (Vector2){ 0, 0 }, WHITE);
 
             // Finally, draw the pointer so it appears in the top of anything else
-            GUI_DrawPointerTrail();
-            GUI_DrawPointer();
+            GUI_DrawCursorTrail();
+            GUI_DrawCursor();
         EndDrawing();
     }
 
