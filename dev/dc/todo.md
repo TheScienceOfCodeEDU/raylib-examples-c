@@ -1,9 +1,10 @@
 imKairos
 
+- Fuentes: usar libreria para cargar fuentes TTF con alta calidad. Que VT323 se vea como aquí en un editor.
+
 - Textbox improvements
     - int y float
     - scroll contents           OK
-        - BUG: Poner textbox en 2da columna del layout -> scrolling no se ve bien.
     - copy/paste
     - jump between spaces
 
