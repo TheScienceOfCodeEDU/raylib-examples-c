@@ -1,4 +1,8 @@
 #pragma once
+#ifndef UNITY_BUILD
+#define UNITY_BUILD 0
+#include "../common.h"
+#endif
 
 #include "types.h"
 #include "_layout.h"
@@ -8,29 +12,21 @@
 //   INDEX
 
 // > CONSTRUCTORS
-//   DEFAULTS
+GUI_Window          GUI_MakeEmptyWindow(void);
+GUI_State           GUI_MakeStateDefault(Vector2 screen_max);
 
-GUI_Window GUI_MakeEmptyWindow(void);
-GUI_State GUI_MakeStateDefault(Vector2 screen_max);
-
-GUI_OverlayDraw GUI_MakeOverlayDraw();
-GUI_Temp GUI_MakeTempDefault();
-
-
+GUI_Overlay     GUI_MakeOverlay();
+GUI_Temp            GUI_MakeTempDefault();
 
 // > POINTER
-//   STATE
-
-bool GUI_IsPointerOverGui();
-bool GUI_IsCurrentWindowTarget(int window_id);
-bool GUI_IsPointerOverOverlay();
-GUI_FontSetup* GUI_GetFontSetup(EGUI_FontType font_type);
-Font GUI_GetFont(EGUI_FontType font_type);
-GUI_PointerSetup* GUI_GetPointerSetup();
+bool                GUI_IsPointerOverGui();
+bool                GUI_IsCurrentWindowTarget(int window_id);
+bool                GUI_IsPointerOverOverlay();
+GUI_FontSetup*      GUI_GetFontSetup(EGUI_FontType font_type);
+Font                GUI_GetFont(EGUI_FontType font_type);
+GUI_PointerSetup*   GUI_GetPointerSetup();
 
 // > WINDOW
-//   MODEL & GEOMETRY
-
 GUI_Window* GUI_GetWindow(int id);
 GUI_Window* GUI_GetWindowByZindex(int z);
 void GUI_ForceZindex(int win_id);
@@ -53,7 +49,7 @@ static inline EGUI_FontType GUI_GetFontType();
 //   API
 
 static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner);
-static inline GUI_OverlayDraw* GUI_OverlayGetDraw();
+static inline GUI_Overlay* GUI_OverlayGetDraw();
 static inline bool GUI_OverlayGetJustInteracted();
 static inline void GUI_OverlayClose();
 static inline void GUI_OverlayOpenFor(const char* id);
@@ -131,9 +127,9 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 
 
 
-GUI_OverlayDraw GUI_MakeOverlayDraw()
+GUI_Overlay GUI_MakeOverlay()
 {
-    GUI_OverlayDraw overlay = {
+    GUI_Overlay overlay = {
         .id_ptr             = NULL,
         .window_target_id   = 0,
         .layout             = GUI_MakeLayoutTemp(),
@@ -158,7 +154,7 @@ GUI_Temp GUI_MakeTempDefault()
         .pointer_over_gui           = false,
         .pointer_trail              = {{0}},
 
-        .overlay_draw               = GUI_MakeOverlayDraw(),
+        .overlay_draw               = GUI_MakeOverlay(),
         .layout                     = GUI_MakeLayoutTemp()
     };
     return temp;
@@ -422,7 +418,7 @@ static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner)
     return GUI_CTX.temp->overlay_draw.id_ptr == text_id_owner;
 }
 
-static inline GUI_OverlayDraw* GUI_OverlayGetDraw()
+static inline GUI_Overlay* GUI_OverlayGetDraw()
 {
     return &GUI_CTX.temp->overlay_draw;
 }
@@ -434,7 +430,7 @@ static inline bool GUI_OverlayGetJustInteracted()
 
 static inline void GUI_OverlayClose()
 {
-    GUI_CTX.temp->overlay_draw = GUI_MakeOverlayDraw();
+    GUI_CTX.temp->overlay_draw = GUI_MakeOverlay();
 }
 
 static inline void GUI_OverlayOpenFor(const char* id)
@@ -504,7 +500,7 @@ void GUI_BeginDraw(EGUI_Pointer pointer_style)
 
 void GUI_DrawOverlay()
 {
-    GUI_OverlayDraw *overlay    = &GUI_CTX.temp->overlay_draw;
+    GUI_Overlay *overlay    = &GUI_CTX.temp->overlay_draw;
     bool is_enabled             = overlay->function != NULL && overlay->id_ptr != NULL;
 
     if (is_enabled) {

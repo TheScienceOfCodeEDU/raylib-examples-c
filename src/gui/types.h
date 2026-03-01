@@ -1,7 +1,7 @@
 #pragma once
 #ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #include "../common.h"
+#define UNITY_BUILD 0
+#include "../main.h"
 #endif
 
 #define GUI_MAX_TRAIL       30
@@ -202,7 +202,7 @@ typedef struct {
     bool            just_interacted;    // Just interacted ocurred on this frame
     Rectangle       shape_drawed;       // Final shape
     void            (*function)(void);  // Draw function
-}  GUI_OverlayDraw;
+}  GUI_Overlay;
 
 // TODO@dc: fix naming starting w/section_
 typedef struct {
@@ -222,7 +222,7 @@ typedef struct {
     Vector2         pointer_trail[GUI_MAX_TRAIL];
 
     // Overlay draw
-    GUI_OverlayDraw overlay_draw;
+    GUI_Overlay overlay_draw;
 
     // Layout temporary data
     GUI_LayoutTemp  layout;
