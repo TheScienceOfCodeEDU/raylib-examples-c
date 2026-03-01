@@ -8,6 +8,9 @@
 
 // > INDEX
 GUI_WindowTemp GUI_MakeWindowTemp();
+
+// > IMPLEMENTATION
+#ifdef IMPLEMENT_ALL
 GUI_WindowTemp GUI_MakeWindowTemp()
 {
         GUI_WindowTemp result = {
@@ -17,3 +20,4 @@ GUI_WindowTemp GUI_MakeWindowTemp()
         };
     return result;
 }
+#endif

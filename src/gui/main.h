@@ -28,17 +28,16 @@ Font                GUI_GetFontAsset(EGUI_Font font);
 GUI_CursorSetup*    GUI_GetCursorSetup();
 
 // > WINDOW
-GUI_Window* GUI_GetWindow(int id);
-GUI_Window* GUI_GetWindowByZindex(int z);
-void GUI_ForceZindex(int win_id);
+GUI_Window*         GUI_GetWindow(int id);
+GUI_Window*         GUI_GetWindowByZindex(int z);
+void                GUI_ForceZindex(int win_id);
 GUI_Window* GUI_OpenWindow(
     int id, const char *title, Rectangle shape,
-    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
-    void (*contents)(GUI_Window*));
+    GUI_ThemeColors colors, Texture2D *icon, bool focused_face, void (*contents)(GUI_Window*));
 void GUI_RemoveWindow(int id);
 
-Rectangle GUI_GetWindowTitle(Rectangle shape);
-Rectangle GUI_GetWindowPanel(Rectangle shape);
+Rectangle   GUI_GetWindowTitle(Rectangle shape);
+Rectangle   GUI_GetWindowPanel(Rectangle shape);
 Rectangle GUI_GetWindowBottom(Rectangle shape);
 void GUI_WindowUpdateShapeForContent(GUI_Window *window);
 Rectangle GUI_MakeWorkspace();
