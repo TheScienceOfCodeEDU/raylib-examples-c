@@ -1,3 +1,4 @@
+
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
  #include "raylib.h"
@@ -12,6 +13,23 @@
             exit(1); \
         } \
     } while (0)
+
+static bool ParseFloatStrict(const char *s, float *out)
+{
+    if (!s) return false;
+
+    // Skip leading spaces
+    while (isspace((unsigned char)*s)) s++;
+
+    char *end = NULL;
+    float v = strtof(s, &end);
+    if (end == s) return false;              // no parse
+    while (isspace((unsigned char)*end)) end++;
+    if (*end != '\0') return false;          // trailing junk
+
+    *out = v;
+    return true;
+}
 
 Rectangle LimitRect(Rectangle shape, Rectangle limits) {
     // Restrict size to not exceed limits
@@ -163,6 +181,14 @@ static inline float SnapFloat(float x) { return floorf(x + 0.5f); }
 static inline Vector2 SnapVector2(Vector2 v) {
     v.x = SnapFloat(v.x);
     v.y = SnapFloat(v.y);
+    return v;
+}
+
+static inline float ClampFloat(float v, float min_v, float max_v)
+{
+    if (min_v > max_v) { float t = min_v; min_v = max_v; max_v = t; } // optional safety
+    if (v < min_v) return min_v;
+    if (v > max_v) return max_v;
     return v;
 }
 

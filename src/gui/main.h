@@ -598,8 +598,8 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_FontTyp
 
     Rectangle        shape          = window->shape;
     Rectangle        shape_title    = GUI_WindowTitle(window->shape);
-    Rectangle        shape_panel    = GUI_WindowPanel(window->shape);
-    Rectangle        shape_bottom   = GUI_WindowBottom(window->shape);
+    //Rectangle        shape_panel    = GUI_WindowPanel(window->shape);
+    //Rectangle        shape_bottom   = GUI_WindowBottom(window->shape);
     GUI_ThemeColors  colors         = window->colors;
     GUI_Theme        *theme         = &GUI_CTX.setup->theme;
 

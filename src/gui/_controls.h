@@ -1,4 +1,10 @@
 #pragma once
+#ifndef UNITY_BUILD
+#define UNITY_BUILD     0
+#define IMPLEMENT_ALL   1
+#include "main.h"
+#endif
+
 
 // > CONTROLS!
 
@@ -48,6 +54,7 @@ void GUI_DrawInput(
 void GUI_Input(
     Rectangle shape, char *value,
     EGUI_InputType type, GUI_ThemeColors colors);
+void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max);
 void GUI_DrawCheckBox(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_FontType font_type);
@@ -272,13 +279,13 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
     result.y += GUI_CTX.temp->layout.current_scroll;
     if (intersect_window && GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN) {
         Rectangle intersection = RectIntersection(result, GUI_CTX.temp->layout.current_window_workspace);
-        if (DEV_DEBUG_GUI_SCROLL) {
-            if (GUI_CTX.temp->layout.current_window_idx == GUI_CTX.state->z_index[0]) {
-                GUI_DrawBorders(GUI_CTX.temp->layout.current_window_workspace, RED, RED, 1, false);
-                DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
-                DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
-            }
+        #if DEV_DEBUG_GUI_SCROLL == 1
+        if (GUI_CTX.temp->layout.current_window_idx == GUI_CTX.state->z_index[0]) {
+            GUI_DrawBorders(GUI_CTX.temp->layout.current_window_workspace, RED, RED, 1, false);
+            DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
+            DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
         }
+        #endif
         result = intersection;
     }
     return result;
@@ -630,7 +637,7 @@ void GUI_DrawInput(
 }
 
 void GUI_Input(
-    Rectangle shape, char *value,
+    Rectangle shape, char *value, /* TODO@dc: add buffer size and rename value as buffer */
     EGUI_InputType type, GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
@@ -792,13 +799,31 @@ void GUI_Input(
     GUI_DrawInput(shape, value, blink_cursor, status, colors, blink_state, font_type);
 }
 
-/*
-void GUI_Number(
-    Rectangle shape, ,
-    EGUI_InputType type, GUI_ThemeColors colors)
+void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max)
 {
+    Rectangle shape_original = shape;
+    shape = GUI_Relative(shape);
 
-} */
+    static char buf_default[256] = {0};
+    static char buf_focused[256] = {0};
+    GUI_MACRO_CONTROL_FOCUSED(buf_focused, shape)
+
+    if (just_focused) {
+        snprintf(buf_focused, sizeof(buf_focused), "%.6g", (double)*value);
+    } else {
+        snprintf(buf_default, sizeof(buf_default), "%.6g", (double)*value);
+    }
+    char *buf = is_focused ? buf_focused : buf_default;
+    GUI_Input(shape_original, buf, EGUI_InputFloat , colors);
+
+    if (is_focused) {
+        //GUI_CTX.temp->control_focus_ptr = value;
+        float parsed;
+        if (ParseFloatStrict(buf, &parsed)) {
+            *value = Clamp(parsed, min, max);
+        }
+    }
+}
 
 
 // > CHECKBOX

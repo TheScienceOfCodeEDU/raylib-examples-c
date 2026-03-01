@@ -1,8 +1,6 @@
 #ifndef UNITY_BUILD
  #define UNITY_BUILD 0
  #include "common.h"
- #include "gui_setup.h"
- #include "gui_structs.h"
  #include "gui.h"
  #include "game_structs.h"
 #endif
@@ -16,6 +14,7 @@ void GUI_TopBar(Rectangle shape);
 void WIN_Window(GUI_Window* window);
 void WIN_Layouts(GUI_Window* window);
 void WIN_CharacterDebug(GUI_Window* window);
+void WIN_Settings(GUI_Window* window);
 void WIN_Winman(GUI_Window* window);
 
 //
@@ -179,7 +178,6 @@ void WIN_Layouts(GUI_Window* window)
 }
 
 
-
 void WIN_CharacterDebug(GUI_Window* window)
 {
     GAME_State *game_state      = GAME_CTX.state;
@@ -229,6 +227,24 @@ void WIN_CharacterDebug(GUI_Window* window)
     GUI_EndWindowContents(window);
 }
 
+// Define your draw window
+void WIN_Settings(GUI_Window* window)
+{
+    GUI_State *state            = GUI_GetState();
+    GUI_ThemeColors colors      = window->colors;
+    EGUI_FontType font_type     = EGUI_FontType_Default;
+
+    Rectangle window_workspace  =
+    GUI_BeginWindowContents(window, font_type);
+        GUI_LayoutBlockCols(3, window_workspace, font_type);
+        GUI_Text(GUI_NextHorizontal(), "Scale", colors);
+        GUI_Float(GUI_NextHorizontals(2), &state->scale, colors, 0.5f, 6.0f);
+
+        GUI_LayoutDuplicateBlock();
+        GUI_Text(GUI_NextHorizontal(), "Scale 2", colors);
+        GUI_Float(GUI_NextHorizontals(2), &state->scale, colors, 0.5f, 6.0f);
+    GUI_EndWindowContents(window);
+}
 
 void WIN_Winman(GUI_Window* window)
 {
@@ -266,6 +282,15 @@ void WIN_Winman(GUI_Window* window)
             }
             GUI_ForceZindex(win_id);
         }
+        static GUI_Window* win_settings = NULL;
+        if (GUI_Button(GUI_NextVertical(), "Open Settings", NULL, window->colors)) {
+            int win_id = 5;
+            if (win_settings == NULL || win_settings->id == 0) {
+                win_settings = GUI_OpenWindow(win_id, "Settings", (Rectangle){ 20, 20, 300, 100 }, setup->theme.gray, &icons->Face, true, WIN_Settings);
+            }
+            GUI_ForceZindex(win_id);
+        }
+
 
         GUI_Text(GUI_NextVertical(), "--- Opened windows ---", window->colors);
         GUI_LayoutDuplicateBlock();

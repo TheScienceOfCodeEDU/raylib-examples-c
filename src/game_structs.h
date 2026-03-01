@@ -60,7 +60,7 @@ typedef struct  {
 
 typedef struct {
     int             current_character;
-    int             alive_characters;    
+    int             alive_characters;
     Camera2D        camera2D;
     GAME_Character  characters[CHARACTERS];
 } GAME_State;
