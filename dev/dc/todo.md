@@ -53,7 +53,7 @@ DONE
 
 - Change cursor when hover a textbox.   OK
     - Support multiple cursors.         OK
-    - Change cursor/pointer.            OK
+    - Change cursor style.              OK
 
 
 - Windows z-index
@@ -76,7 +76,7 @@ DONE
         - Macros        OK
 
 - Add statuses  OK
-- Fix IsPointerOverGui()    OK
+- Fix IsCursorOverGui()    OK
 - Asserts to be project-wise (rayext)   OK
 - Close windows     OK
 - Review GUI_CTX    OK
