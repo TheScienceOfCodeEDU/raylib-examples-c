@@ -1,6 +1,6 @@
 #pragma once
 #ifndef UNITY_BUILD
-#define IMPLEMENT_ALL   1
+#define IMPLEMENT_ALL
 #include "main.h"
 #endif
 
@@ -120,11 +120,11 @@ GUI_Theme GUI_GenerateTheme()
 }
 
 
-GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_Font content)
+GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_Font font)
 {
     _Static_assert(EGUI_Font_Count == 2,  "Update fonts here");
 
-    switch (content) {
+    switch (font) {
     case EGUI_Font_GUI: {
         GUI_FontSetup result = {
             .default_height = 36,

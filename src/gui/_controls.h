@@ -9,8 +9,8 @@
 
 // > INDEX
 // > BASE MACROS
-//   - GUI_MACRO_CONTROL_ACTIVATED
-//   - GUI_CONTROL_FOCUSED
+//   - GUI_BASE_CONTROL_ACTIVATED
+//   - GUI_BASE_CONTROL_ACTIVATED
 
 // > CONTROL HELPERS
 bool        GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window);
@@ -65,42 +65,44 @@ void GUI_Check(
 #ifdef IMPLEMENT_ALL
 
 // > BASE MACROS
-#define GUI_MACRO_CONTROL_ACTIVATED(shape) \
-    /* > GUI_MACRO_CONTROL_ACTIVATED                                     */\
-    /*   is_activable       : if there is no resize or moving action     */\
-    /*   is_cursor_over    : cursor currently within control bounds    */\
-    /*   is_cursor_active  : user pressed mouse or enter key this frame */\
-    /*   is_active          : control activated                          */\
-    /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;         \
-    bool is_cursor_over    = GUI_CheckCollisionCursorControlCurrentWin(shape);       \
-    bool is_cursor_active  = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT); \
-    \
-    /* Activation */                                            \
-    bool is_active = is_cursor_over && is_cursor_active;      \
-    /* Update cursor_over_gui */                               \
-    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true; \
+#define GUI_MACRO_IS_CURSOR_ACTIVE
 
-#define GUI_MACRO_CONTROL_FOCUSED(value, shape) \
-    /* > GUI_CONTROL_FOCUSED                                             */\
-    /*   is_activable       : if there is no resize or moving action     */\
-    /*   is_cursor_over    : cursor currently within control bounds    */\
-    /*   is_cursor_active  : user pressed mouse or enter key this frame */\
-    /*   just_focused       : control gained focus on this frame         */\
-    /*   is_focused         : control retains focus state                */\
+#define GUI_BASE_CONTROL_ACTIVATED(shape) \
+    /* > GUI_BASE_CONTROL_ACTIVATED                                         */\
+    /*   is_activable       : if there is no resize or moving action        */\
+    /*   is_cursor_over    : cursor currently within control bounds         */\
+    /*   is_cursor_active  : user pressed mouse or enter key this frame     */\
+    /*   is_active          : control activated                             */\
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;    \
-    bool is_cursor_over    = GUI_CheckCollisionCursorControlCurrentWin(shape);  \
-    bool is_cursor_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
+    bool is_cursor_over     = GUI_CheckCollisionCursorControlCurrentWin(shape);                 \
+    bool is_cursor_active   = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);          \
     \
-    /* Gains focus todo@dc: window.control_focus_ptr remove?  */                                           \
-    bool just_focused = is_cursor_over && is_cursor_active;   \
-    if (just_focused) GUI_CTX.temp->window.control_focus_ptr = value;  \
+    /* Activation */                                            \
+    bool is_active = is_cursor_over && is_cursor_active;        \
+    /* Update cursor_over_gui */                                \
+    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true;   \
+
+#define GUI_BASE_CONTROL_FOCUSED(value, shape) \
+    /* > GUI_BASE_CONTROL_ACTIVATED                                         */\
+    /*   is_activable       : if there is no resize or moving action        */\
+    /*   is_cursor_over    : cursor currently within control bounds         */\
+    /*   is_cursor_active  : user pressed mouse or enter key this frame     */\
+    /*   just_focused       : control gained focus on this frame            */\
+    /*   is_focused         : control retains focus state                   */\
+    /* Conditions */ \
+    bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;    \
+    bool is_cursor_over     = GUI_CheckCollisionCursorControlCurrentWin(shape);                 \
+    bool is_cursor_active   = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT));        \
+    \
+    /* Gains focus */                                           \
+    bool just_focused = is_cursor_over && is_cursor_active;     \
+    if (just_focused) GUI_CTX.temp->control_focus_ptr = value;  \
     \
     /* Focused control */                                       \
-    bool is_focused = GUI_CTX.temp->window.control_focus_ptr == value; \
-    /* Update cursor_over_gui */                               \
-    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true; \
+    bool is_focused = GUI_CTX.temp->control_focus_ptr == value; \
+    /* Update cursor_over_gui */                                \
+    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true;   \
 
 // >>>>>> POINTER: DRAW & COLLISION
 void GUI_DrawCursorFor(EGUI_Cursor cursor)
@@ -334,7 +336,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 {
     Rectangle shape = RectFromVector2(position, height, height);
     shape = GUI_Relative(shape);
-    GUI_MACRO_CONTROL_ACTIVATED(shape);
+    GUI_BASE_CONTROL_ACTIVATED(shape);
 
     GUI_Theme *theme    = &GUI_CTX.setup->theme;
     float color_change  = theme->color_change;
@@ -481,7 +483,7 @@ bool GUI_Button(
 {
 
     shape = GUI_Relative(shape);
-    GUI_MACRO_CONTROL_ACTIVATED(shape);
+    GUI_BASE_CONTROL_ACTIVATED(shape);
 
     EGUI_Font font     = GUI_GetFont();
     EGUI_ControlStatus status   = EGUI_ControlStatus_Default;
@@ -642,7 +644,7 @@ void GUI_Input(
     EGUI_InputType type, GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
-    GUI_MACRO_CONTROL_FOCUSED(value, shape)
+    GUI_BASE_CONTROL_FOCUSED(value, shape)
 
     // Blink (text cursor)
     static void *last_control_focus_ptr = NULL;
@@ -807,7 +809,7 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
 
     static char buf_default[256] = {0};
     static char buf_focused[256] = {0};
-    GUI_MACRO_CONTROL_FOCUSED(buf_focused, shape)
+    GUI_BASE_CONTROL_FOCUSED(buf_focused, shape)
 
     if (just_focused) {
         snprintf(buf_focused, sizeof(buf_focused), "%.6g", (double)*value);
@@ -874,7 +876,7 @@ void GUI_Check(
     GUI_ThemeColors colors)
 {
     shape = GUI_Relative(shape);
-    GUI_MACRO_CONTROL_FOCUSED(value, shape)
+    GUI_BASE_CONTROL_FOCUSED(value, shape)
 
     // Focused
     if (is_focused) {
