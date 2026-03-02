@@ -4,24 +4,23 @@
 #include "main.h"
 #endif
 
-// > SUBMODULE: WINDOW
 
+// > SUBMODULE: WINDOW
+// > INDEX
 void GUI_DrawOverlay();
 // > WINDOW
-//   UI COMPOSITION
-
-void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font);
-void GUI_WindowEndingPanel(GUI_Window* window, EGUI_Font font);
-void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font font);
-void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
-void GUI_CleanAndPrepareZIndex();
-void GUI_UpdateAndDrawWindows(Rectangle limits);
-Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font);
-void GUI_EndWindowContents(GUI_Window* window);
+void            GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font);
+void            GUI_WindowEndingPanel(GUI_Window* window, EGUI_Font font);
+void            GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font font);
+void            GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
+void            GUI_CleanAndPrepareZIndex();
+void            GUI_UpdateAndDrawWindows(Rectangle limits);
+Rectangle       GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font);
+void            GUI_EndWindowContents(GUI_Window* window);
 
 // > INDEX
-GUI_WindowTemp GUI_MakeWindowTemp();
-GUI_Window          GUI_MakeEmptyWindow(void);
+GUI_WindowTemp  GUI_MakeWindowTemp();
+GUI_Window      GUI_MakeEmptyWindow(void);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
