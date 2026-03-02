@@ -31,6 +31,17 @@ tmp     →  temporary build folder
 
 Eventually, `root` will split into a `res` folder for assets requiring preprocessing during build.
 
+### src
+
+```
+main.c              →  entrypoint
+module/
+module/main.h       →  module entrypoint
+module/structs.h    →  module structs (enums, state, temp)
+module/layout.h     →  layout submodule
+
+```
+
 ---
 
 ## 🌿 Philosophy
@@ -117,42 +128,42 @@ That’s the whole idea of the Abstractica style.
 
 ```c
 // Let's start with this
-Vector2 GUI_MeasureAdjustedText_WORST(const char* text, EGUI_FontType font_type)
+Vector2 GUI_MeasureAdjustedText_WORST(const char* text, EGUI_Font font)
 {
     return Vector2Add(
         (Vector2){
-            MeasureTextEx(GUI_GetFont(font_type), text,
-                GUI_GetFont(font_type).baseSize *
-                GUI_GetSetup()->font_setups[font_type].font_scale *
+            MeasureTextEx(GUI_GetFont(font), text,
+                GUI_GetFont(font).baseSize *
+                GUI_GetSetup()->font_setups[font].font_scale *
                 GUI_GetState()->scale,
-                GUI_GetSetup()->font_setups[font_type].font_spacing).x +
-            GUI_GetSetup()->font_setups[font_type].blink_delta.x *
+                GUI_GetSetup()->font_setups[font].font_spacing).x +
+            GUI_GetSetup()->font_setups[font].blink_delta.x *
                 GUI_GetState()->scale *
-                GUI_GetSetup()->font_setups[font_type].font_scale,
+                GUI_GetSetup()->font_setups[font].font_scale,
 
-            MeasureTextEx(GUI_GetFont(font_type), text,
-                GUI_GetFont(font_type).baseSize *
-                GUI_GetSetup()->font_setups[font_type].font_scale *
+            MeasureTextEx(GUI_GetFont(font), text,
+                GUI_GetFont(font).baseSize *
+                GUI_GetSetup()->font_setups[font].font_scale *
                 GUI_GetState()->scale,
-                GUI_GetSetup()->font_setups[font_type].font_spacing).y +
-            GUI_GetSetup()->font_setups[font_type].blink_delta.y *
+                GUI_GetSetup()->font_setups[font].font_spacing).y +
+            GUI_GetSetup()->font_setups[font].blink_delta.y *
                 GUI_GetState()->scale *
-                GUI_GetSetup()->font_setups[font_type].font_scale
+                GUI_GetSetup()->font_setups[font].font_scale
         },
         Vector2Scale(
-            GUI_GetSetup()->font_setups[font_type].font_delta,
+            GUI_GetSetup()->font_setups[font].font_delta,
             GUI_GetState()->scale
         )
     );
 }
 
 // Then make it more readable
-Vector2 GUI_MeasureAdjustedText_READABLE(const char* text, EGUI_FontType font_type)
+Vector2 GUI_MeasureAdjustedText_READABLE(const char* text, EGUI_Font font)
 {
     // We are extracting data
-    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font];
     GUI_State* state        = GUI_GetState();
-    Font font               = GUI_GetFont(font_type);
+    Font font               = GUI_GetFont(font);
 
     // But here looks clunky and hard to read
     Vector2 result = {
@@ -164,12 +175,12 @@ Vector2 GUI_MeasureAdjustedText_READABLE(const char* text, EGUI_FontType font_ty
 }
 
 // And polish it!
-Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_FontType font_type)
+Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Font font)
 {
     // Extract data
     GUI_State *state        = GUI_CTX.state;
-    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font_type];
-    Font font               = GUI_GetFont(font_type);
+    GUI_FontSetup* setup    = &GUI_GetSetup()->font_setups[font];
+    Font font               = GUI_GetFont(font);
 
     // Process it
     float font_scaled       = font.baseSize * setup->font_scale * state->scale;
@@ -202,7 +213,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
     GUI_MACRO_CONTROL_LAYOUT(shape);
 
     // Control activated logic
-    GUI_MACRO_CONTROL_ACTIVATED(shape);
+    GUI_BASE_CONTROL_ACTIVATED(shape);
 
     // Draw icon
     GUI_Icon(texture2d, position, height, tint);
@@ -211,7 +222,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 }
 ```
 
-These macros automatically handle input, focus, and pointer logic, exposing a few useful statements (as shown in the next example: bool is_active = is_pointer_over && is_pointer_active).
+These macros automatically handle input, focus, and cursor logic, exposing a few useful statements (as shown in the next example: bool is_active = is_cursor_over && is_cursor_active).
 This allows us to simply return that value, clearly indicating that the button was activated.
 
 ---
@@ -221,25 +232,25 @@ This allows us to simply return that value, clearly indicating that the button w
 ### GUI\_MACRO\_CONTROL\_ACTIVATED
 
 ```c
-#define GUI_MACRO_CONTROL_ACTIVATED(shape) \
+#define GUI_BASE_CONTROL_ACTIVATED(shape) \
     bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;           \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);        \
-    bool is_pointer_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT); \
-    bool is_active = is_pointer_over && is_pointer_active;     \
-    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
+    bool is_cursor_over    = GUI_CheckCollisionCursorControlCurrentWin(shape);        \
+    bool is_cursor_active  = is_activable && IsMouseButtonReleased(MOUSE_BUTTON_LEFT); \
+    bool is_active = is_cursor_over && is_cursor_active;     \
+    if (is_cursor_over) GUI_CTX.temp.cursor_over_gui = true; \
 ```
 
 ### GUI\_MACRO\_CONTROL\_FOCUSED
 
 ```c
-#define GUI_MACRO_CONTROL_FOCUSED(value, shape) \
+#define GUI_BASE_CONTROL_FOCUSED(value, shape) \
     bool is_activable       = GUI_CTX.temp.current_action == EGUI_ActionNone;    \
-    bool is_pointer_over    = GUI_CheckCollisionPointerControlCurrentWin(shape);  \
-    bool is_pointer_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
-    bool just_focused = is_pointer_over && is_pointer_active;  \
+    bool is_cursor_over    = GUI_CheckCollisionCursorControlCurrentWin(shape);  \
+    bool is_cursor_active  = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyEnterPressed()); \
+    bool just_focused = is_cursor_over && is_cursor_active;  \
     if (just_focused) GUI_CTX.temp.control_focus_ptr = value;  \
     bool is_focused = GUI_CTX.temp.control_focus_ptr == value; \
-    if (is_pointer_over) GUI_CTX.temp.pointer_over_gui = true; \
+    if (is_cursor_over) GUI_CTX.temp.cursor_over_gui = true; \
 ```
 
 These macros make it easy to create new GUI elements that share consistent input logic. You can build on them without rewriting boilerplate every time.
@@ -248,7 +259,7 @@ These macros make it easy to create new GUI elements that share consistent input
 
 We chose macros because:
 
-- They give you direct access to useful statements like **is_active** or **is_pointer_over**, which you can treat as events in your scripts.
+- They give you direct access to useful statements like **is_active** or **is_cursor_over**, which you can treat as events in your scripts.
 
 - You’re encouraged to **read and understand them** — we show you the actual code. If you’re building something inside our framework, **you should know how it works**.
 
