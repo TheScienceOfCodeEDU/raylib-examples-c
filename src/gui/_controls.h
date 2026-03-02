@@ -60,6 +60,13 @@ void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
     GUI_ThemeColors colors);
 
+// > WINDOW
+//   CONTROLS
+void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font);
+void GUI_WindowEndingPanel(GUI_Window* window, EGUI_Font font);
+void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font font);
+void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
+
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
 
@@ -891,6 +898,216 @@ void GUI_Check(
         is_cursor_over ? EGUI_ControlStatus_Collide :
                           EGUI_ControlStatus_Default;
     GUI_DrawCheckBox(shape, *value, on_txt, off_txt, status, colors, font);
+}
+
+// > WINDOW
+//   CONTROLS
+void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font)
+{
+    GUI_Icons *icons            = GUI_GetIcons();
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
+    GUI_ThemeColors colors      = window->colors;
+
+    float border                = font_setup->border;
+    float scale                 = GUI_CTX.state->scale;
+    float icon_sm_width         = GUI_GetIconSmallWidth();
+
+    Rectangle shape_panel       = GUI_GetWindowPanel(window->shape);
+    Vector2 position_button     = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
+
+    DrawRectangleRec(shape_panel, colors.bg_color_0);
+    if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, WHITE)) {
+        GUI_RemoveWindow(window->id);
+    }
+    GUI_Icon(&icons->MinimizeSmall, AddVector2(position_button, 0, icon_sm_width + border * scale), icon_sm_width, WHITE);
+}
+
+void GUI_WindowEndingPanel(GUI_Window* window, EGUI_Font font)
+{
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
+    GUI_ThemeColors colors      = window->colors;
+
+    float border        = font_setup->border;
+    float scale         = GUI_CTX.state->scale;
+
+    Rectangle shape_bottom   = GUI_GetWindowBottom(window->shape);
+    DrawRectangleRec((Rectangle) {
+        shape_bottom.x + border * scale,
+        shape_bottom.y,
+        shape_bottom.width - border * scale * 2,
+        border * scale
+    }, colors.bg_color_2);
+    DrawRectangleRec((Rectangle) {
+        shape_bottom.x + border * scale,
+        shape_bottom.y + border * scale,
+        shape_bottom.width - border * scale * 2,
+        border * scale
+    }, colors.bg_color_0);
+}
+
+void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font font)
+{
+    GUI_State       *state          = GUI_CTX.state;
+    GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font);
+
+    Rectangle        shape          = window->shape;
+    Rectangle        shape_title    = GUI_GetWindowTitle(window->shape);
+    GUI_ThemeColors  colors         = window->colors;
+    GUI_Theme        *theme         = &GUI_CTX.setup->theme;
+
+    float border        = font_setup->border;
+    float scale         = state->scale;
+    float color_change  = theme->color_change;
+    float bg_alpha      = theme->bg_alpha;
+
+    // Background
+    DrawRectangleRec((Rectangle){shape.x + border * scale, shape.y + border * scale, shape.width - border * scale, shape.height - 2 * border * scale}, ColorAlpha(colors.bg_color_1, bg_alpha));
+    GUI_DrawBorders(shape, colors.bg_color_0, colors.bg_color_2, border * scale, true);
+
+    if (status == EGUI_ControlStatus_Default) {
+        DrawRectangleRec(shape_title, ColorAlpha(colors.bg_color_2, bg_alpha));
+        GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
+    } if (status == EGUI_ControlStatus_Focused) {
+        DrawRectangleRec(shape_title, ColorAlpha(ColorBrightness(colors.bg_color_3, -color_change), bg_alpha));
+        GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3,-color_change), border * scale, true);
+    } if (status == EGUI_ControlStatus_Collide) {
+        DrawRectangleRec(shape_title, ColorAlpha(ColorBrightness(colors.bg_color_3, color_change), bg_alpha));
+        GUI_DrawBorders(shape_title, colors.bg_color_2, colors.bg_color_0, border * scale, false);
+        GUI_DrawBorders(shape, colors.bg_color_0, ColorBrightness(colors.bg_color_3, color_change), border * scale, true);
+    }
+
+    bool reserve_icon_space = window->icon != NULL || (status == EGUI_ControlStatus_Focused && window->focused_face);
+    float icon_w = reserve_icon_space ? GUI_GetIconWidth() : 0;
+
+    GUI_BeginInnerControlScissor(shape_title, border, scale);
+        GUI_DrawAdjustedTextEx(window->title,
+            (Vector2) { shape_title.x + icon_w + (border) * scale, shape_title.y + (border) * scale },
+            colors.tx_color_0, scale, EGUI_Font_GUI);
+    EndScissorMode();
+
+    Vector2 icon_position = { shape_title.x + border * scale, shape_title.y + border * scale };
+    if (window->icon != NULL && icon_w > 0) {
+        GUI_Icon(window->icon, icon_position, icon_w, WHITE);
+    }
+    if (status == EGUI_ControlStatus_Focused && icon_w > 0 && window->focused_face) {
+        GUI_Face((Vector2) { shape_title.x + border * scale, shape_title.y + border * scale }, icon_w);
+    }
+
+    // Vertical scroll
+    // Scrollbar
+    Rectangle workspace = GUI_GetWindowWorkspace(window);
+    if (workspace.height < window->content_height) {
+        float ratio = workspace.height / window->content_height;
+        float bar_h = ratio * workspace.height;
+        float bar_y = workspace.y + (window->scroll_offset / window->content_height) * workspace.height;
+
+        DrawRectangleRec((Rectangle){
+            workspace.x + workspace.width,
+            workspace.y,
+            border * scale * 3,
+            workspace.height
+        }, colors.bg_color_2);
+        DrawRectangleRec((Rectangle){
+            workspace.x + workspace.width + border * scale,
+            bar_y,
+            border * scale,
+            bar_h
+        }, colors.tx_color_0);
+    }
+
+    #if DEV_DEBUG_GUI == 1
+    DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85f));
+    DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75f));
+    DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85f));
+    DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25f));
+    #endif
+}
+
+void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
+{
+    EGUI_Font font          = EGUI_Font_GUI;
+    Rectangle shape_title   = GUI_GetWindowTitle(window->shape);
+    Rectangle shape_panel   = GUI_GetWindowPanel(window->shape);
+    Rectangle shape_bottom  = GUI_GetWindowBottom(window->shape);
+    Rectangle workspace     = GUI_GetWindowWorkspace(window);
+    Vector2 mouse           = GUI_CTX.temp->mouse_current;
+    GUI_WindowTemp *temp    = &GUI_CTX.temp->window;
+
+    // Conditions
+    bool is_window_target       = GUI_IsCurrentWindowTarget(window->id);
+    bool is_cursor_overlay      = GUI_IsCursorOverOverlay();
+    bool is_focusable           = is_window_target && temp->current_action == EGUI_WindowAction_None && is_cursor_overlay == false;
+    bool is_cursor_over         = CheckCollisionPointRec(mouse, window->shape);
+    bool is_cursor_over_panel   = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
+    bool is_cursor_over_title   = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_cursor_over_panel;
+    bool is_cursor_over_bottom  = is_focusable && CheckCollisionPointRec(mouse, shape_bottom);
+    bool just_interacted        = is_cursor_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool is_z_priority          = GUI_CTX.state->z_index[0] == window->id;
+
+    // Update cursor_over_gui
+    if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true;
+
+    // Focus?
+    if (is_focusable && just_interacted && is_z_priority) {
+        temp->current_action =  is_cursor_over_title    ? EGUI_WindowAction_Moving :
+                                is_cursor_over_bottom   ? EGUI_WindowAction_Resizing
+                                                        : EGUI_WindowAction_None;
+    }
+
+    if (is_cursor_over_bottom || temp->current_action == EGUI_WindowAction_Resizing) {
+        GUI_CTX.temp->cursor = EGUI_Cursor_Resize;
+    }
+
+    // Active
+    if (is_z_priority) {
+        bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+        if (is_mouse_down == false) {
+            temp->current_action = EGUI_WindowAction_None;
+        } else {
+            // Movement
+            if (temp->current_action == EGUI_WindowAction_Moving) {
+                Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
+                Vector2 mouse_last_valid        = LimitVector2Rect(GUI_CTX.temp->mouse_last, limits);
+                Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
+
+                window->shape.x += displacement.x;
+                window->shape.y += displacement.y;
+            }
+            // Resizing
+            if (temp->current_action == EGUI_WindowAction_Resizing) {
+                Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
+                window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
+                window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
+            }
+            // Handled by GUI, as move/resize can make that is_cursor_over is false during frames
+            GUI_CTX.temp->cursor_over_gui = temp->current_action != EGUI_WindowAction_None;
+        }
+    }
+
+    // Limit
+    window->shape   = LimitRect(window->shape, limits);
+
+    // Vertical scroll
+    bool horizontal_scroll  = workspace.height < window->content_height;
+    if (horizontal_scroll) {
+        if (is_cursor_over) {
+            float wheel = GetMouseWheelMove();
+            if (wheel != 0.0f) window->scroll_offset -= wheel * GUI_SCROLL_SPEED;
+        }
+        window->scroll_offset = Clamp(window->scroll_offset, 0, window->content_height - workspace.height);
+    } else {
+        window->scroll_offset = 0;
+    }
+
+    // Draw
+    EGUI_ControlStatus status =     is_z_priority           ? EGUI_ControlStatus_Focused :
+                                    is_cursor_over_title    ? EGUI_ControlStatus_Collide : EGUI_ControlStatus_Default;
+    GUI_DrawWindow(window, status, font);
+
+    // Window panels
+    GUI_WindowButtonPanel(window, font);
+    GUI_WindowEndingPanel(window, font);
 }
 
 #endif
