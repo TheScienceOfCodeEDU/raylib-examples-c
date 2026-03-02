@@ -171,12 +171,12 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Conditions
     bool is_window_target       = GUI_IsCurrentWindowTarget(window->id);
-    bool is_cursor_overlay     = GUI_IsCursorOverOverlay();
+    bool is_cursor_overlay      = GUI_IsCursorOverOverlay();
     bool is_focusable           = is_window_target && temp->current_action == EGUI_WindowAction_None && is_cursor_overlay == false;
-    bool is_cursor_over        = CheckCollisionPointRec(mouse, window->shape);
-    bool is_cursor_over_panel  = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
-    bool is_cursor_over_title  = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_cursor_over_panel;
-    bool is_cursor_over_bottom = is_focusable && CheckCollisionPointRec(mouse, shape_bottom);
+    bool is_cursor_over         = CheckCollisionPointRec(mouse, window->shape);
+    bool is_cursor_over_panel   = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
+    bool is_cursor_over_title   = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_cursor_over_panel;
+    bool is_cursor_over_bottom  = is_focusable && CheckCollisionPointRec(mouse, shape_bottom);
     bool just_interacted        = is_cursor_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool is_z_priority          = GUI_CTX.state->z_index[0] == window->id;
 
@@ -222,7 +222,6 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Limit
     window->shape   = LimitRect(window->shape, limits);
-    // shape_title  = GUI_WindowTitle(window->shape);
 
     // Vertical scroll
     bool horizontal_scroll  = workspace.height < window->content_height;
@@ -237,12 +236,11 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     }
 
     // Draw
-    EGUI_ControlStatus status =
-        is_z_priority           ? EGUI_ControlStatus_Focused :
-        is_cursor_over_title   ? EGUI_ControlStatus_Collide :
-                                  EGUI_ControlStatus_Default;
+    EGUI_ControlStatus status =     is_z_priority           ? EGUI_ControlStatus_Focused :
+                                    is_cursor_over_title    ? EGUI_ControlStatus_Collide : EGUI_ControlStatus_Default;
     GUI_DrawWindow(window, status, font);
-    // Generate button panel
+
+    // Window panels
     GUI_WindowButtonPanel(window, font);
     GUI_WindowEndingPanel(window, font);
 }
