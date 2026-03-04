@@ -155,7 +155,6 @@ typedef struct GUI_Window {
     const char      *title;
     Texture2D       *icon;
     float           scroll_offset;
-    float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
     bool            focused_face;
     // Calc fields
     float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
