@@ -22,8 +22,8 @@ Rectangle       GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font);
 void            GUI_EndWindowContents(GUI_Window* window);
 // > WINDOW STATE
 GUI_Window*     GUI_OpenWindow(
-    int id, const char *title, Rectangle shape,
-    GUI_ThemeColors colors, Texture2D *icon, bool focused_face, void (*contents)(GUI_Window*));
+    int id, const char *title, GUI_ThemeColors colors,
+    Texture2D *icon, bool focused_face, void (*contents)(GUI_Window*));
 void            GUI_RemoveWindow(int id);
 
 GUI_Window*     GUI_GetWindow(int id);
@@ -53,6 +53,23 @@ GUI_WindowTemp GUI_MakeWindowTemp()
         .window_target_id   = 0
     };
     return result;
+}
+
+GUI_Window GUI_MakeEmptyWindow(void)
+{
+    GUI_Window window = {
+        .id             = 0,
+        .shape          = (Rectangle){ 0, 0, 0, 0 },
+        .colors         = {{ 0 }},
+        .title          = NULL,
+        .icon           = NULL,
+        .scroll_offset  = 0.0f,
+        .focused_face   = true,
+
+        .content_height = 0.0f,
+        .contents       = NULL,
+    };
+    return window;
 }
 
 // > WINDOW
@@ -194,8 +211,9 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
 Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font)
 {
     // Grant min dimensions
-    window->shape.width     = FloatMax(GUI_MIN_WIN_SIZE, window->shape.width);
-    window->shape.height    = FloatMax(GUI_MIN_WIN_SIZE, window->shape.height);
+    Rectangle min_size      =   GUI_MIN_WIN_RECT;
+    window->shape.width     = FloatMax(min_size.width, window->shape.width);
+    window->shape.height    = FloatMax(min_size.height, window->shape.height);
 
     // Data
     Rectangle window_workspace = GUI_GetWindowWorkspace(window);
@@ -263,18 +281,18 @@ void GUI_ForceZindex(int win_id)
 }
 
 GUI_Window* GUI_OpenWindow(
-    int id, const char *title, Rectangle shape,
-    GUI_ThemeColors colors, Texture2D *icon, bool focused_face,
-    void (*contents)(GUI_Window*))
+    int id, const char *title, GUI_ThemeColors colors,
+    Texture2D *icon, bool focused_face, void (*contents)(GUI_Window*))
 {
-    // avoid duplicates
-    if (GUI_GetWindow(id)) return GUI_GetWindow(id);
+    GUI_Window *existing = GUI_GetWindow(id);
+    if (existing)
+        return existing;
 
     for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
         GUI_Window* window = &GUI_CTX.state->window_s[i];
         if (window->id == 0) {
             window->id              = id;
-            window->shape           = shape;
+            window->shape           = GUI_MIN_WIN_RECT;
             window->colors          = colors;
             window->title           = title;
             window->icon            = icon;

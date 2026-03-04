@@ -1077,8 +1077,9 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
             // Resizing
             if (temp->current_action == EGUI_WindowAction_Resizing) {
                 Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
-                window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, GUI_MIN_WIN_SIZE);
-                window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, GUI_MIN_WIN_SIZE);
+                Rectangle min_size      = GUI_MIN_WIN_RECT;
+                window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, min_size.width);
+                window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, min_size.height);
             }
             // Handled by GUI, as move/resize can make that is_cursor_over is false during frames
             GUI_CTX.temp->cursor_over_gui = temp->current_action != EGUI_WindowAction_None;

@@ -66,22 +66,6 @@ void GUI_EndDraw();
 // > CONSTRUCTORS
 //   DEFAULTS
 
-GUI_Window GUI_MakeEmptyWindow(void)
-{
-    GUI_Window window = {
-        .id             = 0,
-        .shape          = (Rectangle){ 0, 0, 0, 0 },
-        .colors         = {{ 0 }},
-        .title          = NULL,
-        .icon           = NULL,
-        .scroll_offset  = 0.0f,
-        .content_height = 0.0f,
-        .focused_face   = true,
-        .contents       = NULL,
-    };
-    return window;
-}
-
 GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
     GUI_State state = {

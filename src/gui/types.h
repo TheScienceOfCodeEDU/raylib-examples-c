@@ -5,7 +5,7 @@
 #endif
 
 #define GUI_MAX_TRAIL       30
-#define GUI_MIN_WIN_SIZE    128.f
+#define GUI_MIN_WIN_RECT    (Rectangle){ 0, 0, 320.f, 240.f }
 #define GUI_MAX_OPEN_WINS   16
 #define GUI_MAX_TEXTBOXES   256
 #define GUI_SCROLL_SPEED    16

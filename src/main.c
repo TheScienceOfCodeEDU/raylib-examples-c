@@ -114,7 +114,7 @@ int main(void) {
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL) {
-                    win_man = GUI_OpenWindow(1, "WinMan", (Rectangle){ 20, 20, 250, 200 }, gui_setup.theme.gray, &icons.Setup, true, WIN_Winman);
+                    win_man = GUI_OpenWindow(1, "WinMan", gui_setup.theme.gray, &icons.Setup, true, WIN_Winman);
                 } else {
                     float win_forth          = window_limits.width / 4.0f;
                     win_man->shape.x         = win_forth * 3;
