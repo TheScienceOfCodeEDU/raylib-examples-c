@@ -21,7 +21,7 @@ float               GUI_CalcDefaultHeightScaled(EGUI_Font font);
 
 void                GUI_AfterWindowContents();
 
-// > POINTER
+
 bool                GUI_IsCursorOverGui();
 bool                GUI_IsCurrentWindowTarget(int window_id);
 bool                GUI_IsCursorOverOverlay();
@@ -29,20 +29,14 @@ GUI_FontSetup*      GUI_GetFontSetup(EGUI_Font font);
 Font                GUI_GetFontAsset(EGUI_Font font);
 GUI_CursorSetup*    GUI_GetCursorSetup();
 
-
-static inline Rectangle GUI_Relative(Rectangle shape);
-static inline EGUI_Font GUI_GetFont();
-
-
-
-// > FRAME
-//   PIPELINE
-
+Rectangle GUI_Relative(Rectangle shape);
+EGUI_Font GUI_GetFont();
 void GUI_BeginDraw(EGUI_Cursor cursor_style);
 void GUI_EndDraw();
 
 
 #include "_layout.h"
+// ReSharper disable once CppUnusedIncludeDirective
 #include "_setup.h"
 
 #include "_window.h"
@@ -159,10 +153,6 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
-
-// > POINTER
-//   STATE
-
 // GUI_IsCursorOverGui() is meant to be called after EndDraw
 // If you need it internally, it means that you're creating and internal component so you could use GUI_CTX.temp->cursor_over_gui
 bool GUI_IsCursorOverGui()
@@ -207,7 +197,7 @@ GUI_CursorSetup* GUI_GetCursorSetup()
 
 
 
-static inline EGUI_Font GUI_GetFont()
+EGUI_Font GUI_GetFont()
 {
     EGUI_Font font = GUI_CTX.temp->layout.current_font;
     return font;
