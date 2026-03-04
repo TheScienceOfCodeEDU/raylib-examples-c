@@ -192,7 +192,6 @@ bool GUI_IsCursorOverOverlay()
 
 GUI_FontSetup* GUI_GetFontSetup(EGUI_Font font)
 {
-    // TODO@dc: Add validations
     Assert(font >= 0 && font < EGUI_Font_Count);
     return &GUI_CTX.setup->fonts[font];
 }
