@@ -157,6 +157,9 @@ typedef struct GUI_Window {
     float           scroll_offset;
     float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
     bool            focused_face;
+    // Calc fields
+    float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
+    // Handlers
     void (*contents) (struct GUI_Window*);
 } GUI_Window;
 
