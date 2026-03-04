@@ -5,8 +5,6 @@
 #endif
 
 #include "types.h"
-#include "_layout.h"
-#include "_setup.h"
 
 // > FUNCTIONS
 //   INDEX
@@ -18,7 +16,10 @@ GUI_State           GUI_MakeStateDefault(Vector2 screen_max);
 GUI_Overlay         GUI_MakeOverlay();
 GUI_Temp            GUI_MakeTempDefault();
 
-void GUI_DrawOverlay();
+void                GUI_SetFontType(EGUI_Font font);
+float               GUI_CalcDefaultHeightScaled(EGUI_Font font);
+
+void                GUI_AfterWindowContents();
 
 // > POINTER
 bool                GUI_IsCursorOverGui();
@@ -32,28 +33,20 @@ GUI_CursorSetup*    GUI_GetCursorSetup();
 static inline Rectangle GUI_Relative(Rectangle shape);
 static inline EGUI_Font GUI_GetFont();
 
-// > OVERLAY
-//   API
 
-static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner);
-static inline GUI_Overlay* GUI_OverlayGetDraw();
-static inline bool GUI_OverlayGetJustInteracted();
-static inline void GUI_OverlayClose();
-static inline void GUI_OverlayOpenFor(const char* id);
-static inline void GUI_OverlaySetDrawCall(
-    bool just_interacted,
-    void (*draw_function)(void));
-static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed);
-void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape);
 
 // > FRAME
 //   PIPELINE
 
 void GUI_BeginDraw(EGUI_Cursor cursor_style);
-
 void GUI_EndDraw();
 
+
+#include "_layout.h"
+#include "_setup.h"
+
 #include "_window.h"
+#include "_overlay.h"
 // ReSharper disable once CppUnusedIncludeDirective
 #include "_controls.h"
 
@@ -117,6 +110,23 @@ GUI_Temp GUI_MakeTempDefault()
 
     };
     return temp;
+}
+
+void GUI_SetFontType(EGUI_Font font)
+{
+    GUI_CTX.temp->layout.current_font = font;
+}
+
+float GUI_CalcDefaultHeightScaled(EGUI_Font font)
+{
+    GUI_Setup* setup = GUI_CTX.setup;
+    GUI_State* state = GUI_CTX.state;
+    return setup->fonts[font].default_height * state->scale;
+}
+
+void GUI_AfterWindowContents()
+{
+    GUI_DrawOverlay();
 }
 
 // > CONTEXT
@@ -204,69 +214,6 @@ static inline EGUI_Font GUI_GetFont()
 }
 
 
-// > OVERLAY
-//   API
-//   STABILITY : █████████░  90%
-
-static inline bool GUI_OverlayIsOpenBy(const char* text_id_owner)
-{
-    return GUI_CTX.temp->overlay_draw.id_ptr == text_id_owner;
-}
-
-static inline GUI_Overlay* GUI_OverlayGetDraw()
-{
-    return &GUI_CTX.temp->overlay_draw;
-}
-
-static inline bool GUI_OverlayGetJustInteracted()
-{
-    return GUI_CTX.temp->overlay_draw.just_interacted;
-}
-
-static inline void GUI_OverlayClose()
-{
-    GUI_CTX.temp->overlay_draw = GUI_MakeOverlay();
-}
-
-static inline void GUI_OverlayOpenFor(const char* id)
-{
-    Assert(id != NULL);
-    GUI_CTX.temp->overlay_draw.id_ptr = id;
-}
-
-static inline void GUI_OverlaySetDrawCall(
-    bool just_interacted,
-    void (*draw_function)(void))
-{
-    GUI_CTX.temp->overlay_draw.layout           = GUI_CTX.temp->layout;
-    GUI_CTX.temp->overlay_draw.window_target_id = GUI_CTX.temp->window.window_target_id;
-    GUI_CTX.temp->overlay_draw.just_interacted  = just_interacted;
-    GUI_CTX.temp->overlay_draw.function         = draw_function;
-}
-
-static inline void GUI_OverlaySetShapeDrawed(Rectangle shape_drawed)
-{
-    Assert(GUI_CTX.temp->overlay_draw.id_ptr != NULL);
-    GUI_CTX.temp->overlay_draw.shape_drawed = shape_drawed;
-}
-
-void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
-{
-    bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool interactable   = GUI_OverlayGetJustInteracted() == false;
-
-    if (force || (interacted && interactable)) {
-        GUI_ForceZindex(GUI_CTX.temp->overlay_draw.window_target_id);
-        GUI_OverlayClose();
-    } else {
-        Rectangle relative_shape = GUI_RelativePositionOnly(shape);
-        GUI_OverlaySetShapeDrawed(relative_shape);
-        #if DEV_DEBUG_GUI == 1
-        DrawDebugRect(relative_shape, RED);
-        #endif
-    }
-}
-
 // > FRAME
 //   PIPELINE
 
@@ -291,20 +238,6 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
     }
 
     GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();
-}
-
-void GUI_DrawOverlay()
-{
-    GUI_Overlay *overlay    = &GUI_CTX.temp->overlay_draw;
-    bool is_enabled             = overlay->function != NULL && overlay->id_ptr != NULL;
-
-    if (is_enabled) {
-        GUI_CTX.temp->layout                    = overlay->layout;
-        GUI_CTX.temp->layout.force_overflow     = true;
-
-        overlay->function();
-        overlay->function = NULL;
-    }
 }
 
 void GUI_EndDraw()

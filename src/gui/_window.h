@@ -245,7 +245,7 @@ void GUI_EndWindowContents(GUI_Window* window)
     GUI_CTX.temp->layout                     = GUI_MakeLayoutTemp();
 
     // Finish draw instructions
-    GUI_DrawOverlay();
+    GUI_AfterWindowContents();
     rlPopMatrix();
 }
 
