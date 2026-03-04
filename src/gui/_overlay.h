@@ -7,9 +7,9 @@
 
 // > SUBMODULE: OVERLAY
 //   INDEX
+GUI_Overlay     GUI_MakeOverlay();
 void            GUI_DrawOverlay();
 bool            GUI_OverlayIsOpenBy(const char* text_id_owner);
-GUI_Overlay*    GUI_OverlayGetDraw();
 bool            GUI_OverlayGetJustInteracted();
 void            GUI_OverlayClose();
 void            GUI_OverlayOpenFor(const char* id);
@@ -19,6 +19,19 @@ void            GUI_CloseOverlayOnInteraction(bool force, Rectangle shape);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
+GUI_Overlay GUI_MakeOverlay()
+{
+    GUI_Overlay overlay = {
+        .id_ptr             = NULL,
+        .window_target_id   = 0,
+        .layout             = GUI_MakeLayoutTemp(),
+        .just_interacted    = false,
+        .shape_drawed       = (Rectangle){0,0,0,0},
+        .function           = NULL,
+    };
+    return overlay;
+}
+
 void GUI_DrawOverlay()
 {
     GUI_Overlay *overlay    = &GUI_CTX.temp->overlay_draw;
@@ -36,11 +49,6 @@ void GUI_DrawOverlay()
 bool GUI_OverlayIsOpenBy(const char* text_id_owner)
 {
     return GUI_CTX.temp->overlay_draw.id_ptr == text_id_owner;
-}
-
-GUI_Overlay* GUI_OverlayGetDraw()
-{
-    return &GUI_CTX.temp->overlay_draw;
 }
 
 bool GUI_OverlayGetJustInteracted()
@@ -86,9 +94,9 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
     } else {
         Rectangle relative_shape = GUI_RelativePositionOnly(shape);
         GUI_OverlaySetShapeDrawed(relative_shape);
-#if DEV_DEBUG_GUI == 1
+    #if DEV_DEBUG_GUI == 1
         DrawDebugRect(relative_shape, RED);
-#endif
+    #endif
     }
 }
 #endif

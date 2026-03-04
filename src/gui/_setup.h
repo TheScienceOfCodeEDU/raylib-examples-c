@@ -10,6 +10,10 @@
 GUI_Icons           GUI_LoadIcons();
 GUI_IconSetup       GUI_MakeIconSetup(GUI_Icons icons);
 
+GUI_FontSetup*      GUI_GetFontSetup(EGUI_Font font);
+Font                GUI_GetFontAsset(EGUI_Font font);
+GUI_CursorSetup*    GUI_GetCursorSetup();
+
 Color               GUI_GenerateThemeColor(float hue, float intensity);
 GUI_ThemeColors     GUI_GenerateThemeColors(float hue);
 GUI_Theme           GUI_GenerateTheme();
@@ -54,6 +58,28 @@ GUI_IconSetup GUI_MakeIconSetup(GUI_Icons icons)
     };
     return setup;
 }
+
+GUI_FontSetup* GUI_GetFontSetup(EGUI_Font font)
+{
+    Assert(font >= 0 && font < EGUI_Font_Count);
+    return &GUI_CTX.setup->fonts[font];
+}
+
+Font GUI_GetFontAsset(EGUI_Font font)
+{
+    GUI_Setup *setup = GUI_CTX.setup;
+    if (setup->fonts[font].use_custom)
+        return setup->fonts[font].custom;
+    else
+        return GetFontDefault();
+}
+
+GUI_CursorSetup* GUI_GetCursorSetup()
+{
+    EGUI_Cursor cursor = GUI_CTX.temp->cursor;
+    return &GUI_CTX.setup->cursors[cursor];
+}
+
 
 // Generates a color with a specified hue and interpolated saturation and value.
 // Parameters:

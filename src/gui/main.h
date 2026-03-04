@@ -5,6 +5,7 @@
 #endif
 
 #include "types.h"
+#include "_setup.h"
 
 // > FUNCTIONS
 //   INDEX
@@ -12,33 +13,21 @@
 // > CONSTRUCTORS
 
 GUI_State           GUI_MakeStateDefault(Vector2 screen_max);
-
-GUI_Overlay         GUI_MakeOverlay();
 GUI_Temp            GUI_MakeTempDefault();
 
+EGUI_Font           GUI_GetFont();
 void                GUI_SetFontType(EGUI_Font font);
 float               GUI_CalcDefaultHeightScaled(EGUI_Font font);
-
 void                GUI_AfterWindowContents();
-
-
 bool                GUI_IsCursorOverGui();
 bool                GUI_IsCurrentWindowTarget(int window_id);
 bool                GUI_IsCursorOverOverlay();
-GUI_FontSetup*      GUI_GetFontSetup(EGUI_Font font);
-Font                GUI_GetFontAsset(EGUI_Font font);
-GUI_CursorSetup*    GUI_GetCursorSetup();
-
-Rectangle GUI_Relative(Rectangle shape);
-EGUI_Font GUI_GetFont();
-void GUI_BeginDraw(EGUI_Cursor cursor_style);
-void GUI_EndDraw();
+Rectangle           GUI_Relative(Rectangle shape);
+void                GUI_BeginDraw(EGUI_Cursor cursor_style);
+void                GUI_EndDraw();
 
 
 #include "_layout.h"
-// ReSharper disable once CppUnusedIncludeDirective
-#include "_setup.h"
-
 #include "_window.h"
 #include "_overlay.h"
 // ReSharper disable once CppUnusedIncludeDirective
@@ -72,21 +61,6 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     return state;
 }
 
-
-
-GUI_Overlay GUI_MakeOverlay()
-{
-    GUI_Overlay overlay = {
-        .id_ptr             = NULL,
-        .window_target_id   = 0,
-        .layout             = GUI_MakeLayoutTemp(),
-        .just_interacted    = false,
-        .shape_drawed       = (Rectangle){0,0,0,0},
-        .function           = NULL,
-    };
-    return overlay;
-}
-
 GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
@@ -104,6 +78,12 @@ GUI_Temp GUI_MakeTempDefault()
 
     };
     return temp;
+}
+
+EGUI_Font GUI_GetFont()
+{
+    EGUI_Font font = GUI_CTX.temp->layout.current_font;
+    return font;
 }
 
 void GUI_SetFontType(EGUI_Font font)
@@ -173,36 +153,6 @@ bool GUI_IsCursorOverOverlay()
     bool is_cursor_over = CheckCollisionPointRec(GUI_CTX.temp->mouse_current, GUI_CTX.temp->overlay_draw.shape_drawed);
     return is_cursor_over;
 }
-
-GUI_FontSetup* GUI_GetFontSetup(EGUI_Font font)
-{
-    Assert(font >= 0 && font < EGUI_Font_Count);
-    return &GUI_CTX.setup->fonts[font];
-}
-
-Font GUI_GetFontAsset(EGUI_Font font)
-{
-    GUI_Setup *setup = GUI_CTX.setup;
-    if (setup->fonts[font].use_custom)
-        return setup->fonts[font].custom;
-    else
-        return GetFontDefault();
-}
-
-GUI_CursorSetup* GUI_GetCursorSetup()
-{
-    EGUI_Cursor cursor = GUI_CTX.temp->cursor;
-    return &GUI_CTX.setup->cursors[cursor];
-}
-
-
-
-EGUI_Font GUI_GetFont()
-{
-    EGUI_Font font = GUI_CTX.temp->layout.current_font;
-    return font;
-}
-
 
 // > FRAME
 //   PIPELINE
