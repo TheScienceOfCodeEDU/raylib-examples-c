@@ -87,9 +87,8 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
 {
     bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool interactable   = GUI_OverlayGetJustInteracted() == false;
-
-    if (force || (interacted && interactable)) {
-        GUI_ForceZindex(GUI_CTX.temp->overlay_draw.window_target_id);
+    bool is_active      = interacted && interactable;
+    if (force || is_active) {
         GUI_OverlayClose();
     } else {
         Rectangle relative_shape = GUI_RelativePositionOnly(shape);
