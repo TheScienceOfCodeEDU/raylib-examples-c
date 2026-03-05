@@ -177,8 +177,10 @@ void GUI_DrawCursorTrail()
 
 bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 {
-    ///
-    /// TODO: fix collission ovelay same window and outside window
+    // If cursor is over overlay, control cannot be interacted
+    // GUI_DrawOverlay must set GUI_CTX.temp->overlay_draw.shape_drawed to {0} before rendering overlay controls
+    if (GUI_IsCursorOverOverlay()) return false;
+
     GUI_State *state            = GUI_CTX.state;
     int focused_window_id       = state->z_index[0];
     Vector2 mouse               = GUI_CTX.temp->cursor_current;

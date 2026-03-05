@@ -38,9 +38,13 @@ void GUI_DrawOverlay()
     bool is_enabled         = overlay->function != NULL && overlay->id_ptr != NULL;
 
     if (is_enabled) {
+        // Prepare state
         GUI_CTX.temp->layout                    = overlay->layout;
         GUI_CTX.temp->layout.force_overflow     = true;
-
+        // No shape_drawed = CursorOverOverlay is FALSE then controls inside overlay->function();
+        // can be interacted (See GUI_CheckCollisionCursorControl)
+        overlay->shape_drawed                   = (Rectangle){0,0,0,0};
+        // Draw call
         overlay->function();
         overlay->function = NULL;
     }
