@@ -64,18 +64,17 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 GUI_Temp GUI_MakeTempDefault()
 {
     GUI_Temp temp = {
-        .status             = EGUI_Status_Off,
-
-        .cursor             = EGUI_Cursor_Default,
-        .mouse_last         = (Vector2){ 0.0f, 0.0f },
-        .mouse_current      = (Vector2){ 0.0f, 0.0f },
-        .cursor_over_gui    = false,
-        .cursor_trail       = {{0}},
-
-        .overlay_draw       = GUI_MakeOverlay(),
-        .window             = GUI_MakeWindowTemp(),
-        .layout             = GUI_MakeLayoutTemp()
-
+        .status                     = EGUI_Status_Off,
+        .control_focus_ptr          = NULL,
+        .layout                     = GUI_MakeLayoutTemp(),
+        .overlay_draw               = GUI_MakeOverlay(),
+        .cursor                     = EGUI_Cursor_Default,
+        .cursor_last                = (Vector2){ 0.0f, 0.0f },
+        .cursor_current             = (Vector2){ 0.0f, 0.0f },
+        .cursor_over_gui            = false,
+        .cursor_trail               = {{0}},
+        .window_current_action      = EGUI_WindowAction_None,
+        .window_target_id           = 0
     };
     return temp;
 }
@@ -144,13 +143,12 @@ bool GUI_IsCursorOverGui()
 // Returns true if window id is the interactable target (cursor is over and z-index is the lowest possible)
 bool GUI_IsCurrentWindowTarget(int window_id)
 {
-    GUI_WindowTemp temp    = GUI_CTX.temp->window;
-    return temp.window_target_id == 0 || temp.window_target_id == window_id;
+    return GUI_CTX.temp->window_target_id == 0 || GUI_CTX.temp->window_target_id == window_id;
 }
 
 bool GUI_IsCursorOverOverlay()
 {
-    bool is_cursor_over = CheckCollisionPointRec(GUI_CTX.temp->mouse_current, GUI_CTX.temp->overlay_draw.shape_drawed);
+    bool is_cursor_over = CheckCollisionPointRec(GUI_CTX.temp->cursor_current, GUI_CTX.temp->overlay_draw.shape_drawed);
     return is_cursor_over;
 }
 
@@ -171,7 +169,7 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
         (float) GetScreenWidth(),
         (float) GetScreenHeight()
     };
-    GUI_CTX.temp->mouse_current = LimitVector2Rect(GetMousePosition(), mouse_limits);
+    GUI_CTX.temp->cursor_current = LimitVector2Rect(GetMousePosition(), mouse_limits);
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         GUI_CTX.temp->control_focus_ptr = NULL;
@@ -182,7 +180,7 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
 
 void GUI_EndDraw()
 {
-    GUI_CTX.temp->mouse_last = GUI_CTX.temp->mouse_current;
+    GUI_CTX.temp->cursor_last = GUI_CTX.temp->cursor_current;
     GUI_DrawOverlay();
 
     Assert(GUI_CTX.temp->status == EGUI_Status_Drawing);

@@ -72,7 +72,7 @@ void GUI_OverlaySetDrawCall(
     void (*draw_function)(void))
 {
     GUI_CTX.temp->overlay_draw.layout           = GUI_CTX.temp->layout;
-    GUI_CTX.temp->overlay_draw.window_target_id = GUI_CTX.temp->window.window_target_id;
+    GUI_CTX.temp->overlay_draw.window_target_id = GUI_CTX.temp->window_target_id;
     GUI_CTX.temp->overlay_draw.just_interacted  = just_interacted;
     GUI_CTX.temp->overlay_draw.function         = draw_function;
 }

@@ -162,10 +162,6 @@ typedef struct GUI_Window {
     void (*contents) (struct GUI_Window*);
 } GUI_Window;
 
-typedef struct {
-    EGUI_WindowAction   current_action;
-    int                 window_target_id;   // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
-} GUI_WindowTemp;
 // < END SUBMODULE: WINDOW
 
 // > TYPES
@@ -217,21 +213,22 @@ typedef struct {
     EGUI_Status      status;
     void             *control_focus_ptr;                // Keeps track between frames if there is a focused control
 
-    // Window
-    GUI_WindowTemp  window;
+    // Layout temporary data
+    GUI_LayoutTemp  layout;
+
+    // Overlay draw
+    GUI_Overlay     overlay_draw;
 
     // Cursor
     EGUI_Cursor     cursor;
-    Vector2         mouse_last;
-    Vector2         mouse_current;
+    Vector2         cursor_last;
+    Vector2         cursor_current;
     bool            cursor_over_gui;                    // True if the pointer is over any of the elements in the GUI
     Vector2         cursor_trail[GUI_MAX_TRAIL];
 
-    // Overlay draw
-    GUI_Overlay overlay_draw;
-
-    // Layout temporary data
-    GUI_LayoutTemp  layout;
+    // Window
+    EGUI_WindowAction   window_current_action;
+    int                 window_target_id;   // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
 } GUI_Temp;
 
 typedef struct {

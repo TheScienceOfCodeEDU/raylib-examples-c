@@ -80,7 +80,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     /*   is_cursor_active  : user pressed mouse or enter key this frame     */\
     /*   is_active          : control activated                             */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;    \
+    bool is_activable       = GUI_CTX.temp->window_current_action == EGUI_WindowAction_None;    \
     bool is_cursor_over     = GUI_CheckCollisionCursorControlCurrentWin(shape);                 \
     bool is_cursor_active   = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);          \
     \
@@ -97,7 +97,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     /*   just_focused       : control gained focus on this frame            */\
     /*   is_focused         : control retains focus state                   */\
     /* Conditions */ \
-    bool is_activable       = GUI_CTX.temp->window.current_action == EGUI_WindowAction_None;    \
+    bool is_activable       = GUI_CTX.temp->window_current_action == EGUI_WindowAction_None;    \
     bool is_cursor_over     = GUI_CheckCollisionCursorControlCurrentWin(shape);                 \
     bool is_cursor_active   = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT));        \
     \
@@ -114,7 +114,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
 void GUI_DrawCursorFor(EGUI_Cursor cursor)
 {
     GUI_CursorSetup* setup      = &GUI_CTX.setup->cursors[cursor];
-    Vector2 mouse_current       = GUI_CTX.temp->mouse_current;
+    Vector2 mouse_current       = GUI_CTX.temp->cursor_current;
     Texture texture             = setup->texture;
     Vector2 delta_normalized    = setup->delta_normalized;
     float scale                 = setup->scale * GUI_CTX.state->scale;
@@ -143,7 +143,7 @@ void GUI_DrawCursor()
 void GUI_DrawCursorTrail()
 {
     GUI_CursorSetup *setup          = GUI_GetCursorSetup();
-    Vector2 mouse                   = GUI_CTX.temp->mouse_current;
+    Vector2 mouse                   = GUI_CTX.temp->cursor_current;
     float scale                     = setup->scale * GUI_CTX.state->scale;
     Vector2 delta_normalized        = setup->trail_delta_normalized;
     Vector2 delta                   = (Vector2) {
@@ -181,7 +181,7 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
     /// TODO: fix collission ovelay same window and outside window
     GUI_State *state            = GUI_CTX.state;
     int focused_window_id       = state->z_index[0];
-    Vector2 mouse               = GUI_CTX.temp->mouse_current;
+    Vector2 mouse               = GUI_CTX.temp->cursor_current;
 
     // Simple collision (outside a window)
     if (window == NULL || focused_window_id == 0) {
@@ -369,7 +369,7 @@ void GUI_Face(Vector2 position, float height)
     Assert(height > 0);
 
     GUI_Icons *icons = GUI_GetIcons();
-    Vector2 mouse = GUI_CTX.temp->mouse_current;
+    Vector2 mouse = GUI_CTX.temp->cursor_current;
 
     // Center of the face
     Vector2 center = (Vector2){ position.x + height / 2.0f, position.y + height / 2.0f };
@@ -685,7 +685,7 @@ void GUI_Input(
         last_control_focus_ptr = value;
 
         // TODO@dc: validate length
-        float mouse_x   = GUI_CTX.temp->mouse_current.x - shape.x;
+        float mouse_x   = GUI_CTX.temp->cursor_current.x - shape.x;
         int text_size   = StringSize(value);
         bool right_test = mouse_x > GUI_MeasureAdjustedText(value, font).x;
         if (right_test) {
@@ -1035,13 +1035,13 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     Rectangle shape_panel   = GUI_GetWindowPanel(window->shape);
     Rectangle shape_bottom  = GUI_GetWindowBottom(window->shape);
     Rectangle workspace     = GUI_GetWindowWorkspace(window);
-    Vector2 mouse           = GUI_CTX.temp->mouse_current;
-    GUI_WindowTemp *temp    = &GUI_CTX.temp->window;
+    Vector2 mouse           = GUI_CTX.temp->cursor_current;
 
     // Conditions
+    bool no_window_action       = GUI_CTX.temp->window_current_action == EGUI_WindowAction_None;
     bool is_window_target       = GUI_IsCurrentWindowTarget(window->id);
     bool is_cursor_overlay      = GUI_IsCursorOverOverlay();
-    bool is_focusable           = is_window_target && temp->current_action == EGUI_WindowAction_None && is_cursor_overlay == false;
+    bool is_focusable           = no_window_action && is_window_target && is_cursor_overlay == false;
     bool is_cursor_over         = CheckCollisionPointRec(mouse, window->shape);
     bool is_cursor_over_panel   = is_focusable && CheckCollisionPointRec(mouse, shape_panel);
     bool is_cursor_over_title   = is_focusable && CheckCollisionPointRec(mouse, shape_title) && !is_cursor_over_panel;
@@ -1054,12 +1054,12 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
 
     // Focus?
     if (is_focusable && just_interacted && is_z_priority) {
-        temp->current_action =  is_cursor_over_title    ? EGUI_WindowAction_Moving :
-                                is_cursor_over_bottom   ? EGUI_WindowAction_Resizing
-                                                        : EGUI_WindowAction_None;
+        GUI_CTX.temp->window_current_action =   is_cursor_over_title    ? EGUI_WindowAction_Moving      :
+                                                is_cursor_over_bottom   ? EGUI_WindowAction_Resizing
+                                                                        : EGUI_WindowAction_None;
     }
 
-    if (is_cursor_over_bottom || temp->current_action == EGUI_WindowAction_Resizing) {
+    if (is_cursor_over_bottom || GUI_CTX.temp->window_current_action == EGUI_WindowAction_Resizing) {
         GUI_CTX.temp->cursor = EGUI_Cursor_Resize;
     }
 
@@ -1067,26 +1067,25 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     if (is_z_priority) {
         bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
         if (is_mouse_down == false) {
-            temp->current_action = EGUI_WindowAction_None;
+            GUI_CTX.temp->window_current_action = EGUI_WindowAction_None;
         } else {
             // Movement
-            if (temp->current_action == EGUI_WindowAction_Moving) {
-                Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
-                Vector2 mouse_last_valid        = LimitVector2Rect(GUI_CTX.temp->mouse_last, limits);
+            if (GUI_CTX.temp->window_current_action == EGUI_WindowAction_Moving) {
+                Vector2 mouse_current_valid     = LimitVector2Rect(GUI_CTX.temp->cursor_current, limits);
+                Vector2 mouse_last_valid        = LimitVector2Rect(GUI_CTX.temp->cursor_last, limits);
                 Vector2 displacement            = Vector2Subtract(mouse_current_valid, mouse_last_valid);
 
                 window->shape.x += displacement.x;
                 window->shape.y += displacement.y;
             }
             // Resizing
-            if (temp->current_action == EGUI_WindowAction_Resizing) {
-                Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->mouse_current, limits);
+            if (GUI_CTX.temp->window_current_action == EGUI_WindowAction_Resizing) {
+                Vector2 mouse_valid     = LimitVector2Rect(GUI_CTX.temp->cursor_current, limits);
                 Rectangle min_size      = GUI_MIN_WIN_RECT;
                 window->shape.width     = FloatMax(mouse_valid.x - window->shape.x, min_size.width);
                 window->shape.height    = FloatMax(mouse_valid.y - window->shape.y, min_size.height);
             }
-            // Handled by GUI, as move/resize can make that is_cursor_over is false during frames
-            GUI_CTX.temp->cursor_over_gui = temp->current_action != EGUI_WindowAction_None;
+            GUI_CTX.temp->cursor_over_gui = GUI_CTX.temp->window_current_action != EGUI_WindowAction_None;
         }
     }
 

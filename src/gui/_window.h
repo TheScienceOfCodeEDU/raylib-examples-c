@@ -8,7 +8,6 @@
 // > SUBMODULE: WINDOW
 // > INDEX
 Rectangle       GUI_MakeWorkspace();
-GUI_WindowTemp  GUI_MakeWindowTemp();
 GUI_Window      GUI_MakeEmptyWindow(void);
 
 // > WINDOW CONTROLS
@@ -44,15 +43,6 @@ Rectangle GUI_MakeWorkspace()
         0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()
     };
     return workspace;
-}
-
-GUI_WindowTemp GUI_MakeWindowTemp()
-{
-    GUI_WindowTemp result = {
-        .current_action     = EGUI_WindowAction_None,
-        .window_target_id   = 0
-    };
-    return result;
 }
 
 GUI_Window GUI_MakeEmptyWindow(void)
@@ -123,7 +113,6 @@ void GUI_CleanAndPrepareZIndex()
 void GUI_UpdateAndDrawWindows(Rectangle limits)
 {
     GUI_State *state        = GUI_CTX.state;
-    GUI_WindowTemp *temp    = &GUI_CTX.temp->window;
 
     GUI_CleanAndPrepareZIndex();
 
@@ -150,7 +139,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
             if (window == NULL) continue;
 
             bool find_window    = forcing_z_index && interacted_id == window->id;
-            bool check_window   = !forcing_z_index && CheckCollisionPointRec(GUI_CTX.temp->mouse_current, window->shape);
+            bool check_window   = !forcing_z_index && CheckCollisionPointRec(GUI_CTX.temp->cursor_current, window->shape);
             if (find_window || check_window) {
                 interacted_id = window->id;
                 current_zindex = j;
@@ -172,22 +161,22 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     // UPDATE WINDOW TARGET ID
     // Check collisions to determine current window_target_id (not only z-index priority but actual collision for this frame
     // you can be pointing to a 2nd window with a lower z-index priority.
-    temp->window_target_id = 0;
+    GUI_CTX.temp->window_target_id = 0;
     // If overlay is displayed then force window_target_id
     // This allows clicking on the overlay when its in front of other window(s).
     if (GUI_CTX.temp->overlay_draw.window_target_id != 0) {
-        temp->window_target_id = GUI_CTX.temp->overlay_draw.window_target_id;
+        GUI_CTX.temp->window_target_id = GUI_CTX.temp->overlay_draw.window_target_id;
     }
     // Normal windows
-    if (temp->window_target_id  == 0) {
+    if (GUI_CTX.temp->window_target_id == 0) {
         for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
             int id = state->z_index[j];
             if (id == 0) continue;
 
             GUI_Window  *window         = GUI_GetWindow(id);
-            bool        is_cursor_over = CheckCollisionPointRec(GUI_CTX.temp->mouse_current, window->shape);
+            bool        is_cursor_over  = CheckCollisionPointRec(GUI_CTX.temp->cursor_current, window->shape);
             if (is_cursor_over) {
-                temp->window_target_id = window->id;
+                GUI_CTX.temp->window_target_id = window->id;
                 break;
             }
         }
