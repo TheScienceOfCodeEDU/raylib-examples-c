@@ -6,7 +6,7 @@
 
 
 // > SUBMODULE: OVERLAY
-//   INDEX
+// > INDEX
 GUI_Overlay     GUI_MakeOverlay();
 void            GUI_DrawOverlay();
 bool            GUI_OverlayIsOpenBy(const char* text_id_owner);
@@ -100,4 +100,3 @@ void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
     }
 }
 #endif
-

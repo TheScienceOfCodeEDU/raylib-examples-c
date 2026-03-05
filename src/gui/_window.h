@@ -319,8 +319,8 @@ void GUI_RemoveWindow(int id)
 
 // > WINDOW
 //   MODEL & GEOMETRY
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+//   STABILITY: 90%
+//   NOTES: Nothing here
 Rectangle GUI_GetWindowTitle(Rectangle shape)
 {
     float border    = GUI_GetFontSetup(EGUI_Font_GUI)->border;

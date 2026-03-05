@@ -9,7 +9,7 @@
 // > INDEX
 // > BASE MACROS
 //   - GUI_BASE_CONTROL_ACTIVATED
-//   - GUI_BASE_CONTROL_ACTIVATED
+//   - GUI_BASE_CONTROL_FOCUSED
 
 // > CONTROL HELPERS
 bool        GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window);
@@ -110,7 +110,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     /* Update cursor_over_gui */                                \
     if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true;   \
 
-// >>>>>> POINTER: DRAW & COLLISION
+// > POINTERS
 void GUI_DrawCursorFor(EGUI_Cursor cursor)
 {
     GUI_CursorSetup* setup      = &GUI_CTX.setup->cursors[cursor];
@@ -215,10 +215,10 @@ bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 {
     return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->layout.current_window_idx));
 }
-// <<<<<<< POINTER: DRAW & COLLISION
+// < END POINTERS
 
 
-// >>>>>>> DRAW PRIMITIVES
+// > DRAW PRIMITIVES
 void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner)
 {
     if (!remove_corner) {
@@ -231,16 +231,16 @@ void GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, boo
         // Right
         DrawRectangleRec((Rectangle){ shape.x + shape.width - border, shape.y, border, shape.height }, light);
     } else {
-        // ─── Top (with corner gaps) ──────────────────────────────
+        // Top (with corner gaps)
         DrawRectangleRec((Rectangle){ shape.x + border, shape.y, shape.width - 2 * border, border }, dark);
 
-        // │ Left (start after top gap)
+        // Left (start after top gap)
         DrawRectangleRec((Rectangle){ shape.x, shape.y + border, border, shape.height - border }, dark);
 
-        // │ Right (start after top gap)
+        // Right (start after top gap)
         DrawRectangleRec((Rectangle){ shape.x + shape.width - border, shape.y + border, border, shape.height - border }, light);
 
-        // └ Bottom (full width)
+        // Bottom (full width)
         DrawRectangleRec((Rectangle){ shape.x, shape.y + shape.height - border, shape.width, border }, light);
     }
 }
@@ -278,9 +278,9 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Font font)
     Vector2 delta_scaled = Vector2Scale(setup->delta, state->scale);
     return Vector2Add(result, delta_scaled);
 }
-// <<<<<<< DRAW PRIMITIVES
+// < END DRAW PRIMITIVES
 
-// >>>>>>> CONTROL HELPERS
+// > CONTROL HELPERS
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
 
@@ -317,7 +317,9 @@ void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
     BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
 }
 
-// >>>>>>> ICON
+// < END CONTROL HELPERS
+
+// > ICONS
 // Returns used texture_scale to draw the texture in the available height
 float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 {
@@ -355,7 +357,9 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 }
 
 
-// >>>>>>> FACE
+// < END ICONS
+
+// > IMAGES
 void GUI_Face(Vector2 position, float height)
 {
     Rectangle shape = { position.x, position.y, height, height };
@@ -410,8 +414,8 @@ void GUI_Face(Vector2 position, float height)
 //   UI
 
 // > IMAGE
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+//   STABILITY: 90%
+//   NOTES: Nothing here
 void GUI_Image(Texture2D texture, Rectangle shape)
 {
     shape = GUI_Relative(shape);
@@ -445,8 +449,8 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 
 
 // > BUTTON
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+//   STABILITY: 90%
+//   NOTES: Nothing here
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
@@ -541,8 +545,8 @@ bool GUI_ButtonMenu(
 }
 
 // > TEXT
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+//   STABILITY: 90%
+//   NOTES: Nothing here
 void GUI_DrawText(
     Rectangle shape, const char* text,
     GUI_ThemeColors colors, EGUI_Font font)
@@ -567,8 +571,8 @@ void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 }
 
 // > INPUT
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+//   STABILITY: 90%
+//   NOTES: Nothing here
 void GUI_DrawInput(
     Rectangle shape, char* value, int blink_cursor,
     EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font)
@@ -836,8 +840,8 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
 
 
 // > CHECKBOX
-//   STABILITY : █████████░  90%
-//   NOTES     : Improve draw
+//   STABILITY: 90%
+//   NOTES: Improve draw
 void GUI_DrawCheckBox(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)

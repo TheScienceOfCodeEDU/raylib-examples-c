@@ -256,5 +256,3 @@ static struct {
 void        GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
 GUI_State*  GUI_GetState();
 GUI_Setup*  GUI_GetSetup();
-
-
