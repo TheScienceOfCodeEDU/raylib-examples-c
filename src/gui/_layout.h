@@ -5,38 +5,39 @@
 #endif
 
 
-// > SUBMODULE: LAYOUT
+// > SUBMODULE: GRID
 // > INDEX
-GUI_LayoutTemp  GUI_MakeLayoutTemp();
-float           GUI_VerticalSizeOrDefault();
-float           GUI_HorizontalSizeOrDefault();
-void            GUI_LayoutVertical(float size);
+GUI_GridTemp    GUI_MakeGrid();
+float           GUI_GridHeightOrDefault();
+float           GUI_GridWidthOrDefault();
 
-Rectangle       GUI_NextInPlace(int horizontal, int vertical);
-Rectangle       GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical);
-Rectangle       GUI_NextVertical();
+Rectangle       GUI_GridAt(int horizontal, int vertical);
+Rectangle       GUI_GridBetween(int horizontal, int vertical, int end_horizontal, int end_vertical);
 
-void            GUI_LayoutHorizontal(float size);
-Rectangle       GUI_NextHorizontal();
-Rectangle       GUI_NextHorizontals(int quantity);
-Rectangle       GUI_NextVerticals(int quantity);
+void            GUI_GridHorizontal(float horizontal_size);
+void            GUI_GridVertical(float size);
+void            GUI_GridSize(float width, float height);
+void            GUI_GridCols(float cols, Rectangle window_workspace, EGUI_Font font);
+void            GUI_GridDuplicate();
 
-Rectangle       GUI_LayoutAvailable(Rectangle workspace);
-void            GUI_LayoutReset(Rectangle workspace);
-void            GUI_LayoutAutoJump();
-void            GUI_LayoutBlock(float width, float height);
-void            GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_Font font);
-void            GUI_LayoutDuplicateBlock();
+Rectangle       GUI_GridNextX();
+Rectangle       GUI_GridNextY();
+Rectangle       GUI_GridNextXn(int quantity);
+Rectangle       GUI_GridNextYn(int quantity);
 
-Rectangle       GUI_Relative(Rectangle shape);
-Rectangle       GUI_RelativePositionOnly(Rectangle shape);
+Rectangle       GUI_GridAvailable(Rectangle workspace);
+void            GUI_GridReset(Rectangle workspace);
+void            GUI_GridAutoJump();
+
+Rectangle       GUI_GridRelative(Rectangle shape);
+Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
 
-GUI_LayoutTemp GUI_MakeLayoutTemp()
+GUI_GridTemp GUI_MakeGrid()
 {
-    GUI_LayoutTemp layout = {
+    GUI_GridTemp grid = {
         .current_workspace          = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .vertical_count             = 0,
         .vertical_size              = 0.0f,
@@ -49,34 +50,40 @@ GUI_LayoutTemp GUI_MakeLayoutTemp()
         .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .force_overflow             = false
     };
-    return layout;
+    return grid;
 }
 
-void GUI_LayoutVertical(float size)
+void GUI_GridHorizontal(float size)
 {
-    GUI_CTX.temp->layout.vertical_count = 0;
-    GUI_CTX.temp->layout.vertical_size  = size;
+    GUI_CTX.temp->grid.horizontal_count = 0;
+    GUI_CTX.temp->grid.horizontal_size  = size;
 }
 
-float GUI_VerticalSizeOrDefault()
+void GUI_GridVertical(float size)
 {
-    return GUI_CTX.temp->layout.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.vertical_size
-                                                              : (float)GetScreenHeight();
+    GUI_CTX.temp->grid.vertical_count = 0;
+    GUI_CTX.temp->grid.vertical_size  = size;
 }
 
-float GUI_HorizontalSizeOrDefault()
+float GUI_GridHeightOrDefault()
 {
-    return GUI_CTX.temp->layout.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->layout.horizontal_size
-                                                                : (float)GetScreenWidth();
+    return GUI_CTX.temp->grid.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->grid.vertical_size
+                                                            : (float)GetScreenHeight();
+}
+
+float GUI_GridWidthOrDefault()
+{
+    return GUI_CTX.temp->grid.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->grid.horizontal_size
+                                                              : (float)GetScreenWidth();
 }
 
 Rectangle GUI_NextInPlace(int horizontal, int vertical)
 {
-    float horizontal_size   = GUI_HorizontalSizeOrDefault();
-    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
+    float horizontal_size   = GUI_GridWidthOrDefault();
+    float vertical_size     = GUI_CTX.temp->grid.vertical_size;
     Rectangle result        = {
-        .x      = horizontal_size * (float)(GUI_CTX.temp->layout.horizontal_count + horizontal),
-        .y      = vertical_size * (float)(GUI_CTX.temp->layout.vertical_count + vertical),
+        .x      = horizontal_size * (float)(GUI_CTX.temp->grid.horizontal_count + horizontal),
+        .y      = vertical_size * (float)(GUI_CTX.temp->grid.vertical_count + vertical),
         .width  = horizontal_size,
         .height = vertical_size
     };
@@ -96,38 +103,33 @@ Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizonta
     return result;
 }
 
-Rectangle GUI_NextVertical()
-{
-    Rectangle shape         = GUI_NextInPlace(0, 0);
-    float vertical_size     = GUI_CTX.temp->layout.vertical_size;
-
-    GUI_CTX.temp->layout.used_height += vertical_size;
-    GUI_CTX.temp->layout.vertical_count++;
-    return shape;
-}
-
-void GUI_LayoutHorizontal(float size)
-{
-    GUI_CTX.temp->layout.horizontal_count = 0;
-    GUI_CTX.temp->layout.horizontal_size = size;
-}
-
-Rectangle GUI_NextHorizontal()
+Rectangle GUI_GridNextX()
 {
     Rectangle shape = GUI_NextInPlace(0, 0);
-    GUI_CTX.temp->layout.horizontal_count++;
+    GUI_CTX.temp->grid.horizontal_count++;
     return shape;
 }
 
-Rectangle GUI_NextHorizontals(int quantity)
+Rectangle GUI_GridNextY()
+{
+    Rectangle shape         = GUI_NextInPlace(0, 0);
+    float vertical_size     = GUI_CTX.temp->grid.vertical_size;
+
+    GUI_CTX.temp->grid.used_height += vertical_size;
+    GUI_CTX.temp->grid.vertical_count++;
+    return shape;
+}
+
+
+Rectangle GUI_GridNextXn(int quantity)
 {
     Assert(quantity > 1);
 
     // Push value for next element
-    Rectangle first = GUI_NextHorizontal();
+    Rectangle first = GUI_GridNextX();
     Rectangle last = {0};
     for (int i = 1; i < quantity; ++i) {
-        last = GUI_NextHorizontal();
+        last = GUI_GridNextX();
     }
 
     Rectangle result = {
@@ -139,15 +141,15 @@ Rectangle GUI_NextHorizontals(int quantity)
     return result;
 }
 
-Rectangle GUI_NextVerticals(int quantity)
+Rectangle GUI_GridNextYn(int quantity)
 {
     Assert(quantity > 1);
 
     // Push value for next element
-    Rectangle first = GUI_NextVertical();
+    Rectangle first = GUI_GridNextY();
     Rectangle last = {0};
     for (int i = 1; i < quantity; ++i) {
-        last = GUI_NextVertical();
+        last = GUI_GridNextY();
     }
 
     Rectangle result = {
@@ -158,10 +160,10 @@ Rectangle GUI_NextVerticals(int quantity)
     };
     return result;
 }
-Rectangle GUI_LayoutAvailable(Rectangle workspace)
+Rectangle GUI_GridAvailable(Rectangle workspace)
 {
-    float used_w = GUI_CTX.temp->layout.horizontal_size * (float)GUI_CTX.temp->layout.horizontal_count;
-    float used_h = GUI_CTX.temp->layout.vertical_size   * (float)GUI_CTX.temp->layout.vertical_count;
+    float used_w = GUI_CTX.temp->grid.horizontal_size * (float)GUI_CTX.temp->grid.horizontal_count;
+    float used_h = GUI_CTX.temp->grid.vertical_size   * (float)GUI_CTX.temp->grid.vertical_count;
     Rectangle result = {
         .x      = workspace.x + used_w,
         .y      = workspace.y + used_h,
@@ -170,84 +172,84 @@ Rectangle GUI_LayoutAvailable(Rectangle workspace)
     };
 
     // Vertical scroll
-    if (result.height < GUI_CTX.temp->layout.vertical_size)
-        result.height = GUI_CTX.temp->layout.vertical_size;
+    if (result.height < GUI_CTX.temp->grid.vertical_size)
+        result.height = GUI_CTX.temp->grid.vertical_size;
     return result;
 }
-void GUI_LayoutReset(Rectangle workspace)
+void GUI_GridReset(Rectangle workspace)
 {
-    GUI_CTX.temp->layout = GUI_MakeLayoutTemp();
-    GUI_CTX.temp->layout.current_workspace      = workspace;
+    GUI_CTX.temp->grid = GUI_MakeGrid();
+    GUI_CTX.temp->grid.current_workspace      = workspace;
 }
-void GUI_LayoutAutoJump()
+void GUI_GridAutoJump()
 {
-    bool used_space = GUI_CTX.temp->layout.horizontal_count > 0 && GUI_CTX.temp->layout.vertical_count == 0;
+    bool used_space = GUI_CTX.temp->grid.horizontal_count > 0 && GUI_CTX.temp->grid.vertical_count == 0;
     if (used_space) {
-        GUI_NextVertical();
+        GUI_GridNextY();
     }
 }
-void GUI_LayoutBlock(float width, float height)
+void GUI_GridSize(float width, float height)
 {
-    GUI_LayoutAutoJump();
+    GUI_GridAutoJump();
 
     // Horizontal
     if (width > 0.0) {
-        GUI_LayoutHorizontal(width);
+        GUI_GridHorizontal(width);
     } else if (width < 0.0) {
         // width is already negative
         // so this takes available space minus width
-        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width + width);
+        GUI_GridHorizontal(GUI_CTX.temp->grid.current_workspace.width + width);
     } else {
-        GUI_LayoutHorizontal(GUI_CTX.temp->layout.current_workspace.width);
+        GUI_GridHorizontal(GUI_CTX.temp->grid.current_workspace.width);
     }
 
     // Adjust to get y-available space
-    if (GUI_CTX.temp->layout.vertical_count != 0) {
-        GUI_CTX.temp->layout.current_workspace = GUI_LayoutAvailable(GUI_CTX.temp->layout.current_workspace);
+    if (GUI_CTX.temp->grid.vertical_count != 0) {
+        GUI_CTX.temp->grid.current_workspace = GUI_GridAvailable(GUI_CTX.temp->grid.current_workspace);
     }
 
     // Vertical
     if (height > 0.0) {
-        GUI_LayoutVertical(height);
+        GUI_GridVertical(height);
     } else if (height < 0.0) {
         // height is already negative
         // so this takes available space minus height
-        float available  = GUI_CTX.temp->layout.current_workspace.height + height;
+        float available  = GUI_CTX.temp->grid.current_workspace.height + height;
         if (available > 0) {
-            GUI_LayoutVertical(available);
+            GUI_GridVertical(available);
         } else {
-            GUI_LayoutVertical(height * -1);
+            GUI_GridVertical(height * -1);
         }
     } else {
-        GUI_LayoutVertical(GUI_CTX.temp->layout.current_workspace.height);
+        GUI_GridVertical(GUI_CTX.temp->grid.current_workspace.height);
     }
 }
 
-void GUI_LayoutBlockCols(float cols, Rectangle window_workspace, EGUI_Font font)
+void GUI_GridCols(float cols, Rectangle window_workspace, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
-    GUI_LayoutBlock(window_workspace.width / cols, default_height);
+    GUI_GridSize(window_workspace.width / cols, default_height);
     GUI_SetFontType(font);
 }
 
-void GUI_LayoutDuplicateBlock()
+void GUI_GridDuplicate()
 {
-    GUI_LayoutBlock(GUI_CTX.temp->layout.horizontal_size, GUI_CTX.temp->layout.vertical_size);
+    GUI_GridSize(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size);
 }
 
-Rectangle GUI_Relative(Rectangle shape)
+Rectangle GUI_GridRelative(Rectangle shape)
 {
-    bool is_active_layout = GUI_CTX.temp->layout.current_workspace.width  > 0 &&
-                            GUI_CTX.temp->layout.current_workspace.height > 0;
-    if (is_active_layout) {
-        shape = RelativeToRect(shape, GUI_CTX.temp->layout.current_workspace);
+    bool is_active_grid = GUI_CTX.temp->grid.current_workspace.width  > 0 &&
+                            GUI_CTX.temp->grid.current_workspace.height > 0;
+    if (is_active_grid) {
+        shape = RelativeToRect(shape, GUI_CTX.temp->grid.current_workspace);
     }
     return shape;
 }
 
-Rectangle GUI_RelativePositionOnly(Rectangle shape)
+Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
 {
-    Rectangle shape_relative    = GUI_Relative(shape);
+    Rectangle shape_relative    = GUI_GridRelative(shape);
     // Keep dimensions
     shape_relative.width        = shape.width;
     shape_relative.height       = shape.height;

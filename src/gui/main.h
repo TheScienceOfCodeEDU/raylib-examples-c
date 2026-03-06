@@ -22,7 +22,7 @@ void                GUI_AfterWindowContents();
 bool                GUI_IsCursorOverGui();
 bool                GUI_IsCurrentWindowTarget(int window_id);
 bool                GUI_IsCursorOverOverlay();
-Rectangle           GUI_Relative(Rectangle shape);
+Rectangle           GUI_GridRelative(Rectangle shape);
 void                GUI_BeginDraw(EGUI_Cursor cursor_style);
 void                GUI_EndDraw();
 
@@ -65,7 +65,7 @@ GUI_Temp GUI_MakeTempDefault()
     GUI_Temp temp = {
         .status                     = EGUI_Status_Off,
         .control_focus_ptr          = NULL,
-        .layout                     = GUI_MakeLayoutTemp(),
+        .grid                       = GUI_MakeGrid(),
         .overlay                    = GUI_MakeOverlay(),
         .cursor                     = EGUI_Cursor_Default,
         .cursor_last                = (Vector2){ 0.0f, 0.0f },
@@ -80,13 +80,13 @@ GUI_Temp GUI_MakeTempDefault()
 
 EGUI_Font GUI_GetFont()
 {
-    EGUI_Font font = GUI_CTX.temp->layout.current_font;
+    EGUI_Font font = GUI_CTX.temp->grid.current_font;
     return font;
 }
 
 void GUI_SetFontType(EGUI_Font font)
 {
-    GUI_CTX.temp->layout.current_font = font;
+    GUI_CTX.temp->grid.current_font = font;
 }
 
 float GUI_CalcDefaultHeightScaled(EGUI_Font font)
@@ -179,7 +179,7 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
         GUI_CTX.temp->control_focus_ptr = NULL;
     }
 
-    GUI_CTX.temp->layout                       = GUI_MakeLayoutTemp();
+    GUI_CTX.temp->grid = GUI_MakeGrid();
 }
 
 void GUI_EndDraw()

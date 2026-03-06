@@ -157,7 +157,7 @@ typedef struct GUI_Window {
     float           scroll_offset;
     bool            focused_face;
     // Calc fields
-    float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during layout processing.
+    float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during grid processing.
     // Handlers
     void (*contents) (struct GUI_Window*);
 } GUI_Window;
@@ -165,14 +165,14 @@ typedef struct GUI_Window {
 // < END SUBMODULE: WINDOW
 
 // > TYPES
-//   SUBMODULE: LAYOUT
+//   SUBMODULE: GRID
 #define RESET_COUNT     0
 #define ADD_COUNT       1
 #define ONLY_GET_COUNT  2
-#define DEFAULT_SIZE    0.0
+#define DEFAULT_SIZE    0.0 // TODO@dc: remove
 
 typedef struct {
-    Rectangle       current_workspace;  // Current available (Use only for layouts)
+    Rectangle       current_workspace;  // Current available (Use only for grids)
     int             vertical_count;
     float           vertical_size;
     int             horizontal_count;
@@ -186,8 +186,8 @@ typedef struct {
     int             current_window_idx;       // Current window being drawn
     Rectangle       current_window_workspace; // Current window workspace
     bool            force_overflow;
-} GUI_LayoutTemp;
-// < END SUBMODULE: LAYOUT
+} GUI_GridTemp;
+// < END SUBMODULE: GRID
 
 //
 // <<<<<<< END SUBMODULES
@@ -201,7 +201,7 @@ typedef struct {
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
     int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
-    GUI_LayoutTemp  layout;             // Layout state when the overlay draw was queued (used to draw with correct transform the opened menu)
+    GUI_GridTemp    grid;             // Grid state when the overlay draw was queued (used to draw with correct transform the opened menu)
     bool            just_enabled;       // TRUE if the overlay was JUST ENABLED on this frame
     Rectangle       final_shape;        // Final shape of the overlay
     void            (*function)(void);  // Draw function
@@ -213,8 +213,8 @@ typedef struct {
     EGUI_Status      status;
     void             *control_focus_ptr;                // Keeps track between frames if there is a focused control
 
-    // Layout temporary data
-    GUI_LayoutTemp  layout;
+    // Grid temporary data
+    GUI_GridTemp  grid;
 
     // Overlay
     GUI_Overlay     overlay;

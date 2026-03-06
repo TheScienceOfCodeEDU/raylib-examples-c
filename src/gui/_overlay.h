@@ -24,7 +24,7 @@ GUI_Overlay GUI_MakeOverlay()
     GUI_Overlay overlay = {
         .id_ptr             = NULL,
         .window_target_id   = 0,
-        .layout             = GUI_MakeLayoutTemp(),
+        .grid               = GUI_MakeGrid(),
         .just_enabled       = false,
         .final_shape        = (Rectangle){0,0,0,0},
         .function           = NULL,
@@ -39,8 +39,8 @@ void GUI_DrawOverlay()
 
     if (is_enabled) {
         // Prepare state
-        GUI_CTX.temp->layout                    = overlay->layout;
-        GUI_CTX.temp->layout.force_overflow     = true;
+        GUI_CTX.temp->grid                      = overlay->grid;
+        GUI_CTX.temp->grid.force_overflow       = true;
         // No final_shape = CursorOverOverlay is FALSE then controls inside overlay->function();
         // can be interacted (See GUI_CheckCollisionCursorControl)
         overlay->final_shape                    = (Rectangle){0,0,0,0};
@@ -73,7 +73,7 @@ void GUI_OverlayOpenFor(const char* id)
 
 void GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void))
 {
-    GUI_CTX.temp->overlay.layout           = GUI_CTX.temp->layout;
+    GUI_CTX.temp->overlay.grid             = GUI_CTX.temp->grid;
     GUI_CTX.temp->overlay.window_target_id = GUI_CTX.temp->window_target_id;
     GUI_CTX.temp->overlay.just_enabled     = just_enabled;
     GUI_CTX.temp->overlay.function         = draw_function;
@@ -92,7 +92,7 @@ void GUI_CloseOverlayOnInteraction(Rectangle final_shape)
     if (interacted && interactable) {
         GUI_OverlayClose();
     } else {
-        Rectangle relative_shape = GUI_RelativePositionOnly(final_shape);
+        Rectangle relative_shape = GUI_GridRelativePositionOnly(final_shape);
         GUI_OverlaySetFinalShape(relative_shape);
     #if DEV_DEBUG_GUI == 1
         DrawDebugRect(relative_shape, RED);

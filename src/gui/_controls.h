@@ -201,10 +201,10 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
     bool collide_focused        = CheckCollisionPointRec(mouse, focused_window->shape);
 
     // Vertical scroll data
-    Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->layout.current_scroll };
+    Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->grid.current_scroll };
     bool collide_scrolled       = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
     bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_GetWindowWorkspace(window));
-    bool overflow               = GUI_CTX.temp->layout.force_overflow;
+    bool overflow               = GUI_CTX.temp->grid.force_overflow;
 
     // Collide checks
     bool collide                = collide_scrolled && (collide_workspace || overflow);
@@ -215,7 +215,7 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 
 bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 {
-    return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->layout.current_window_idx));
+    return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->grid.current_window_idx));
 }
 // < END POINTERS
 
@@ -286,12 +286,12 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Font font)
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
 
-    result.y += GUI_CTX.temp->layout.current_scroll;
-    if (intersect_window && GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN) {
-        Rectangle intersection = RectIntersection(result, GUI_CTX.temp->layout.current_window_workspace);
+    result.y += GUI_CTX.temp->grid.current_scroll;
+    if (intersect_window && GUI_CTX.temp->grid.current_window_idx != GUI_NO_WIN) {
+        Rectangle intersection = RectIntersection(result, GUI_CTX.temp->grid.current_window_workspace);
         #if DEV_DEBUG_GUI_SCROLL == 1
-        if (GUI_CTX.temp->layout.current_window_idx == GUI_CTX.state->z_index[0]) {
-            GUI_DrawBorders(GUI_CTX.temp->layout.current_window_workspace, RED, RED, 1, false);
+        if (GUI_CTX.temp->grid.current_window_idx == GUI_CTX.state->z_index[0]) {
+            GUI_DrawBorders(GUI_CTX.temp->grid.current_window_workspace, RED, RED, 1, false);
             DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
             DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
         }
@@ -303,10 +303,10 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
 
 void GUI_BeginControlScissor()
 {
-    bool not_overflow   = GUI_CTX.temp->layout.force_overflow == false;
-    bool inside_window  = GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN;
+    bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
+    bool inside_window  = GUI_CTX.temp->grid.current_window_idx != GUI_NO_WIN;
     if (not_overflow && inside_window) {
-        BeginScissorModeRect(GUI_CTX.temp->layout.current_window_workspace);
+        BeginScissorModeRect(GUI_CTX.temp->grid.current_window_workspace);
     }
 }
 
@@ -314,8 +314,8 @@ void GUI_BeginControlScissor()
 // Useful to cut text inside a control
 void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
 {
-    bool not_overflow   = GUI_CTX.temp->layout.force_overflow == false;
-    bool inside_window  = GUI_CTX.temp->layout.current_window_idx != GUI_NO_WIN;
+    bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
+    bool inside_window  = GUI_CTX.temp->grid.current_window_idx != GUI_NO_WIN;
     BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
 }
 
@@ -345,7 +345,7 @@ float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint)
 {
     Rectangle shape = RectFromVector2(position, height, height);
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
     GUI_Theme *theme    = &GUI_CTX.setup->theme;
@@ -365,7 +365,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 void GUI_Face(Vector2 position, float height)
 {
     Rectangle shape = { position.x, position.y, height, height };
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
     position.x = shape.x;
     position.y = shape.y;
     Assert(height > 0);
@@ -420,7 +420,7 @@ void GUI_Face(Vector2 position, float height)
 //   NOTES: Nothing here
 void GUI_Image(Texture2D texture, Rectangle shape)
 {
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
 
     if (texture.id == 0) return;
 
@@ -494,7 +494,7 @@ bool GUI_Button(
     GUI_ThemeColors colors)
 {
 
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
     EGUI_Font font              = GUI_GetFont();
@@ -565,8 +565,8 @@ void GUI_DrawText(
 
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
-    shape = GUI_Relative(shape);
-    GUI_DrawText(shape, text, colors, GUI_CTX.temp->layout.current_font); // todo@dc: review! temp->layout.current_font?
+    shape = GUI_GridRelative(shape);
+    GUI_DrawText(shape, text, colors, GUI_CTX.temp->grid.current_font); // todo@dc: review! temp->grid.current_font?
 }
 
 // > INPUT
@@ -652,7 +652,7 @@ void GUI_Input(
     Rectangle shape, char *value, /* TODO@dc: add buffer size and rename value as buffer */
     EGUI_InputType type, GUI_ThemeColors colors)
 {
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
     GUI_BASE_CONTROL_FOCUSED(value, shape)
 
     // Blink (text cursor)
@@ -814,7 +814,7 @@ void GUI_Input(
 void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max)
 {
     Rectangle shape_original = shape;
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
 
     static char buf_default[256] = {0};
     static char buf_focused[256] = {0};
@@ -884,7 +884,7 @@ void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
     GUI_ThemeColors colors)
 {
-    shape = GUI_Relative(shape);
+    shape = GUI_GridRelative(shape);
     GUI_BASE_CONTROL_FOCUSED(value, shape)
 
     // Focused
