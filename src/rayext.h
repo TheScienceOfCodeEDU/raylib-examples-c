@@ -31,6 +31,28 @@ static bool ParseFloatStrict(const char *s, float *out)
     return true;
 }
 
+Color MakeColor(unsigned char r, unsigned char g, unsigned char b)
+{
+    Color color = {
+        .r = r,
+        .g = g,
+        .b = b,
+        .a = 255
+    };
+    return color;
+}
+
+Color MakeColorAlpha(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+    Color color = {
+        .r = r,
+        .g = g,
+        .b = b,
+        .a = a
+    };
+    return color;
+}
+
 Rectangle LimitRect(Rectangle shape, Rectangle limits) {
     // Restrict size to not exceed limits
     shape.width = fminf(shape.width, limits.width);

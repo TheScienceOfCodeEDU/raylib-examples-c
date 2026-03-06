@@ -88,6 +88,7 @@ typedef struct {
     GUI_ThemeColors     gray;
     GUI_ThemeColors     red;
     GUI_ThemeColors     green;
+    GUI_ThemeColors     abstractica;
     float               bg_alpha;
     float               color_change;
 } GUI_Theme;

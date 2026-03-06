@@ -62,8 +62,9 @@ void GUI_TopBar(Rectangle shape)
 
     GUI_GridReset(GUI_MakeWorkspace());
     GUI_GridCols(BUTTONS, shape, EGUI_Font_GUI);
-    GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,           theme->red,     GUI_ProgramMenu);
-    GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,    theme->gray,    GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,           theme->red,    GUI_ProgramMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,    theme->gray,   GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Other",        &icons->Dog,   theme->abstractica,   GUI_GameMenu);
 }
 
 //
@@ -262,7 +263,7 @@ void WIN_Winman(GUI_Window* window)
         if (GUI_Button(GUI_GridNextY(), "Sample window", NULL, window->colors)) {
             int win_id = 2;
             if (win_window == NULL || win_window->id == 0) {
-                win_window = GUI_OpenWindow(win_id, "Sample window", setup->theme.gray, &icons->Dog, false, WIN_Window);
+                win_window = GUI_OpenWindow(win_id, "Sample window", setup->theme.abstractica, &icons->Dog, false, WIN_Window);
             }
             GUI_ForceZindex(win_id);
         }

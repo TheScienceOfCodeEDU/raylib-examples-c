@@ -14,6 +14,8 @@ GUI_FontSetup*      GUI_GetFontSetup(EGUI_Font font);
 Font                GUI_GetFontAsset(EGUI_Font font);
 GUI_CursorSetup*    GUI_GetCursorSetup();
 
+GUI_ThemeColors     GUI_MakeThemeColors(Color tx_color_0, Color tx_color_1,
+                                        Color bg_color_0, Color bg_color_1, Color bg_color_2, Color bg_color_3);
 Color               GUI_GenerateThemeColor(float hue, float intensity);
 GUI_ThemeColors     GUI_GenerateThemeColors(float hue);
 GUI_Theme           GUI_GenerateTheme();
@@ -81,6 +83,20 @@ GUI_CursorSetup* GUI_GetCursorSetup()
 }
 
 
+GUI_ThemeColors GUI_MakeThemeColors(Color tx_color_0, Color tx_color_1,
+    Color bg_color_0, Color bg_color_1, Color bg_color_2, Color bg_color_3)
+{
+    GUI_ThemeColors colors = {
+        .tx_color_0 = tx_color_0,
+        .tx_color_1 = tx_color_1,
+        .bg_color_0 = bg_color_0,
+        .bg_color_1 = bg_color_1,
+        .bg_color_2 = bg_color_2,
+        .bg_color_3 = bg_color_3
+    };
+    return colors;
+}
+
 // Generates a color with a specified hue and interpolated saturation and value.
 // Parameters:
 //   hue: Hue value in degrees (e.g., 180.0f for cyan).
@@ -102,7 +118,6 @@ Color GUI_GenerateThemeColor(float hue, float intensity) {
 
     return ColorFromHSV(hue, saturation, value);
 }
-
 
 GUI_ThemeColors GUI_GenerateThemeColors(float hue)
 {
@@ -138,6 +153,9 @@ GUI_Theme GUI_GenerateTheme()
         .gray           = GUI_GenerateThemeColors(180.0f),
         .red            = GUI_GenerateThemeColors(3.0f),
         .green          = GUI_GenerateThemeColors(97.0f),
+        .abstractica    = GUI_MakeThemeColors(
+            MakeColor(153, 155, 163), MakeColor(150, 149, 150),
+            MakeColor(65,67,72), MakeColor(43,45,48), MakeColor(25,26,28), MakeColor(29,25,30)),
         .bg_alpha       = 1.0f,
         .color_change   = 0.05f
     };
