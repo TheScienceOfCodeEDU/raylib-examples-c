@@ -94,6 +94,9 @@ void WIN_Window(GUI_Window* window)
         // A default layout with 3 columns
         GUI_LayoutBlockCols(3, window_workspace, font);
 
+        GUI_NextHorizontal();
+        GUI_ButtonMenu(GUI_NextHorizontal(), "Game 2",    &icons->Dog,    theme.gray, GUI_GameMenu);
+
         GUI_LayoutDuplicateBlock();
         // 1st input (textbox)
         GUI_Text(GUI_NextHorizontal(), "Text", colors);
@@ -121,9 +124,7 @@ void WIN_Window(GUI_Window* window)
         GUI_Text(GUI_NextHorizontal(), "Font",  colors);
         GUI_Check(GUI_NextHorizontals(2), &win_state->font_toggle, "GUI", "DEF", colors);
 
-        GUI_LayoutDuplicateBlock();
-        GUI_NextHorizontal();
-        GUI_ButtonMenu(GUI_NextHorizontal(), "Game 2",    &icons->Dog,    theme.gray, GUI_GameMenu);
+
     GUI_EndWindowContents(window);
 }
 
@@ -260,7 +261,7 @@ void WIN_Winman(GUI_Window* window)
         GUI_LayoutBlock(window_workspace.width, default_height);
 
         static GUI_Window* win_window = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
+        if (GUI_Button(GUI_NextVertical(), "Sample window", NULL, window->colors)) {
             int win_id = 2;
             if (win_window == NULL || win_window->id == 0) {
                 win_window = GUI_OpenWindow(win_id, "Sample window", setup->theme.gray, &icons->Dog, false, WIN_Window);
@@ -268,7 +269,7 @@ void WIN_Winman(GUI_Window* window)
             GUI_ForceZindex(win_id);
         }
         static GUI_Window* win_layouts = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open layouts window", NULL, window->colors)) {
+        if (GUI_Button(GUI_NextVertical(), "Layouts window", NULL, window->colors)) {
             int win_id = 3;
             if (win_layouts == NULL || win_layouts->id == 0) {
                 win_layouts = GUI_OpenWindow(win_id, "Layouts window", setup->theme.gray, &icons->Layouts, false, WIN_Layouts);
@@ -276,7 +277,7 @@ void WIN_Winman(GUI_Window* window)
             GUI_ForceZindex(win_id);
         }
         static GUI_Window* win_character_debug = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open Character debug", NULL, window->colors)) {
+        if (GUI_Button(GUI_NextVertical(), "Character debug", NULL, window->colors)) {
             int win_id = 4;
             if (win_character_debug == NULL || win_character_debug->id == 0) {
                 win_character_debug = GUI_OpenWindow(win_id, "Character debug", setup->theme.gray, &icons->Dog, false, WIN_CharacterDebug);
@@ -284,7 +285,7 @@ void WIN_Winman(GUI_Window* window)
             GUI_ForceZindex(win_id);
         }
         static GUI_Window* win_settings = NULL;
-        if (GUI_Button(GUI_NextVertical(), "Open Settings", NULL, window->colors)) {
+        if (GUI_Button(GUI_NextVertical(), "Settings", &icons->Setup, window->colors)) {
             int win_id = 5;
             if (win_settings == NULL || win_settings->id == 0) {
                 win_settings = GUI_OpenWindow(win_id, "Settings", setup->theme.gray, &icons->Face, true, WIN_Settings);

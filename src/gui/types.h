@@ -202,8 +202,8 @@ typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
     int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
     GUI_LayoutTemp  layout;             // Layout state when the overlay draw was queued (used to draw with correct transform the opened menu)
-    bool            just_interacted;    // Just interacted ocurred on this frame
-    Rectangle       shape_drawed;       // Final shape
+    bool            just_enabled;       // TRUE if the overlay was JUST ENABLED on this frame
+    Rectangle       final_shape;        // Final shape of the overlay
     void            (*function)(void);  // Draw function
 }  GUI_Overlay;
 
@@ -216,8 +216,8 @@ typedef struct {
     // Layout temporary data
     GUI_LayoutTemp  layout;
 
-    // Overlay draw
-    GUI_Overlay     overlay_draw;
+    // Overlay
+    GUI_Overlay     overlay;
 
     // Cursor
     EGUI_Cursor     cursor;

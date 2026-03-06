@@ -46,7 +46,7 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
     GUI_State state = {
         .buffer         = LoadRenderTexture((int)screen_max.x, (int)screen_max.y),
-        .scale          = 2.0f,
+        .scale          = 1.0f,
         .force_z_index  = 0
     };
 
@@ -56,7 +56,6 @@ GUI_State GUI_MakeStateDefault(Vector2 screen_max)
     for (int i = 0; i < GUI_MAX_OPEN_WINS; i++) {
         state.window_s[i] = GUI_MakeEmptyWindow();
     }
-
     memset(state.z_index, 0, sizeof(state.z_index));
     return state;
 }
@@ -67,7 +66,7 @@ GUI_Temp GUI_MakeTempDefault()
         .status                     = EGUI_Status_Off,
         .control_focus_ptr          = NULL,
         .layout                     = GUI_MakeLayoutTemp(),
-        .overlay_draw               = GUI_MakeOverlay(),
+        .overlay                    = GUI_MakeOverlay(),
         .cursor                     = EGUI_Cursor_Default,
         .cursor_last                = (Vector2){ 0.0f, 0.0f },
         .cursor_current             = (Vector2){ 0.0f, 0.0f },
@@ -143,12 +142,17 @@ bool GUI_IsCursorOverGui()
 // Returns true if window id is the interactable target (cursor is over and z-index is the lowest possible)
 bool GUI_IsCurrentWindowTarget(int window_id)
 {
-    return GUI_CTX.temp->window_target_id == 0 || GUI_CTX.temp->window_target_id == window_id;
+    int target_id   = GUI_CTX.temp->window_target_id;
+    bool no_target  = target_id == 0;
+    bool is_target  = target_id == window_id;
+    return no_target || is_target;
 }
 
 bool GUI_IsCursorOverOverlay()
 {
-    bool is_cursor_over = CheckCollisionPointRec(GUI_CTX.temp->cursor_current, GUI_CTX.temp->overlay_draw.shape_drawed);
+    Vector2 cursor      = GUI_CTX.temp->cursor_current;
+    Rectangle shape     = GUI_CTX.temp->overlay.final_shape;
+    bool is_cursor_over = CheckCollisionPointRec(cursor, shape);
     return is_cursor_over;
 }
 

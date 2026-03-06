@@ -164,8 +164,8 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     GUI_CTX.temp->window_target_id = 0;
     // If overlay is displayed then force window_target_id
     // This allows clicking on the overlay when its in front of other window(s).
-    if (GUI_CTX.temp->overlay_draw.window_target_id != 0) {
-        GUI_CTX.temp->window_target_id = GUI_CTX.temp->overlay_draw.window_target_id;
+    if (GUI_CTX.temp->overlay.window_target_id != 0) {
+        GUI_CTX.temp->window_target_id = GUI_CTX.temp->overlay.window_target_id;
     }
     // Normal windows
     if (GUI_CTX.temp->window_target_id == 0) {
