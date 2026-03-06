@@ -15,7 +15,7 @@ void            GUI_OverlayClose();
 void            GUI_OverlayOpenFor(const char* id);
 void            GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void));
 void            GUI_OverlaySetFinalShape(Rectangle shape);
-void            GUI_CloseOverlayOnInteraction(bool force, Rectangle shape);
+void            GUI_CloseOverlayOnInteraction(Rectangle final_shape);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -85,15 +85,14 @@ void GUI_OverlaySetFinalShape(Rectangle shape)
     GUI_CTX.temp->overlay.final_shape = shape;
 }
 
-void GUI_CloseOverlayOnInteraction(bool force, Rectangle shape)
+void GUI_CloseOverlayOnInteraction(Rectangle final_shape)
 {
     bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     bool interactable   = GUI_OverlayGetJustEnabled() == false;
-    bool is_active      = interacted && interactable;
-    if (force || is_active) {
+    if (interacted && interactable) {
         GUI_OverlayClose();
     } else {
-        Rectangle relative_shape = GUI_RelativePositionOnly(shape);
+        Rectangle relative_shape = GUI_RelativePositionOnly(final_shape);
         GUI_OverlaySetFinalShape(relative_shape);
     #if DEV_DEBUG_GUI == 1
         DrawDebugRect(relative_shape, RED);

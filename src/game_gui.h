@@ -29,14 +29,13 @@ void GUI_ProgramMenu()
     GUI_Icons *icons        = GUI_GetIcons();
     GUI_Theme *theme        = &setup->theme;
 
-    bool force = false;
     //  GUI_Button(GUI_NextInPlace(-1, 0),      "Project [X]",  NULL,           theme->red);
     GUI_Button(GUI_NextInPlace(-1,1),       "New",          &icons->New,    theme->gray);
     GUI_Button(GUI_NextInPlace(-1,2),       "Open",         &icons->Open,   theme->gray);
     if (GUI_Button(GUI_NextInPlace(-1,3),   "Quit",         &icons->New,    theme->gray))
         exit(0);
 
-    GUI_CloseOverlayOnInteraction(force, GUI_NextInPlaceBetween(-1, 1, -1, 3));
+    GUI_CloseOverlayOnInteraction(GUI_NextInPlaceBetween(-1, 1, -1, 3));
 }
 
 void GUI_GameMenu()
@@ -51,8 +50,7 @@ void GUI_GameMenu()
     actions->add_character       = GUI_Button(GUI_NextInPlace(-1,2), "Add",      &icons->Open,   theme->gray);
     actions->toggle_character    = GUI_Button(GUI_NextInPlace(-1,3), "Change",   &icons->Error,  theme->gray);
 
-    bool force = actions->reset_characters || actions->add_character || actions->toggle_character;
-    GUI_CloseOverlayOnInteraction(force, GUI_NextInPlaceBetween(-1, 1, -1, 3));
+    GUI_CloseOverlayOnInteraction(GUI_NextInPlaceBetween(-1, 1, -1, 3));
 }
 
 void GUI_TopBar(Rectangle shape)
