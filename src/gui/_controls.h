@@ -497,15 +497,12 @@ bool GUI_Button(
     shape = GUI_Relative(shape);
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
-    EGUI_Font font     = GUI_GetFont();
+    EGUI_Font font              = GUI_GetFont();
     EGUI_ControlStatus status   = EGUI_ControlStatus_Default;
-    if (is_cursor_over && is_activable) {
-        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            status = EGUI_ControlStatus_Collide;
-        } else {
-            status = EGUI_ControlStatus_Focused;
-        }
-    }
+    bool cursor_active          = is_cursor_over && IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+
+    if (is_cursor_over)  status = EGUI_ControlStatus_Collide;
+    if (cursor_active)   status = EGUI_ControlStatus_Focused;
     GUI_DrawButton(shape, text, icon, status, colors, font);
     // TODO@dc: improve colors DrawDebugRect(shape, ColorAlpha(is_cursor_over? RED : BLUE, 0.2));
     return is_active;
