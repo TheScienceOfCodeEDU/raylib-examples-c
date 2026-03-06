@@ -170,14 +170,14 @@ GUI_FontSetup GUI_LoadFontSetupDefault(EGUI_Font font)
     case EGUI_Font_Default:
     default: {
         GUI_FontSetup result = {
-            .default_height = 30,
+            .default_height = 36,
             .border         = 2.0f,
             .scale          = 1.0f,
-            .delta          = (Vector2){ 4.f, 4.f },
+            .delta          = (Vector2){ 6.0f, 6.0f },
             .custom         = LoadFontEx("fnt/unifont-17.0.01.otf", 16, 0, 0),
             .use_custom     = 1,
             .spacing        = 1.0f,
-            .blink_size     = (Vector2){ 1.0f, 24.0f },
+            .blink_size     = (Vector2){ 1.0f, 30.0f },
             .blink_delta    = (Vector2){ 0.0f, 0.0f },
             .blink_alpha    = 0.95f
         };
