@@ -1,12 +1,14 @@
-#ifndef UNITY_BUILD 
- #define UNITY_BUILD 0
- #include "common.h"
- #include "gui_setup.h"
- #include "gui_structs.h"
- #include "gui.h"
- #include "game_structs.h"
- #include "game_gui.h"
+#pragma once
+#ifndef UNITY_BUILD
+#define UNITY_BUILD 0
+#define IMPLEMENT_ALL
+#include "../common.h"
 #endif
+
+#include "types.h"
+
+// > FUNCTIONS
+//   INDEX
 
 void                GAME_UpdateNextCharacter();
 void                GAME_AddCharacter();
@@ -14,7 +16,10 @@ GAME_Character*     GAME_GetCurrentCharacter();
 bool                GAME_CheckRingCollision(GAME_Character* character1, GAME_Character* character2, float radius);
 void                GAME_UpdateCollisions(bool collisions[], float radius);
 
+#include "_gui.h"
 
+// > IMPLEMENTATION
+#ifdef IMPLEMENT_ALL
 void GAME_UpdateNextCharacter()
 {
     GAME_State* state   = GAME_CTX.state;
@@ -48,7 +53,7 @@ void GAME_UpdateCollisions(bool collisions[], float radius)
     for (int i = 0; i < CHARACTERS; i++) {
         collisions[i] = false;
     }
-    
+
     for (int i = 0; i < state->alive_characters; ++i) {
         for (int j = i + 1; j < state->alive_characters; ++j) {
             if (GAME_CheckRingCollision(&state->characters[i], &state->characters[j], radius)) {
@@ -58,3 +63,4 @@ void GAME_UpdateCollisions(bool collisions[], float radius)
         }
     }
 }
+#endif

@@ -1,7 +1,7 @@
 #pragma once
 #ifndef UNITY_BUILD
 #define IMPLEMENT_ALL   1
-#include "main.h"
+#include "../common.h"
 #endif
 
 
@@ -53,14 +53,14 @@ GUI_GridTemp GUI_MakeGrid()
 
 float GUI_GridHeightOrDefault()
 {
-    return GUI_CTX.temp->grid.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->grid.vertical_size
-                                                            : (float)GetScreenHeight();
+    float vertical_size = GUI_CTX.temp->grid.vertical_size;
+    return vertical_size != 0 ? vertical_size : (float)GetScreenHeight();
 }
 
 float GUI_GridWidthOrDefault()
 {
-    return GUI_CTX.temp->grid.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->grid.horizontal_size
-                                                              : (float)GetScreenWidth();
+    float horizontal_size = GUI_CTX.temp->grid.horizontal_size;
+    return horizontal_size != 0 ? horizontal_size : (float)GetScreenWidth();
 }
 
 Rectangle GUI_GridRelative(Rectangle shape)

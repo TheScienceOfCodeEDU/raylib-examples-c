@@ -1,5 +1,8 @@
 #pragma once
+#ifndef UNITY_BUILD
+#define IMPLEMENT_ALL
 #include "../common.h"
+#endif
 
 #define GUI_MAX_TRAIL       30
 #define GUI_MIN_WIN_RECT    (Rectangle){ 0, 0, 320.f, 240.f }
@@ -164,10 +167,10 @@ typedef struct GUI_Window {
 
 // > TYPES
 //   SUBMODULE: GRID
-#define RESET_COUNT     0
-#define ADD_COUNT       1
-#define ONLY_GET_COUNT  2
-#define DEFAULT_SIZE    0.0 // TODO@dc: remove
+#define GUI_RESET_COUNT     0
+#define GUI_ADD_COUNT       1
+#define GUI_ONLY_GET_COUNT  2
+#define GUI_NO_SIZE         0.0
 
 typedef struct {
     Rectangle       current_workspace;  // Current available workspace (consumed by GUI_GridNext)
@@ -241,7 +244,3 @@ static struct {
     GUI_Setup*  setup;
     GUI_Temp*   temp;
 } GUI_CTX = { 0 };
-
-void        GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
-GUI_State*  GUI_GetState();
-GUI_Setup*  GUI_GetSetup();

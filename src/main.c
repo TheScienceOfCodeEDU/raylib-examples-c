@@ -1,10 +1,6 @@
 #define UNITY_BUILD 1
 #define IMPLEMENT_ALL 1
 #include "common.h"
-#include "gui/main.h"
-#include "game_structs.h"
-#include "game_gui.h"
-#include "game.h"
 #include "lab.h"
 
 #define GAME_RES_W          320

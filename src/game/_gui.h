@@ -1,9 +1,7 @@
-#include "gui/_window.h"
+#pragma once
 #ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #include "common.h"
- #include "gui.h"
- #include "game_structs.h"
+#define IMPLEMENT_ALL   1
+#include "../common.h"
 #endif
 
 //
@@ -21,7 +19,7 @@ void WIN_Winman(GUI_Window* window);
 //
 // FUNCTIONS
 //
-
+#
 
 void GUI_ProgramMenu()
 {

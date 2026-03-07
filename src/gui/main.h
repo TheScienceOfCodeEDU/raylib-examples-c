@@ -1,6 +1,7 @@
 #pragma once
 #ifndef UNITY_BUILD
 #define UNITY_BUILD 0
+#define IMPLEMENT_ALL
 #include "../common.h"
 #endif
 
@@ -11,36 +12,39 @@
 // > FUNCTIONS
 //   INDEX
 
-// > CONSTRUCTORS
+// > CONTEXT
+GUI_State   GUI_MakeStateDefault(Vector2 screen_max);
+GUI_Temp    GUI_MakeTempDefault();
+void        GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
+GUI_State*  GUI_GetState();
+GUI_Setup*  GUI_GetSetup();
+// > FONT
+EGUI_Font   GUI_GetFont();
+void        GUI_SetFontType(EGUI_Font font);
+float       GUI_CalcDefaultHeightScaled(EGUI_Font font);
+// > WINDOW RUNTIME EVENTS
+void        GUI_ProcessWindow(GUI_Window* window, Rectangle limits);
+void        GUI_AfterWindowContents();
+// > CURSOR
+bool        GUI_IsCursorOverGui();
+bool        GUI_IsCurrentWindowTarget(int window_id);
+bool        GUI_IsCursorOverOverlay();
+// > FRAME PIPELINE
+void        GUI_BeginDraw(EGUI_Cursor cursor_style);
+void        GUI_EndDraw();
 
-GUI_State           GUI_MakeStateDefault(Vector2 screen_max);
-GUI_Temp            GUI_MakeTempDefault();
-
-EGUI_Font           GUI_GetFont();
-void                GUI_SetFontType(EGUI_Font font);
-float               GUI_CalcDefaultHeightScaled(EGUI_Font font);
-void                GUI_ProcessWindow(GUI_Window* window, Rectangle limits);
-void                GUI_AfterWindowContents();
-bool                GUI_IsCursorOverGui();
-bool                GUI_IsCurrentWindowTarget(int window_id);
-bool                GUI_IsCursorOverOverlay();
-void                GUI_BeginDraw(EGUI_Cursor cursor_style);
-void                GUI_EndDraw();
-
-
+// > SUBMODULES
 #include "_grid.h"
 #include "_window.h"
 #include "_overlay.h"
 #include "_controls.h"
-
 
 // > FUNCTIONS
 //   IMPLEMENTATION
 
 #ifdef IMPLEMENT_ALL
 
-// > CONSTRUCTORS
-//   DEFAULTS
+// > CONTEXT
 
 GUI_State GUI_MakeStateDefault(Vector2 screen_max)
 {
@@ -80,40 +84,6 @@ GUI_Temp GUI_MakeTempDefault()
     return temp;
 }
 
-EGUI_Font GUI_GetFont()
-{
-    EGUI_Font font = GUI_CTX.temp->current_font;
-    return font;
-}
-
-void GUI_SetFontType(EGUI_Font font)
-{
-    GUI_CTX.temp->current_font = font;
-}
-
-float GUI_CalcDefaultHeightScaled(EGUI_Font font)
-{
-    GUI_Setup* setup = GUI_CTX.setup;
-    GUI_State* state = GUI_CTX.state;
-    return setup->fonts[font].default_height * state->scale;
-}
-
-void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
-{
-    Assert(window->id > 0);
-    Assert(window->contents != NULL);
-
-    GUI_UpdateAndDrawWindow(window, limits);
-}
-
-void GUI_AfterWindowContents()
-{
-    GUI_DrawOverlay();
-}
-
-// > CONTEXT
-//   API
-
 void GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp)
 {
     // Update statuses
@@ -141,6 +111,42 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
+// > FONT
+EGUI_Font GUI_GetFont()
+{
+    EGUI_Font font = GUI_CTX.temp->current_font;
+    return font;
+}
+
+void GUI_SetFontType(EGUI_Font font)
+{
+    GUI_CTX.temp->current_font = font;
+}
+
+float GUI_CalcDefaultHeightScaled(EGUI_Font font)
+{
+    GUI_Setup* setup = GUI_CTX.setup;
+    GUI_State* state = GUI_CTX.state;
+    return setup->fonts[font].default_height * state->scale;
+}
+// < END FONT
+
+
+// > WINDOW RUNTIME EVENTS
+void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
+{
+    Assert(window->id > 0);
+    Assert(window->contents != NULL);
+
+    GUI_UpdateAndDrawWindow(window, limits);
+}
+
+void GUI_AfterWindowContents()
+{
+    GUI_DrawOverlay();
+}
+// < WINDOW RUNTIME EVENTS
+
 // GUI_IsCursorOverGui() is meant to be called after EndDraw
 // If you need it internally, it means that you're creating and internal component so you could use GUI_CTX.temp->cursor_over_gui
 bool GUI_IsCursorOverGui()
@@ -165,6 +171,7 @@ bool GUI_IsCursorOverOverlay()
     bool is_cursor_over = CheckCollisionPointRec(cursor, shape);
     return is_cursor_over;
 }
+// < CONTEXT
 
 // > FRAME
 //   PIPELINE
@@ -194,8 +201,5 @@ void GUI_EndDraw()
     Assert(GUI_CTX.temp->status == EGUI_Status_Drawing);
     GUI_CTX.temp->status = EGUI_Status_Ready;
 }
-
-
-
-
+// < FRAME PIPELINE
 #endif

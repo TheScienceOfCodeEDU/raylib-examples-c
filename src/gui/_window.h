@@ -1,7 +1,7 @@
 #pragma once
 #ifndef UNITY_BUILD
 #define IMPLEMENT_ALL
-#include "main.h"
+#include "../common.h"
 #endif
 
 

@@ -1,7 +1,8 @@
+#pragma once
 #ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #define INCLUDE_GUI
- #include "common.h"
+#define UNITY_BUILD 0
+#define INCLUDE_GUI
+#include "common.h"
 #endif
 
 //
