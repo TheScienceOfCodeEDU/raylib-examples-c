@@ -12,7 +12,7 @@ void            GUI_DrawOverlay();
 bool            GUI_OverlayIsOpenBy(const char* text_id_owner);
 bool            GUI_OverlayWasJustEnabled();
 void            GUI_OverlayClose();
-void            GUI_OverlayOpenFor(const char* id, int window_target_id);
+void            GUI_OverlayOpenFor(const char* id);
 void            GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void));
 void            GUI_OverlaySetFinalShape(Rectangle shape);
 GUI_ThemeColors GUI_BeginOverlay();
@@ -24,7 +24,6 @@ GUI_Overlay GUI_MakeOverlay()
 {
     GUI_Overlay overlay = {
         .id_ptr             = NULL,
-        .window_target_id   = GUI_NO_WIN,
         .grid               = GUI_MakeGrid(),
         .just_enabled       = false,
         .final_shape        = (Rectangle){0,0,0,0},
@@ -60,11 +59,10 @@ void GUI_OverlayClose()
     GUI_CTX.temp->overlay = GUI_MakeOverlay();
 }
 
-void GUI_OverlayOpenFor(const char* id, int window_target_id)
+void GUI_OverlayOpenFor(const char* id)
 {
     Assert(id != NULL);
     GUI_CTX.temp->overlay.id_ptr            = id;
-    GUI_CTX.temp->overlay.window_target_id  = window_target_id;
 }
 
 void GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void))
@@ -91,7 +89,7 @@ GUI_ThemeColors GUI_BeginOverlay()
     overlay->final_shape                    = (Rectangle){0,0,0,0};
 
     // Apply ThemeColors
-    int window_id               = overlay->window_target_id;
+    int window_id               = GUI_CTX.temp->window_current_idx;
     bool has_window_target      = window_id != GUI_NO_WIN;
     if (has_window_target) {
         GUI_Window* window      = GUI_GetWindow(window_id);

@@ -517,7 +517,7 @@ bool GUI_ButtonMenu(
     if (just_interacted) {
         // Open it
         if (is_open == false) {
-            GUI_OverlayOpenFor(text_id, GUI_CTX.temp->window_current_idx);
+            GUI_OverlayOpenFor(text_id);
         // Close it
         } else {
             GUI_OverlayClose();

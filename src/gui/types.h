@@ -1,8 +1,5 @@
 #pragma once
-#ifndef UNITY_BUILD
-#define UNITY_BUILD 0
-#include "../main.h"
-#endif
+#include "../common.h"
 
 #define GUI_MAX_TRAIL       30
 #define GUI_MIN_WIN_RECT    (Rectangle){ 0, 0, 320.f, 240.f }
@@ -200,14 +197,13 @@ typedef struct {
 
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
-    int             window_target_id;   // Window owner of the overlay. (if its inside a window otherwise 0)
     GUI_GridTemp    grid;               // Grid state when the overlay draw was queued (used to draw with correct transform the opened menu)
     bool            just_enabled;       // TRUE if the overlay was JUST ENABLED on this frame
     Rectangle       final_shape;        // Final shape of the overlay
+    bool            is_drawing;         // True if Draw function is being executed
     void            (*function)(void);  // Draw function
 }  GUI_Overlay;
 
-// TODO@dc: fix naming starting w/section_
 typedef struct {
     // Globals
     EGUI_Status      status;
