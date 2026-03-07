@@ -45,7 +45,6 @@ GUI_GridTemp GUI_MakeGrid()
         .horizontal_size            = 0.0f,
         .used_height                = 0.0f,
         .current_scroll             = 0,
-        .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .force_overflow             = false
     };
     return grid;

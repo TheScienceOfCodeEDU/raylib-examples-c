@@ -7,6 +7,11 @@ imKairos
     - scroll contents           OK
     - copy/paste
     - jump between spaces
+- Limpieza:
+  - Overlay
+  - Grids
+  - Window
+  - Controls
 
 - Program menu
     - New

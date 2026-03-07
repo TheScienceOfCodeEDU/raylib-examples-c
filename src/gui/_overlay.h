@@ -95,7 +95,7 @@ GUI_ThemeColors GUI_BeginOverlay()
     GUI_CTX.temp->overlay.is_drawing        = true;
 
     // Apply ThemeColors
-    int window_id               = GUI_CTX.temp->window_current_idx;
+    int window_id               = GUI_CTX.temp->window_current_id;
     bool has_window_target      = window_id != GUI_NO_WIN;
     if (has_window_target) {
         GUI_Window* window      = GUI_GetWindow(window_id);

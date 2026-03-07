@@ -33,6 +33,7 @@ Rectangle       GUI_GetWindowTitle(Rectangle shape);
 Rectangle       GUI_GetWindowPanel(Rectangle shape);
 Rectangle       GUI_GetWindowBottom(Rectangle shape);
 void            GUI_WindowUpdateShapeForContent(GUI_Window *window);
+Rectangle       GUI_GetWorkspaceFor(int window_id);
 Rectangle       GUI_GetWindowWorkspace(GUI_Window *window);
 
 // > IMPLEMENTATION
@@ -206,8 +207,7 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font)
     GUI_SetFontType(font);
 
     // Set window data
-    GUI_CTX.temp->window_current_idx              = window->id;
-    GUI_CTX.temp->grid.current_window_workspace   = window_workspace;
+    GUI_CTX.temp->window_current_id              = window->id;
     GUI_CTX.temp->grid.current_scroll             = -window->scroll_offset;
 
     // Vertical scroll
@@ -229,7 +229,7 @@ void GUI_EndWindowContents(GUI_Window* window)
     GUI_CTX.temp->grid                  = GUI_MakeGrid();
     // Finish draw instructions
     GUI_AfterWindowContents();
-    GUI_CTX.temp->window_current_idx    = GUI_NO_WIN;
+    GUI_CTX.temp->window_current_id    = GUI_NO_WIN;
     rlPopMatrix();
 }
 
@@ -364,6 +364,15 @@ void GUI_WindowUpdateShapeForContent(GUI_Window *window)
                             + shape_title.height + shape_bottom.height;
 
     window->shape.height    = current_height;
+}
+
+Rectangle GUI_GetWorkspaceFor(int window_id)
+{
+    Assert(window_id > 0);
+    GUI_Window *window = GUI_GetWindow(window_id);
+    if (window == NULL)
+        return (Rectangle){ 0, 0, 0, 0};
+    return GUI_GetWindowWorkspace(window);
 }
 
 Rectangle GUI_GetWindowWorkspace(GUI_Window *window)

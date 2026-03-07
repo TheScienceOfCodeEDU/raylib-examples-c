@@ -170,7 +170,7 @@ typedef struct GUI_Window {
 #define DEFAULT_SIZE    0.0 // TODO@dc: remove
 
 typedef struct {
-    Rectangle       current_workspace;  // Current available (Use only for grids)
+    Rectangle       current_workspace;  // Current available workspace (consumed by GUI_GridNext)
     int             vertical_count;
     float           vertical_size;
     int             horizontal_count;
@@ -180,7 +180,6 @@ typedef struct {
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player.
-    Rectangle       current_window_workspace; // Current window workspace
     bool            force_overflow;
 } GUI_GridTemp;
 // < END SUBMODULE: GRID
@@ -209,23 +208,19 @@ typedef struct {
     void             *control_focus_ptr;            // Keeps track between frames if there is a focused control
     EGUI_Font        current_font;
 
-    // Grid temporary data
-    GUI_GridTemp  grid;
-
-    // Overlay
+    // Submodules
+    GUI_GridTemp    grid;
     GUI_Overlay     overlay;
-
     // Cursor
     EGUI_Cursor     cursor;
     Vector2         cursor_last;
     Vector2         cursor_current;
-    bool            cursor_over_gui;                    // True if the pointer is over any of the elements in the GUI
+    bool            cursor_over_gui;                // True if the pointer is over any of the elements in the GUI
     Vector2         cursor_trail[GUI_MAX_TRAIL];
-
     // Window
-    int                 window_current_idx;
+    int                 window_current_id;          // ID of the window that is being processed
+    int                 window_target_id;           // Targeted window. SEE: UPDATE WINDOW TARGET ID inside _window.h
     EGUI_WindowAction   window_current_action;
-    int                 window_target_id;   // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
 } GUI_Temp;
 
 typedef struct {

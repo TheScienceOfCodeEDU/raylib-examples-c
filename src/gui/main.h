@@ -74,9 +74,9 @@ GUI_Temp GUI_MakeTempDefault()
         .cursor_current             = (Vector2){ 0.0f, 0.0f },
         .cursor_over_gui            = false,
         .cursor_trail               = {{0}},
-        .window_current_idx         = GUI_NO_WIN,
+        .window_current_id          = GUI_NO_WIN,
+        .window_target_id           = GUI_NO_WIN,
         .window_current_action      = EGUI_WindowAction_None,
-        .window_target_id           = GUI_NO_WIN
     };
     return temp;
 }
