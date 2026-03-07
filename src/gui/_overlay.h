@@ -9,7 +9,7 @@
 // > INDEX
 GUI_Overlay     GUI_MakeOverlay();
 void            GUI_DrawOverlay();
-bool            GUI_OverlayIsOpenBy(const char* text_id_owner);
+bool            GUI_OverlayOpenedBy(const char* text_id_owner);
 bool            GUI_OverlayWasJustEnabled();
 void            GUI_OverlayClose();
 void            GUI_OverlayOpenFor(const char* id);
@@ -46,7 +46,7 @@ void GUI_DrawOverlay()
     }
 }
 
-bool GUI_OverlayIsOpenBy(const char* text_id_owner)
+bool GUI_OverlayOpenedBy(const char* text_id_owner)
 {
     return GUI_CTX.temp->overlay.id_ptr == text_id_owner;
 }

@@ -516,22 +516,20 @@ bool GUI_ButtonMenu(
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
     bool scrolled           = GetMouseWheelMove() != 0;
-    bool is_open            = GUI_OverlayIsOpenBy(text_id);
+    bool is_open            = GUI_OverlayOpenedBy(text_id);
     bool just_interacted    = GUI_Button(shape, text_id, icon, colors);
     if (just_interacted) {
-        // Open it
         if (is_open == false) {
             GUI_OverlayOpenFor(text_id);
-        // Close it
         } else {
             GUI_OverlayClose();
         }
     }
 
     // Update condition
-    is_open = GUI_OverlayIsOpenBy(text_id);
+    is_open = GUI_OverlayOpenedBy(text_id);
 
-    // Process changes if this control is the owner
+    // Update
     if (is_open) {
         if (scrolled) {
             GUI_OverlayClose();
@@ -542,7 +540,7 @@ bool GUI_ButtonMenu(
     }
 
     // Update condition
-    is_open = GUI_OverlayIsOpenBy(text_id);
+    is_open = GUI_OverlayOpenedBy(text_id);
     return is_open;
 }
 
