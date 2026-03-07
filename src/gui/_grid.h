@@ -11,8 +11,8 @@ GUI_GridTemp    GUI_MakeGrid();
 float           GUI_GridHeightOrDefault();
 float           GUI_GridWidthOrDefault();
 
-Rectangle       GUI_GridAt(int horizontal, int vertical);
-Rectangle       GUI_GridBetween(int horizontal, int vertical, int end_horizontal, int end_vertical);
+Rectangle       GUI_GridAt(int x, int y);
+Rectangle       GUI_GridBetween(int x, int y, int x_end, int Y_end);
 
 void            GUI_GridHorizontal(float horizontal_size);
 void            GUI_GridVertical(float size);
@@ -22,8 +22,8 @@ void            GUI_GridDuplicate();
 
 Rectangle       GUI_GridNextX();
 Rectangle       GUI_GridNextY();
-Rectangle       GUI_GridNextXn(int quantity);
-Rectangle       GUI_GridNextYn(int quantity);
+Rectangle       GUI_GridNextXn(int n);
+Rectangle       GUI_GridNextYn(int n);
 
 Rectangle       GUI_GridAvailable(Rectangle workspace);
 void            GUI_GridReset(Rectangle workspace);
@@ -74,23 +74,23 @@ float GUI_GridWidthOrDefault()
                                                               : (float)GetScreenWidth();
 }
 
-Rectangle GUI_NextInPlace(int horizontal, int vertical)
+Rectangle GUI_GridAt(int x, int y)
 {
     float horizontal_size   = GUI_GridWidthOrDefault();
     float vertical_size     = GUI_CTX.temp->grid.vertical_size;
     Rectangle result        = {
-        .x      = horizontal_size * (float)(GUI_CTX.temp->grid.horizontal_count + horizontal),
-        .y      = vertical_size * (float)(GUI_CTX.temp->grid.vertical_count + vertical),
+        .x      = horizontal_size * (float)(GUI_CTX.temp->grid.horizontal_count + x),
+        .y      = vertical_size * (float)(GUI_CTX.temp->grid.vertical_count + y),
         .width  = horizontal_size,
         .height = vertical_size
     };
     return result;
 }
 
-Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizontal, int end_vertical)
+Rectangle GUI_GridBetween(int x, int y, int x_end, int y_end)
 {
-    Rectangle begin     = GUI_NextInPlace(horizontal, vertical);
-    Rectangle end       = GUI_NextInPlace(end_horizontal, end_vertical);
+    Rectangle begin     = GUI_GridAt(x, y);
+    Rectangle end       = GUI_GridAt(x_end, y_end);
     Rectangle result    = {
         .x      = begin.x,
         .y      = begin.y,
@@ -102,21 +102,20 @@ Rectangle GUI_NextInPlaceBetween(int horizontal, int vertical, int end_horizonta
 
 Rectangle GUI_GridNextX()
 {
-    Rectangle shape = GUI_NextInPlace(0, 0);
+    Rectangle shape = GUI_GridAt(0, 0);
     GUI_CTX.temp->grid.horizontal_count++;
     return shape;
 }
 
 Rectangle GUI_GridNextY()
 {
-    Rectangle shape         = GUI_NextInPlace(0, 0);
+    Rectangle shape         = GUI_GridAt(0, 0);
     float vertical_size     = GUI_CTX.temp->grid.vertical_size;
 
     GUI_CTX.temp->grid.used_height += vertical_size;
     GUI_CTX.temp->grid.vertical_count++;
     return shape;
 }
-
 
 Rectangle GUI_GridNextXn(int n)
 {

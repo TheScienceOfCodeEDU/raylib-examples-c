@@ -24,7 +24,6 @@ void                GUI_AfterWindowContents();
 bool                GUI_IsCursorOverGui();
 bool                GUI_IsCurrentWindowTarget(int window_id);
 bool                GUI_IsCursorOverOverlay();
-Rectangle           GUI_GridRelative(Rectangle shape);
 void                GUI_BeginDraw(EGUI_Cursor cursor_style);
 void                GUI_EndDraw();
 
