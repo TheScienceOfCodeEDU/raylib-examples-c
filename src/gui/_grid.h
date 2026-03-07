@@ -66,7 +66,7 @@ float GUI_GridWidthOrDefault()
 Rectangle GUI_GridRelative(Rectangle shape)
 {
     bool is_active_grid = GUI_CTX.temp->grid.current_workspace.width  > 0 &&
-                            GUI_CTX.temp->grid.current_workspace.height > 0;
+                          GUI_CTX.temp->grid.current_workspace.height > 0;
     if (is_active_grid) {
         shape = RelativeToRect(shape, GUI_CTX.temp->grid.current_workspace);
     }

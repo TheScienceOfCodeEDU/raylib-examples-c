@@ -369,3 +369,14 @@ set_target_monitor:
 
     if (--retries > 0) goto set_target_monitor;
 }
+
+Rectangle GetScreenRect()
+{
+    Rectangle result = (Rectangle) {
+        0,
+        0,
+        (float) GetScreenWidth(),
+        (float) GetScreenHeight()
+    };
+    return result;
+}

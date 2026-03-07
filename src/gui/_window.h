@@ -201,14 +201,13 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font)
     window->shape.height    = FloatMax(min_size.height, window->shape.height);
 
     // Data
-    Rectangle window_workspace = GUI_GetWindowWorkspace(window);
-    // Begin window stuff
-    GUI_GridReset(window_workspace);
+    Rectangle window_workspace      = GUI_GetWindowWorkspace(window);
+    GUI_CTX.temp->window_current_id = window->id;
     GUI_SetFontType(font);
 
-    // Set window data
-    GUI_CTX.temp->window_current_id              = window->id;
-    GUI_CTX.temp->grid.current_scroll             = -window->scroll_offset;
+    // Grid
+    GUI_GridReset(window_workspace);
+    GUI_CTX.temp->grid.current_scroll            = -window->scroll_offset;
 
     // Vertical scroll
     rlPushMatrix();
@@ -225,12 +224,14 @@ void GUI_EndWindowContents(GUI_Window* window)
     // Vertical scroll
     // Stored grid height
     window->content_height = GUI_CTX.temp->grid.used_height;
-    // Reset temp values
-    GUI_CTX.temp->grid                  = GUI_MakeGrid();
+
     // Finish draw instructions
     GUI_AfterWindowContents();
-    GUI_CTX.temp->window_current_id    = GUI_NO_WIN;
+    GUI_CTX.temp->window_current_id = GUI_NO_WIN;
     rlPopMatrix();
+
+    // Grid
+    GUI_GridReset(GetScreenRect());
 }
 
 // > WINDOW

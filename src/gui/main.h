@@ -176,14 +176,7 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
 
     GUI_CTX.temp->cursor            = cursor_style;
     GUI_CTX.temp->cursor_over_gui   = false;
-
-    Rectangle mouse_limits = (Rectangle) {
-        0,
-        0,
-        (float) GetScreenWidth(),
-        (float) GetScreenHeight()
-    };
-    GUI_CTX.temp->cursor_current = LimitVector2Rect(GetMousePosition(), mouse_limits);
+    GUI_CTX.temp->cursor_current    = LimitVector2Rect(GetMousePosition(), GetScreenRect());
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         GUI_CTX.temp->control_focus_ptr = NULL;
