@@ -1005,7 +1005,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font fo
     DrawDebugRect(shape_bottom, ColorAlpha(YELLOW, 0.85f));
     DrawDebugRect(shape_title, ColorAlpha(WHITE, 0.75f));
     DrawDebugRect(shape_panel, ColorAlpha(RED, 0.85f));
-    DrawDebugRect(GUI_WindowWorkspace(window), ColorAlpha(GREEN, 0.25f));
+    DrawDebugRect(GUI_GetWindowWorkspace(window), ColorAlpha(GREEN, 0.25f));
     #endif
 }
 
