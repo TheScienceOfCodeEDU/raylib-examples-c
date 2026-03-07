@@ -58,7 +58,6 @@ void GUI_TopBar(Rectangle shape)
     GUI_Theme *theme    = &setup->theme;
     const int BUTTONS   = 4;
 
-    GUI_GridReset(GUI_MakeWorkspace());
     GUI_GridForCols(BUTTONS, shape, EGUI_Font_GUI);
     GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,           theme->red,    GUI_ProgramMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,    theme->gray,   GUI_GameMenu);
