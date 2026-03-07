@@ -66,6 +66,7 @@ GUI_Temp GUI_MakeTempDefault()
     GUI_Temp temp = {
         .status                     = EGUI_Status_Off,
         .control_focus_ptr          = NULL,
+        .current_font               = EGUI_Font_Default,
         .grid                       = GUI_MakeGrid(),
         .overlay                    = GUI_MakeOverlay(),
         .cursor                     = EGUI_Cursor_Default,
@@ -82,13 +83,13 @@ GUI_Temp GUI_MakeTempDefault()
 
 EGUI_Font GUI_GetFont()
 {
-    EGUI_Font font = GUI_CTX.temp->grid.current_font;
+    EGUI_Font font = GUI_CTX.temp->current_font;
     return font;
 }
 
 void GUI_SetFontType(EGUI_Font font)
 {
-    GUI_CTX.temp->grid.current_font = font;
+    GUI_CTX.temp->current_font = font;
 }
 
 float GUI_CalcDefaultHeightScaled(EGUI_Font font)
@@ -190,6 +191,7 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
     }
 
     GUI_CTX.temp->grid = GUI_MakeGrid();
+    GUI_CTX.temp->current_font = EGUI_Font_Default;
 }
 
 void GUI_EndDraw()

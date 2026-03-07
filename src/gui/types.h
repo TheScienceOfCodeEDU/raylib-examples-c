@@ -177,7 +177,6 @@ typedef struct {
     float           horizontal_size;
     float           used_height;        // Used to auto calc vertical scroll bar
     float           current_scroll;
-    EGUI_Font       current_font;
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player.
@@ -208,6 +207,7 @@ typedef struct {
     // Globals
     EGUI_Status      status;
     void             *control_focus_ptr;            // Keeps track between frames if there is a focused control
+    EGUI_Font        current_font;
 
     // Grid temporary data
     GUI_GridTemp  grid;

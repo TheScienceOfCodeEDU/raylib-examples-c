@@ -552,7 +552,7 @@ void GUI_DrawText(
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
     shape = GUI_GridRelative(shape);
-    GUI_DrawText(shape, text, colors, GUI_CTX.temp->grid.current_font); // todo@dc: review! temp->grid.current_font?
+    GUI_DrawText(shape, text, colors, GUI_GetFont());
 }
 
 // > INPUT
