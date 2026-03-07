@@ -21,7 +21,7 @@ void        GUI_BeginInnerControlScissor(Rectangle shape, float border, float sc
 void        GUI_DrawBorders(Rectangle shape, Color dark, Color light, float border, bool remove_corner);
 void        GUI_DrawAdjustedTextEx(const char* text, Vector2 position, Color tint, float scale, EGUI_Font font);
 Vector2     GUI_MeasureAdjustedText(const char* text, EGUI_Font font);
-// > POINTERS
+// > CURSOR
 void        GUI_DrawCursorFor(EGUI_Cursor cursor);
 void        GUI_DrawCursor();
 void        GUI_DrawCursorTrail();
@@ -96,6 +96,8 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     bool is_focused = GUI_CTX.temp->control_focus_ptr == value; \
     /* Update cursor_over_gui */                                \
     if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true;   \
+
+// < END BASE MACROS
 
 // > CONTROL HELPERS
 bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
@@ -406,10 +408,6 @@ void GUI_Face(Vector2 position, float height)
     DrawRectangleV(Vector2Add((Vector2){ 10 * texture_scale, 6 * texture_scale }, pixel_pos), (Vector2){ texture_scale, texture_scale }, WHITE);
 }
 
-// > COMPONENTS
-//   UI
-
-// > IMAGE
 void GUI_Image(Texture2D texture, Rectangle shape)
 {
     shape = GUI_GridRelative(shape);
@@ -440,9 +438,9 @@ void GUI_Image(Texture2D texture, Rectangle shape)
         DrawTexturePro(texture, src, dst, (Vector2){0,0}, 0.0f, WHITE);
     EndScissorMode();
 }
+// < END IMAGES
 
-
-// > CONTROLS
+// > BUTTON
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
@@ -530,6 +528,7 @@ bool GUI_ButtonMenu(
     is_open = GUI_OverlayOpenedBy(text_id);
     return is_open;
 }
+// < END BUTTON
 
 // > TEXT
 void GUI_DrawText(
@@ -554,8 +553,9 @@ void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
     shape = GUI_GridRelative(shape);
     GUI_DrawText(shape, text, colors, GUI_GetFont());
 }
+// < END TEXT
 
-// > INPUT
+// > INPUTS
 void GUI_DrawInput(
     Rectangle shape, char* buffer, int blink_cursor,
     EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font)
@@ -818,6 +818,7 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
         }
     }
 }
+// < END INPUTS
 
 
 // > CHECK
@@ -882,6 +883,7 @@ void GUI_Check(
                           EGUI_ControlStatus_Default;
     GUI_DrawCheck(shape, *value, on_txt, off_txt, status, colors, font);
 }
+// < END CHECK
 
 // > WINDOW
 //   CONTROLS
