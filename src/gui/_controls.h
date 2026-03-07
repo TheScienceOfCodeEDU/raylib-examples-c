@@ -33,32 +33,19 @@ bool        GUI_IconButton(Texture2D* texture2d, Vector2 position, float height,
 void        GUI_Face(Vector2 position, float height);
 void        GUI_Image(Texture2D texture, Rectangle shape);
 // > BUTTON
-void GUI_DrawButton(
-    Rectangle shape, const char *text, Texture2D *icon,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
-bool GUI_Button(
-    Rectangle shape, const char* text, Texture2D* icon,
-    GUI_ThemeColors colors);
-bool GUI_ButtonMenu(
-    Rectangle shape, const char* text_id, Texture2D* icon,
-    GUI_ThemeColors colors, void (*draw_function)(void));
-void GUI_DrawText(
-    Rectangle shape, const char* text,
-    GUI_ThemeColors colors, EGUI_Font font);
+void GUI_DrawButton(Rectangle shape, const char *text, Texture2D *icon, EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
+bool GUI_Button(Rectangle shape, const char* text, Texture2D* icon, GUI_ThemeColors colors);
+bool GUI_ButtonMenu(Rectangle shape, const char* text_id, Texture2D* icon, GUI_ThemeColors colors, void (*draw_function)(void));
+// > TEXT
+void GUI_DrawText(Rectangle shape, const char* text, GUI_ThemeColors colors, EGUI_Font font);
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors);
-void GUI_DrawInput(
-    Rectangle shape, char* value, int blink_cursor,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font);
-void GUI_Input(
-    Rectangle shape, char *value,
-    EGUI_InputType type, GUI_ThemeColors colors);
+// > INPUTS
+void GUI_DrawInput(Rectangle shape, char* value, int blink_cursor, EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font);
+void GUI_Input(Rectangle shape, char *value, EGUI_InputType type, GUI_ThemeColors colors);
 void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max);
-void GUI_DrawCheckBox(
-    Rectangle shape, bool value, const char *on_txt, const char *off_txt,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
-void GUI_Check(
-    Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
-    GUI_ThemeColors colors);
+// > CHECK
+void GUI_DrawCheck(Rectangle shape, bool value, const char *on_txt, const char *off_txt, EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
+void GUI_Check(Rectangle shape, bool *value, const char *on_txt, const char *off_txt, GUI_ThemeColors colors);
 
 // > WINDOW
 //   CONTROLS
@@ -110,71 +97,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     /* Update cursor_over_gui */                                \
     if (is_cursor_over) GUI_CTX.temp->cursor_over_gui = true;   \
 
-// > POINTERS
-void GUI_DrawCursorFor(EGUI_Cursor cursor)
-{
-    GUI_CursorSetup* setup      = &GUI_CTX.setup->cursors[cursor];
-    Vector2 mouse_current       = GUI_CTX.temp->cursor_current;
-    Texture texture             = setup->texture;
-    Vector2 delta_normalized    = setup->delta_normalized;
-    float scale                 = setup->scale * GUI_CTX.state->scale;
-    if (scale == 0) {
-        return;
-    }
-
-    Vector2 mouse_shape = (Vector2) {
-        mouse_current.x - ((float)texture.width * delta_normalized.x * scale),
-        mouse_current.y - ((float)texture.height * delta_normalized.y * scale)
-    };
-    DrawTextureEx(texture, mouse_shape, 0, scale, ColorAlpha(WHITE, setup->alpha));
-}
-
-void GUI_DrawCursor()
-{
-    EGUI_Cursor cursor              = GUI_CTX.temp->cursor;
-    GUI_CursorSetup* cursor_setup   = &GUI_CTX.setup->cursors[cursor];
-    if (cursor_setup->additional_cursor != EGUI_Cursor_None) {
-        GUI_DrawCursorFor(cursor_setup->additional_cursor);
-    }
-    GUI_DrawCursorFor(cursor);
-}
-
-// raylib [shapes] example - Draw a mouse trail (position history)
-void GUI_DrawCursorTrail()
-{
-    GUI_CursorSetup *setup          = GUI_GetCursorSetup();
-    Vector2 mouse                   = GUI_CTX.temp->cursor_current;
-    float scale                     = setup->scale * GUI_CTX.state->scale;
-    Vector2 delta_normalized        = setup->trail_delta_normalized;
-    Vector2 delta                   = (Vector2) {
-        .x = delta_normalized.x * (float)setup->texture.width * scale,
-        .y = delta_normalized.y * (float)setup->texture.height * scale
-    };
-
-    // Shift all existing positions backward by one slot in the array
-    // The last element (the oldest position) is dropped
-    Vector2 *trail = GUI_CTX.temp->cursor_trail;
-    for (int i = GUI_MAX_TRAIL - 1; i > 0; i--) {
-        trail[i] = trail[i - 1];
-    }
-    trail[0] = Vector2Add(mouse, delta);
-
-    for (int i = 0; i < GUI_MAX_TRAIL; i++) {
-        // Ensure we skip drawing if the array hasn't been fully filled on startup
-        if ((trail[i].x != 0.0f) || (trail[i].y != 0.0f))
-        {
-            #define TRAIL_ALPHA_MIN 0.001f
-            #define TRAIL_ALPHA_MAX 0.05f
-            float current_ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL;
-            float trail_alpha   = current_ratio * (TRAIL_ALPHA_MAX - TRAIL_ALPHA_MIN) + TRAIL_ALPHA_MIN;
-            Color trail_color   = Fade(BLACK, trail_alpha);
-            float trail_radius  = current_ratio * scale;
-
-            DrawCircleV(Vector2AddValue(trail[i], -trail_radius), trail_radius, trail_color);
-        }
-    }
-}
-
+// > CONTROL HELPERS
 bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 {
     GUI_State *state    = GUI_CTX.state;
@@ -220,7 +143,44 @@ bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 {
     return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->window_current_idx));
 }
-// < END POINTERS
+
+
+Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
+    Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
+
+    result.y += GUI_CTX.temp->grid.current_scroll;
+    if (intersect_window && GUI_CTX.temp->window_current_idx != GUI_NO_WIN) {
+        Rectangle intersection = RectIntersection(result, GUI_CTX.temp->grid.current_window_workspace);
+#if DEV_DEBUG_GUI_SCROLL == 1
+        if (GUI_CTX.temp->current_window_idx == GUI_CTX.state->z_index[0]) {
+            GUI_DrawBorders(GUI_CTX.temp->grid.current_window_workspace, RED, RED, 1, false);
+            DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
+            DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
+        }
+#endif
+        result = intersection;
+    }
+    return result;
+}
+
+void GUI_BeginControlScissor()
+{
+    bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
+    bool inside_window  = GUI_CTX.temp->window_current_idx != GUI_NO_WIN;
+    if (not_overflow && inside_window) {
+        BeginScissorModeRect(GUI_CTX.temp->grid.current_window_workspace);
+    }
+}
+
+// Cut text not only by window but by the control itself
+// Useful to cut text inside a control
+void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
+{
+    bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
+    bool inside_window  = GUI_CTX.temp->window_current_idx != GUI_NO_WIN;
+    BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
+}
+// < END CONTROL HELPERS
 
 
 // > DRAW PRIMITIVES
@@ -285,44 +245,71 @@ Vector2 GUI_MeasureAdjustedText(const char* text, EGUI_Font font)
 }
 // < END DRAW PRIMITIVES
 
-// > CONTROL HELPERS
-Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
-    Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
+// > CURSOR
+void GUI_DrawCursorFor(EGUI_Cursor cursor)
+{
+    GUI_CursorSetup* setup      = &GUI_CTX.setup->cursors[cursor];
+    Vector2 mouse_current       = GUI_CTX.temp->cursor_current;
+    Texture texture             = setup->texture;
+    Vector2 delta_normalized    = setup->delta_normalized;
+    float scale                 = setup->scale * GUI_CTX.state->scale;
+    if (scale == 0) {
+        return;
+    }
 
-    result.y += GUI_CTX.temp->grid.current_scroll;
-    if (intersect_window && GUI_CTX.temp->window_current_idx != GUI_NO_WIN) {
-        Rectangle intersection = RectIntersection(result, GUI_CTX.temp->grid.current_window_workspace);
-        #if DEV_DEBUG_GUI_SCROLL == 1
-        if (GUI_CTX.temp->current_window_idx == GUI_CTX.state->z_index[0]) {
-            GUI_DrawBorders(GUI_CTX.temp->grid.current_window_workspace, RED, RED, 1, false);
-            DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
-            DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
+    Vector2 mouse_shape = (Vector2) {
+        mouse_current.x - ((float)texture.width * delta_normalized.x * scale),
+        mouse_current.y - ((float)texture.height * delta_normalized.y * scale)
+    };
+    DrawTextureEx(texture, mouse_shape, 0, scale, ColorAlpha(WHITE, setup->alpha));
+}
+
+void GUI_DrawCursor()
+{
+    EGUI_Cursor cursor              = GUI_CTX.temp->cursor;
+    GUI_CursorSetup* cursor_setup   = &GUI_CTX.setup->cursors[cursor];
+    if (cursor_setup->additional_cursor != EGUI_Cursor_None) {
+        GUI_DrawCursorFor(cursor_setup->additional_cursor);
+    }
+    GUI_DrawCursorFor(cursor);
+}
+
+// raylib [shapes] example - Draw a mouse trail (position history)
+void GUI_DrawCursorTrail()
+{
+    GUI_CursorSetup *setup          = GUI_GetCursorSetup();
+    Vector2 mouse                   = GUI_CTX.temp->cursor_current;
+    float scale                     = setup->scale * GUI_CTX.state->scale;
+    Vector2 delta_normalized        = setup->trail_delta_normalized;
+    Vector2 delta                   = (Vector2) {
+        .x = delta_normalized.x * (float)setup->texture.width * scale,
+        .y = delta_normalized.y * (float)setup->texture.height * scale
+    };
+
+    // Shift all existing positions backward by one slot in the array
+    // The last element (the oldest position) is dropped
+    Vector2 *trail = GUI_CTX.temp->cursor_trail;
+    for (int i = GUI_MAX_TRAIL - 1; i > 0; i--) {
+        trail[i] = trail[i - 1];
+    }
+    trail[0] = Vector2Add(mouse, delta);
+
+    for (int i = 0; i < GUI_MAX_TRAIL; i++) {
+        // Ensure we skip drawing if the array hasn't been fully filled on startup
+        if ((trail[i].x != 0.0f) || (trail[i].y != 0.0f))
+        {
+            #define TRAIL_ALPHA_MIN 0.001f
+            #define TRAIL_ALPHA_MAX 0.05f
+            float current_ratio = (float)(GUI_MAX_TRAIL - i) / GUI_MAX_TRAIL;
+            float trail_alpha   = current_ratio * (TRAIL_ALPHA_MAX - TRAIL_ALPHA_MIN) + TRAIL_ALPHA_MIN;
+            Color trail_color   = Fade(BLACK, trail_alpha);
+            float trail_radius  = current_ratio * scale;
+
+            DrawCircleV(Vector2AddValue(trail[i], -trail_radius), trail_radius, trail_color);
         }
-        #endif
-        result = intersection;
-    }
-    return result;
-}
-
-void GUI_BeginControlScissor()
-{
-    bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
-    bool inside_window  = GUI_CTX.temp->window_current_idx != GUI_NO_WIN;
-    if (not_overflow && inside_window) {
-        BeginScissorModeRect(GUI_CTX.temp->grid.current_window_workspace);
     }
 }
-
-// Cut text not only by window but by the control itself
-// Useful to cut text inside a control
-void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
-{
-    bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
-    bool inside_window  = GUI_CTX.temp->window_current_idx != GUI_NO_WIN;
-    BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
-}
-
-// < END CONTROL HELPERS
+// < END CURSOR
 
 // > ICONS
 // Returns used texture_scale to draw the texture in the available height
@@ -453,9 +440,7 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 }
 
 
-// > BUTTON
-//   STABILITY: 90%
-//   NOTES: Nothing here
+// > CONTROLS
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
@@ -839,10 +824,8 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
 }
 
 
-// > CHECKBOX
-//   STABILITY: 90%
-//   NOTES: Improve draw
-void GUI_DrawCheckBox(
+// > CHECK
+void GUI_DrawCheck(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt,
     EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
 {
@@ -901,7 +884,7 @@ void GUI_Check(
         is_focused      ? EGUI_ControlStatus_Focused :
         is_cursor_over ? EGUI_ControlStatus_Collide :
                           EGUI_ControlStatus_Default;
-    GUI_DrawCheckBox(shape, *value, on_txt, off_txt, status, colors, font);
+    GUI_DrawCheck(shape, *value, on_txt, off_txt, status, colors, font);
 }
 
 // > WINDOW
@@ -1113,5 +1096,6 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     GUI_WindowButtonPanel(window, font);
     GUI_WindowEndingPanel(window, font);
 }
+// < END WINDOW
 
 #endif
