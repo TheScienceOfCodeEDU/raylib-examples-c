@@ -14,11 +14,11 @@ float           GUI_GridWidthOrDefault();
 Rectangle       GUI_GridRelative(Rectangle shape);
 Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 // > GRID STARTERS
-void            GUI_GridForX(float x_size);
-void            GUI_GridForY(float y_size);
-void            GUI_GridSize(float width, float height);
-void            GUI_GridForCols(float cols, Rectangle window_workspace, EGUI_Font font);
-void            GUI_GridDuplicate();
+void            GUI_GridForX(float w);
+void            GUI_GridForY(float h);
+void            GUI_GridForXY(float w, float h);
+void            GUI_GridFor(float columns, Rectangle window_workspace, EGUI_Font font);
+void            GUI_GridForDuplicate();
 // > IN PLACE QUERIES
 Rectangle       GUI_GridAt(int x, int y);
 Rectangle       GUI_GridBetween(int x, int y, int x_end, int y_end);
@@ -84,29 +84,29 @@ Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
 // < END BASICS
 
 // > GRID STARTERS
-void GUI_GridForX(float x_size)
+void GUI_GridForX(float w)
 {
     GUI_CTX.temp->grid.horizontal_count = 0;
-    GUI_CTX.temp->grid.horizontal_size  = x_size;
+    GUI_CTX.temp->grid.horizontal_size  = w;
 }
 
-void GUI_GridForY(float y_size)
+void GUI_GridForY(float h)
 {
     GUI_CTX.temp->grid.vertical_count = 0;
-    GUI_CTX.temp->grid.vertical_size  = y_size;
+    GUI_CTX.temp->grid.vertical_size  = h;
 }
 
-void GUI_GridSize(float width, float height)
+void GUI_GridForXY(float w, float h)
 {
     GUI_GridAutoJump();
 
     // Horizontal
-    if (width > 0.0) {
-        GUI_GridForX(width);
-    } else if (width < 0.0) {
+    if (w > 0.0) {
+        GUI_GridForX(w);
+    } else if (w < 0.0) {
         // width is already negative
         // so this takes available space minus width
-        GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width + width);
+        GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width + w);
     } else {
         GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width);
     }
@@ -117,32 +117,32 @@ void GUI_GridSize(float width, float height)
     }
 
     // Vertical
-    if (height > 0.0) {
-        GUI_GridForY(height);
-    } else if (height < 0.0) {
+    if (h > 0.0) {
+        GUI_GridForY(h);
+    } else if (h < 0.0) {
         // height is already negative
         // so this takes available space minus height
-        float available  = GUI_CTX.temp->grid.current_workspace.height + height;
+        float available  = GUI_CTX.temp->grid.current_workspace.height + h;
         if (available > 0) {
             GUI_GridForY(available);
         } else {
-            GUI_GridForY(height * -1);
+            GUI_GridForY(h * -1);
         }
     } else {
         GUI_GridForY(GUI_CTX.temp->grid.current_workspace.height);
     }
 }
 
-void GUI_GridForCols(float cols, Rectangle window_workspace, EGUI_Font font)
+void GUI_GridFor(float columns, Rectangle window_workspace, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
-    GUI_GridSize(window_workspace.width / cols, default_height);
+    GUI_GridForXY(window_workspace.width / columns, default_height);
     GUI_SetFontType(font);
 }
 
-void GUI_GridDuplicate()
+void GUI_GridForDuplicate()
 {
-    GUI_GridSize(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size);
+    GUI_GridForXY(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size);
 }
 // < END GRID STARTERS
 

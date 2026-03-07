@@ -58,7 +58,7 @@ void GUI_TopBar(Rectangle shape)
     GUI_Theme *theme    = &setup->theme;
     const int BUTTONS   = 4;
 
-    GUI_GridForCols(BUTTONS, shape, EGUI_Font_GUI);
+    GUI_GridFor(BUTTONS, shape, EGUI_Font_GUI);
     GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,           theme->red,    GUI_ProgramMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,    theme->gray,   GUI_GameMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Other",        &icons->Dog,   theme->abstractica,   GUI_GameMenu);
@@ -88,35 +88,35 @@ void WIN_Window(GUI_Window* window)
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font);
         // A default layout with 3 columns
-        GUI_GridForCols(3, window_workspace, font);
+        GUI_GridFor(3, window_workspace, font);
 
         GUI_GridNextX();
         GUI_ButtonMenu(GUI_GridNextX(), "Game 2",    &icons->Dog,    theme.abstractica, GUI_GameMenu);
 
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         // 1st input (textbox)
         GUI_Text(GUI_GridNextX(), "Text", colors);
         GUI_Input(GUI_GridNextXn(2), win_state->input_contents, (int)sizeof(win_state->input_contents), EGUI_Input_Text, colors);
 
         // 2nd input for integer
         // TODO@dc: add min, max and parsing
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "Int", colors);
         GUI_Input(GUI_GridNextXn(2), win_state->input_int_contents, (int)sizeof(win_state->input_int_contents), EGUI_Input_Int, colors);
 
         // 3rd input for float
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "Float", colors);
         GUI_Input(GUI_GridNextXn(2), win_state->input_float_contents, (int)sizeof(win_state->input_float_contents), EGUI_Input_Float, colors);
 
         // Wallpaper check (checkbox/switch)
         // With a theme.red color
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "Wallpaper",  colors);
         GUI_Check(GUI_GridNextXn(2), &win_state->checkbox_value, "ON", "OFF", setup->theme.red);
 
         // Font toggler
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "Font",  colors);
         GUI_Check(GUI_GridNextXn(2), &win_state->font_toggle, "GUI", "DEF", colors);
 
@@ -134,7 +134,7 @@ void WIN_Layouts(GUI_Window* window)
     GUI_BeginWindowContents(window, EGUI_Font_Default);
 
         // First block
-        GUI_GridSize(window_workspace.width, default_height);
+        GUI_GridForXY(window_workspace.width, default_height);
         GUI_Text(GUI_GridNextY(), "Some sample layouts for imKairos", setup->theme.gray);
 
         // and more verticals of full width (can be written as Horizontals too, but requires
@@ -145,13 +145,13 @@ void WIN_Layouts(GUI_Window* window)
             DrawDebugRect(GUI_GridRelative(GUI_GridNextY()), ColorAlpha(BEIGE, color_alpha));
 
             // 1/3rd and 2/3rds blocks
-            GUI_GridSize(window_workspace.width / 3, default_height);
+            GUI_GridForXY(window_workspace.width / 3, default_height);
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(YELLOW, color_alpha));
             DrawDebugRect(GUI_GridRelative(GUI_GridNextXn(2)), ColorAlpha(GREEN, color_alpha));
 
             // Second block
             // 3 horizontals of 1/3 of the available space
-            GUI_GridSize(window_workspace.width / 3, default_height);
+            GUI_GridForXY(window_workspace.width / 3, default_height);
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(DARKGRAY, color_alpha));
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(GRAY, color_alpha));
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(LIGHTGRAY, color_alpha));
@@ -160,7 +160,7 @@ void WIN_Layouts(GUI_Window* window)
             // You can send negative values to use AVAILABLE - YOUR_VALUE
             // Ex:
             // -default_height means take all space minus a default_height to insert a final row
-            GUI_GridSize(window_workspace.width / 5, -default_height);
+            GUI_GridForXY(window_workspace.width / 5, -default_height);
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.1f));
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.2f));
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.3f));
@@ -168,7 +168,7 @@ void WIN_Layouts(GUI_Window* window)
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.5f));
 
             // Final row
-            GUI_GridSize(window_workspace.width / 2, default_height);
+            GUI_GridForXY(window_workspace.width / 2, default_height);
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(RED, color_alpha));
             DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLUE, color_alpha));
         EndScissorMode();
@@ -184,41 +184,41 @@ void WIN_CharacterDebug(GUI_Window* window)
     EGUI_Font font     = EGUI_Font_Default;
 
     Rectangle workspace = GUI_BeginWindowContents(window, font);
-        GUI_GridForCols(2, workspace, font);
+        GUI_GridFor(2, workspace, font);
 
         // Shape
         GUI_Text(GUI_GridNextX(), "shape.x", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.2f", ch->shape.x), colors);
 
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "shape.y", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.2f", ch->shape.y), colors);
 
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "shape.w", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.2f", ch->shape.width), colors);
 
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "shape.h", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.2f", ch->shape.height), colors);
 
         // Color (RGB)
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "color", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("r:%d g:%d b:%d a:%d",
             ch->color.r, ch->color.g, ch->color.b, ch->color.a), colors);
 
         // Movement
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "movement.x", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.3f", ch->movement.x), colors);
 
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "movement.y", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.3f", ch->movement.y), colors);
 
         // Animation time
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "anim_time", colors);
         GUI_Text(GUI_GridNextX(), TextFormat("%.3f", ch->anim_time), colors);
 
@@ -234,11 +234,11 @@ void WIN_Settings(GUI_Window* window)
 
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font);
-        GUI_GridForCols(3, window_workspace, font);
+        GUI_GridFor(3, window_workspace, font);
         GUI_Text(GUI_GridNextX(), "Scale", colors);
         GUI_Float(GUI_GridNextXn(2), &state->scale, colors, 0.5f, 6.0f);
 
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         GUI_Text(GUI_GridNextX(), "Scale 2", colors);
         GUI_Float(GUI_GridNextXn(2), &state->scale, colors, 0.5f, 6.0f);
     GUI_EndWindowContents(window);
@@ -254,7 +254,7 @@ void WIN_Winman(GUI_Window* window)
 
     Rectangle window_workspace =
     GUI_BeginWindowContents(window, font);
-        GUI_GridSize(window_workspace.width, default_height);
+        GUI_GridForXY(window_workspace.width, default_height);
 
         static GUI_Window* win_window = NULL;
         if (GUI_Button(GUI_GridNextY(), "Sample window", NULL, window->colors)) {
@@ -291,7 +291,7 @@ void WIN_Winman(GUI_Window* window)
 
 
         GUI_Text(GUI_GridNextY(), "--- Opened windows ---", window->colors);
-        GUI_GridDuplicate();
+        GUI_GridForDuplicate();
         for (int i = 0; i < GUI_MAX_OPEN_WINS; ++i) {
             GUI_Window* win = &state->window_s[i];
             if (win->id == 0 || window->id == win->id) continue;
