@@ -184,7 +184,6 @@ typedef struct {
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player.
-    int             current_window_idx;       // Current window being drawn TODO@dc: REVIEW AGAINST TARGET_ID
     Rectangle       current_window_workspace; // Current window workspace
     bool            force_overflow;
 } GUI_GridTemp;
@@ -212,7 +211,7 @@ typedef struct {
 typedef struct {
     // Globals
     EGUI_Status      status;
-    void             *control_focus_ptr;                // Keeps track between frames if there is a focused control
+    void             *control_focus_ptr;            // Keeps track between frames if there is a focused control
 
     // Grid temporary data
     GUI_GridTemp  grid;
@@ -228,6 +227,7 @@ typedef struct {
     Vector2         cursor_trail[GUI_MAX_TRAIL];
 
     // Window
+    int                 window_current_idx;
     EGUI_WindowAction   window_current_action;
     int                 window_target_id;   // Window currently eligible for interaction (See UPDATE WINDOW TARGET ID)
 } GUI_Temp;

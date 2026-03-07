@@ -214,7 +214,7 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 
 bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 {
-    return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->grid.current_window_idx));
+    return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->window_current_idx));
 }
 // < END POINTERS
 
@@ -286,10 +286,10 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
 
     result.y += GUI_CTX.temp->grid.current_scroll;
-    if (intersect_window && GUI_CTX.temp->grid.current_window_idx != GUI_NO_WIN) {
+    if (intersect_window && GUI_CTX.temp->window_current_idx != GUI_NO_WIN) {
         Rectangle intersection = RectIntersection(result, GUI_CTX.temp->grid.current_window_workspace);
         #if DEV_DEBUG_GUI_SCROLL == 1
-        if (GUI_CTX.temp->grid.current_window_idx == GUI_CTX.state->z_index[0]) {
+        if (GUI_CTX.temp->current_window_idx == GUI_CTX.state->z_index[0]) {
             GUI_DrawBorders(GUI_CTX.temp->grid.current_window_workspace, RED, RED, 1, false);
             DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
             DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
@@ -303,7 +303,7 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
 void GUI_BeginControlScissor()
 {
     bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
-    bool inside_window  = GUI_CTX.temp->grid.current_window_idx != GUI_NO_WIN;
+    bool inside_window  = GUI_CTX.temp->window_current_idx != GUI_NO_WIN;
     if (not_overflow && inside_window) {
         BeginScissorModeRect(GUI_CTX.temp->grid.current_window_workspace);
     }
@@ -314,7 +314,7 @@ void GUI_BeginControlScissor()
 void GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale)
 {
     bool not_overflow   = GUI_CTX.temp->grid.force_overflow == false;
-    bool inside_window  = GUI_CTX.temp->grid.current_window_idx != GUI_NO_WIN;
+    bool inside_window  = GUI_CTX.temp->window_current_idx != GUI_NO_WIN;
     BeginScissorModeRect(GUI_ControlShapeCut(shape, border, scale, inside_window && not_overflow));
 }
 
@@ -511,14 +511,13 @@ bool GUI_ButtonMenu(
     Rectangle shape, const char* text_id, Texture2D* icon,
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
-    int current_window_id   = GUI_CTX.temp->grid.current_window_idx;
     bool scrolled           = GetMouseWheelMove() != 0;
     bool is_open            = GUI_OverlayIsOpenBy(text_id);
     bool just_interacted    = GUI_Button(shape, text_id, icon, colors);
     if (just_interacted) {
         // Open it
         if (is_open == false) {
-            GUI_OverlayOpenFor(text_id, current_window_id);
+            GUI_OverlayOpenFor(text_id, GUI_CTX.temp->window_current_idx);
         // Close it
         } else {
             GUI_OverlayClose();

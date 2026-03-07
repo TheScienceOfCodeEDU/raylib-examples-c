@@ -46,7 +46,6 @@ GUI_GridTemp GUI_MakeGrid()
         .used_height                = 0.0f,
         .current_scroll             = 0,
         .current_font               = EGUI_Font_Default,
-        .current_window_idx         = GUI_NO_WIN,
         .current_window_workspace   = (Rectangle) { 0.f, 0.f, 0.f, 0.f},
         .force_overflow             = false
     };

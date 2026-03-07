@@ -210,8 +210,8 @@ Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font)
     GUI_GridReset(window_workspace);
     GUI_SetFontType(font);
 
-    // Vertical scroll
-    GUI_CTX.temp->grid.current_window_idx         = window->id;
+    // Set window data
+    GUI_CTX.temp->window_current_idx              = window->id;
     GUI_CTX.temp->grid.current_window_workspace   = window_workspace;
     GUI_CTX.temp->grid.current_scroll             = -window->scroll_offset;
 
@@ -231,7 +231,8 @@ void GUI_EndWindowContents(GUI_Window* window)
     // Stored grid height
     window->content_height = GUI_CTX.temp->grid.used_height;
     // Reset temp values
-    GUI_CTX.temp->grid              = GUI_MakeGrid();
+    GUI_CTX.temp->window_current_idx    = GUI_NO_WIN;
+    GUI_CTX.temp->grid                  = GUI_MakeGrid();
 
     // Finish draw instructions
     GUI_AfterWindowContents();
