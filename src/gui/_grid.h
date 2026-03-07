@@ -14,7 +14,7 @@ Rectangle       GUI_GridRelative(Rectangle shape);
 Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 // > IN PLACE QUERIES
 Rectangle       GUI_GridAt(int x, int y);
-Rectangle       GUI_GridBetween(int x, int y, int x_end, int Y_end);
+Rectangle       GUI_GridBetween(int x, int y, int x_end, int y_end);
 // > GRID STARTERS
 void            GUI_GridForX(float x_size);
 void            GUI_GridForY(float y_size);
@@ -80,10 +80,10 @@ Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
     return shape_relative;
 }
 
-void GUI_GridHorizontal(float size)
+void GUI_GridForX(float x_size)
 {
     GUI_CTX.temp->grid.horizontal_count = 0;
-    GUI_CTX.temp->grid.horizontal_size  = size;
+    GUI_CTX.temp->grid.horizontal_size  = x_size;
 }
 
 void GUI_GridForY(float y_size)
@@ -208,13 +208,13 @@ void GUI_GridSize(float width, float height)
 
     // Horizontal
     if (width > 0.0) {
-        GUI_GridHorizontal(width);
+        GUI_GridForX(width);
     } else if (width < 0.0) {
         // width is already negative
         // so this takes available space minus width
-        GUI_GridHorizontal(GUI_CTX.temp->grid.current_workspace.width + width);
+        GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width + width);
     } else {
-        GUI_GridHorizontal(GUI_CTX.temp->grid.current_workspace.width);
+        GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width);
     }
 
     // Adjust to get y-available space
