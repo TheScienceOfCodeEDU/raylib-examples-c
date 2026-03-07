@@ -63,13 +63,13 @@ void GUI_OverlayClose()
 void GUI_OverlayOpenFor(const char* id)
 {
     Assert(id != NULL);
-    GUI_CTX.temp->overlay.id_ptr = id;
+    GUI_CTX.temp->overlay.id_ptr            = id;
+    GUI_CTX.temp->overlay.window_target_id  = GUI_CTX.temp->window_target_id;
 }
 
 void GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void))
 {
     GUI_CTX.temp->overlay.grid             = GUI_CTX.temp->grid;
-    GUI_CTX.temp->overlay.window_target_id = GUI_CTX.temp->window_target_id;
     GUI_CTX.temp->overlay.just_enabled     = just_enabled;
     GUI_CTX.temp->overlay.function         = draw_function;
 }

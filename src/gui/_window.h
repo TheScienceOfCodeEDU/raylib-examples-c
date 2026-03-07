@@ -232,7 +232,6 @@ void GUI_EndWindowContents(GUI_Window* window)
     window->content_height = GUI_CTX.temp->grid.used_height;
     // Reset temp values
     GUI_CTX.temp->grid              = GUI_MakeGrid();
-    GUI_CTX.temp->window_target_id  = GUI_NO_WIN;
 
     // Finish draw instructions
     GUI_AfterWindowContents();
