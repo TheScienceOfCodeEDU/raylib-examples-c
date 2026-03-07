@@ -177,18 +177,22 @@ void GUI_DrawCursorTrail()
 
 bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 {
+    GUI_State *state    = GUI_CTX.state;
+    Vector2 cursor      = GUI_CTX.temp->cursor_current;
+
+    // Special case overlay
+    if (GUI_OverlayIsDrawing()) {
+        return CheckCollisionPointRec(cursor, shape);
+    }
+
     // If cursor is over overlay, control cannot be interacted
-    // GUI_DrawOverlay must set GUI_CTX.temp->overlay_draw.shape_drawed to {0} before rendering overlay controls
     if (GUI_IsCursorOverOverlay()) return false;
 
-    GUI_State *state            = GUI_CTX.state;
-    int focused_window_id       = state->z_index[0];
-    Vector2 mouse               = GUI_CTX.temp->cursor_current;
-
     // Simple collision (outside a window)
-    bool outside_window = window == NULL || focused_window_id == GUI_NO_WIN;
+    int focused_window_id   = state->z_index[0];
+    bool outside_window     = window == NULL || focused_window_id == GUI_NO_WIN;
     if (outside_window) {
-        return CheckCollisionPointRec(mouse, shape);
+        return CheckCollisionPointRec(cursor, shape);
     }
 
     // Or inside a window... (window != NULL)
@@ -197,12 +201,12 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
         return false;
     }
     // Focused window data
-    bool collide_focused        = CheckCollisionPointRec(mouse, window->shape);
+    bool collide_focused        = CheckCollisionPointRec(cursor, window->shape);
 
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->grid.current_scroll };
-    bool collide_scrolled       = CheckCollisionPointRec(mouse, MoveRect(shape, current_scroll));
-    bool collide_workspace      = CheckCollisionPointRec(mouse, GUI_GetWindowWorkspace(window));
+    bool collide_scrolled       = CheckCollisionPointRec(cursor, MoveRect(shape, current_scroll));
+    bool collide_workspace      = CheckCollisionPointRec(cursor, GUI_GetWindowWorkspace(window));
     bool overflow               = GUI_CTX.temp->grid.force_overflow;
 
     // Collide checks

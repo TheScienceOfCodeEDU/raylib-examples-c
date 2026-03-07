@@ -15,6 +15,7 @@ void            GUI_OverlayClose();
 void            GUI_OverlayOpenFor(const char* id);
 void            GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void));
 void            GUI_OverlaySetFinalShape(Rectangle shape);
+bool            GUI_OverlayIsDrawing();
 GUI_ThemeColors GUI_BeginOverlay();
 void            GUI_EndOverlay(Rectangle final_shape);
 
@@ -27,6 +28,7 @@ GUI_Overlay GUI_MakeOverlay()
         .grid               = GUI_MakeGrid(),
         .just_enabled       = false,
         .final_shape        = (Rectangle){0,0,0,0},
+        .is_drawing         = false,
         .function           = NULL,
     };
     return overlay;
@@ -78,15 +80,19 @@ void GUI_OverlaySetFinalShape(Rectangle shape)
     GUI_CTX.temp->overlay.final_shape = shape;
 }
 
+bool GUI_OverlayIsDrawing()
+{
+    return GUI_CTX.temp->overlay.is_drawing;
+}
+
 GUI_ThemeColors GUI_BeginOverlay()
 {
     GUI_Overlay *overlay    = &GUI_CTX.temp->overlay;
     // Prepare state
     GUI_CTX.temp->grid                      = overlay->grid;
     GUI_CTX.temp->grid.force_overflow       = true;
-    // No final_shape = CursorOverOverlay is FALSE then controls inside overlay->function();
-    // can be interacted (See GUI_CheckCollisionCursorControl)
-    overlay->final_shape                    = (Rectangle){0,0,0,0};
+    // Begin is drawing
+    GUI_CTX.temp->overlay.is_drawing        = true;
 
     // Apply ThemeColors
     int window_id               = GUI_CTX.temp->window_current_idx;
@@ -114,5 +120,7 @@ void GUI_EndOverlay(Rectangle final_shape)
         DrawDebugRect(relative_shape, RED);
     #endif
     }
+    // End drawing
+    GUI_CTX.temp->overlay.is_drawing = false;
 }
 #endif

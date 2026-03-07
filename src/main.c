@@ -138,10 +138,10 @@ int main(void) {
         // GUI Actions
         PLAYER_Actions *player_actions = &GAME_CTX.temp->player_actions;
         if (player_actions->reset_characters)   game_state = GAME_MakeState();
-        if (player_actions->add_character)       GAME_AddCharacter();
-        if (player_actions->toggle_character)    GAME_UpdateNextCharacter();
-        if (IsKeyPressed(KEY_F8))              gui_state.scale = FloatMin(6.0f, gui_state.scale + 0.25f);
-        if (IsKeyPressed(KEY_F7))              gui_state.scale = FloatMax(0.5f, gui_state.scale - 0.25f);
+        if (player_actions->add_character)      GAME_AddCharacter();
+        if (player_actions->toggle_character)   GAME_UpdateNextCharacter();
+        if (IsKeyPressed(KEY_F8))               gui_state.scale = FloatMin(6.0f, gui_state.scale + 0.25f);
+        if (IsKeyPressed(KEY_F7))               gui_state.scale = FloatMax(0.5f, gui_state.scale - 0.25f);
 
         if (GUI_IsCursorOverGui() == false) {
             // Update camera
