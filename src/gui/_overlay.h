@@ -10,7 +10,7 @@
 GUI_Overlay     GUI_MakeOverlay();
 void            GUI_DrawOverlay();
 bool            GUI_OverlayIsOpenBy(const char* text_id_owner);
-bool            GUI_OverlayGetJustEnabled();
+bool            GUI_OverlayWasJustEnabled();
 void            GUI_OverlayClose();
 void            GUI_OverlayOpenFor(const char* id);
 void            GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void));
@@ -55,7 +55,7 @@ bool GUI_OverlayIsOpenBy(const char* text_id_owner)
     return GUI_CTX.temp->overlay.id_ptr == text_id_owner;
 }
 
-bool GUI_OverlayGetJustEnabled()
+bool GUI_OverlayWasJustEnabled()
 {
     return GUI_CTX.temp->overlay.just_enabled;
 }
@@ -88,7 +88,7 @@ void GUI_OverlaySetFinalShape(Rectangle shape)
 void GUI_CloseOverlayOnInteraction(Rectangle final_shape)
 {
     bool interacted     = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    bool interactable   = GUI_OverlayGetJustEnabled() == false;
+    bool interactable   = GUI_OverlayWasJustEnabled() == false;
     if (interacted && interactable) {
         GUI_OverlayClose();
     } else {
