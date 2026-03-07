@@ -1,6 +1,6 @@
 #pragma once
-#ifndef UNITY_BUILD
-#define UNITY_BUILD 0
+#ifndef NON_EDITOR_BUILD
+#define NON_EDITOR_BUILD 0
 #define IMPLEMENT_ALL
 #include "../common.h"
 #endif

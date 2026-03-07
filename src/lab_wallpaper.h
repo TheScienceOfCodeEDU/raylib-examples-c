@@ -1,8 +1,6 @@
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #include "raylib.h"
- #include <math.h>
- #include <stdint.h>
+#ifndef NON_EDITOR_BUILD
+ #define NON_EDITOR_BUILD 0
+ #include "common.h"
 #endif
 
 #ifndef WALLPAPER_LOGICAL_W

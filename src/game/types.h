@@ -1,8 +1,7 @@
 #pragma once
-#ifndef UNITY_BUILD
-#define UNITY_BUILD 0
-#define INCLUDE_GUI
-#include "common.h"
+#ifndef NON_EDITOR_BUILD
+#define NON_EDITOR_BUILD 0
+#include "../common.h"
 #endif
 
 //
@@ -88,9 +87,7 @@ GAME_State GAME_MakeState(void)
     return state;
 }
 
-//
-// Win state
-//
+// > GAME GUI State
 
 typedef struct {
     bool checkbox_value;
@@ -124,9 +121,7 @@ GAME_Temp GAME_MakeTemp()
     return temp;
 }
 
-// > STATE > CONTEXT
-//   STABILITY : █████████░  90%
-//   NOTES     : Nothing here
+// > CONTEXT
 
 static struct {
     GAME_State          *state;

@@ -415,8 +415,8 @@ This makes it easy to reuse and import full modules when needed.
 **Example:** `game.h`
 
 ```c
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
+#ifndef NON_EDITOR_BUILD
+ #define NON_EDITOR_BUILD 0
  #define INCLUDE_GUI
  #include "common.h"
  #include "game_structs.h"
@@ -427,7 +427,7 @@ This makes it easy to reuse and import full modules when needed.
 This imports GUI but not `GAME` itself (since it’s the current module). The main file can bring all:
 
 ```c
-#define UNITY_BUILD 1
+#define NON_EDITOR_BUILD 1
 #define INCLUDE_GUI
 #define INCLUDE_GAME
 #include "common.h"

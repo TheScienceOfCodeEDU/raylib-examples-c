@@ -1,9 +1,7 @@
-
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #include "raylib.h"
- #include "raymath.h"
- #include "rlgl.h"
+#pragma once
+#ifndef NON_EDITOR_BUILD
+#define NON_EDITOR_BUILD 0
+#include "common.h"
 #endif
 
 #define Assert(cond) \
@@ -13,6 +11,24 @@
             exit(1); \
         } \
     } while (0)
+
+const char* BuildTimeFormatted()
+{
+    static char buffer[32];
+
+    // Parse __TIME__ HH:MM:SS
+    int h = (__TIME__[0]-'0')*10 + (__TIME__[1]-'0');
+    int m = (__TIME__[3]-'0')*10 + (__TIME__[4]-'0');
+    int s = (__TIME__[6]-'0')*10 + (__TIME__[7]-'0');
+
+    const char* ampm = "am";
+    if(h >= 12) ampm = "pm";
+    if(h > 12)  h -= 12;
+    if(h == 0)  h = 12; // midnight edge case
+
+    snprintf(buffer, sizeof(buffer), "%02dh:%02dm:%02ds %s", h, m, s, ampm);
+    return buffer;
+}
 
 static bool ParseFloatStrict(const char *s, float *out)
 {

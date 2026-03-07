@@ -1,5 +1,5 @@
 #pragma once
-#ifndef UNITY_BUILD
+#ifndef NON_EDITOR_BUILD
 #define IMPLEMENT_ALL   1
 #include "../common.h"
 #endif

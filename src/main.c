@@ -1,31 +1,13 @@
-#define UNITY_BUILD 1
+#define NON_EDITOR_BUILD 1
 #define IMPLEMENT_ALL 1
 #include "common.h"
+#include "game/main.h"
 #include "lab.h"
 
 #define GAME_RES_W          320
 #define GAME_RES_H          240
 #define GAME_RES_HALF_W     160
 #define GAME_RES_HALF_H     120
-
-const char* BuildTimeFormatted()
-{
-    static char buffer[32];
-
-    // Parse __TIME__ HH:MM:SS
-    int h = (__TIME__[0]-'0')*10 + (__TIME__[1]-'0');
-    int m = (__TIME__[3]-'0')*10 + (__TIME__[4]-'0');
-    int s = (__TIME__[6]-'0')*10 + (__TIME__[7]-'0');
-
-    const char* ampm = "am";
-    if(h >= 12) ampm = "pm";
-    if(h > 12)  h -= 12;
-    if(h == 0)  h = 12; // midnight edge case
-
-    snprintf(buffer, sizeof(buffer), "%02dh:%02dm:%02ds %s", h, m, s, ampm);
-    return buffer;
-}
-
 
 int main(void) {
     if (DEV_FULLSCREEN == false)

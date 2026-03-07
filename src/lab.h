@@ -1,9 +1,6 @@
-#ifndef UNITY_BUILD
- #define UNITY_BUILD 0
- #include "raylib.h"
- #include "raymath.h"
- #include "rlgl.h"
- #include "rayext.h"
+#ifndef NON_EDITOR_BUILD
+ #define NON_EDITOR_BUILD 0
+ #include "common.h"
 #endif
 
 void DrawCharacter(Rectangle shape, Vector2 movement, float anim_time, Color color)
