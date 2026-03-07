@@ -186,19 +186,18 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
     Vector2 mouse               = GUI_CTX.temp->cursor_current;
 
     // Simple collision (outside a window)
-    if (window == NULL || focused_window_id == 0) {
+    bool outside_window = window == NULL || focused_window_id == GUI_NO_WIN;
+    if (outside_window) {
         return CheckCollisionPointRec(mouse, shape);
     }
 
-    // This is not the window!
-    if (GUI_IsCurrentWindowTarget(window->id) == false) {
+    // Or inside a window... (window != NULL)
+    bool current_target = GUI_IsCurrentWindowTarget(window->id);
+    if (current_target == false) {
         return false;
     }
-
-    // Inside a window
     // Focused window data
-    GUI_Window *focused_window  = GUI_GetWindow(focused_window_id);
-    bool collide_focused        = CheckCollisionPointRec(mouse, focused_window->shape);
+    bool collide_focused        = CheckCollisionPointRec(mouse, window->shape);
 
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->grid.current_scroll };

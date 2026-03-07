@@ -5,6 +5,7 @@
 #endif
 
 #include "types.h"
+// ReSharper disable once CppUnusedIncludeDirective
 #include "_setup.h"
 
 // > FUNCTIONS
@@ -18,6 +19,7 @@ GUI_Temp            GUI_MakeTempDefault();
 EGUI_Font           GUI_GetFont();
 void                GUI_SetFontType(EGUI_Font font);
 float               GUI_CalcDefaultHeightScaled(EGUI_Font font);
+void                GUI_ProcessWindow(GUI_Window* window, Rectangle limits);
 void                GUI_AfterWindowContents();
 bool                GUI_IsCursorOverGui();
 bool                GUI_IsCurrentWindowTarget(int window_id);
@@ -30,7 +32,6 @@ void                GUI_EndDraw();
 #include "_grid.h"
 #include "_window.h"
 #include "_overlay.h"
-// ReSharper disable once CppUnusedIncludeDirective
 #include "_controls.h"
 
 
@@ -73,7 +74,7 @@ GUI_Temp GUI_MakeTempDefault()
         .cursor_over_gui            = false,
         .cursor_trail               = {{0}},
         .window_current_action      = EGUI_WindowAction_None,
-        .window_target_id           = 0
+        .window_target_id           = GUI_NO_WIN
     };
     return temp;
 }
@@ -94,6 +95,14 @@ float GUI_CalcDefaultHeightScaled(EGUI_Font font)
     GUI_Setup* setup = GUI_CTX.setup;
     GUI_State* state = GUI_CTX.state;
     return setup->fonts[font].default_height * state->scale;
+}
+
+void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
+{
+    Assert(window->id > 0);
+    Assert(window->contents != NULL);
+
+    GUI_UpdateAndDrawWindow(window, limits);
 }
 
 void GUI_AfterWindowContents()
@@ -143,7 +152,7 @@ bool GUI_IsCursorOverGui()
 bool GUI_IsCurrentWindowTarget(int window_id)
 {
     int target_id   = GUI_CTX.temp->window_target_id;
-    bool no_target  = target_id == 0;
+    bool no_target  = target_id == GUI_NO_WIN;
     bool is_target  = target_id == window_id;
     return no_target || is_target;
 }

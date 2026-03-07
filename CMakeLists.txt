@@ -14,6 +14,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 )
 
 add_executable(abstractica ${SOURCES})
+target_link_libraries(abstractica PRIVATE raylib m)
 
 # Include roots
 target_include_directories(abstractica PRIVATE

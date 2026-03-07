@@ -1,0 +1,380 @@
+[0/2] Re-checking globbed directories...
+[2/3] Linking C executable abstractica
+FAILED: abstractica
+: && /usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/abstractica.dir/link.d CMakeFiles/abstractica.dir/src/main.c.o -o abstractica   && :
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `LimitRect':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:58:(.text+0x197): undefined reference to `fminf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:59:(.text+0x1b2): undefined reference to `fminf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:62:(.text+0x1cd): undefined reference to `fmaxf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:63:(.text+0x1e8): undefined reference to `fmaxf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:66:(.text+0x21b): undefined reference to `fminf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:67:(.text+0x24e): undefined reference to `fminf'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `LimitVector2Rect':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:74:(.text+0x2ab): undefined reference to `fmaxf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:75:(.text+0x2c6): undefined reference to `fmaxf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:78:(.text+0x2f0): undefined reference to `fminf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:79:(.text+0x31a): undefined reference to `fminf'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `DrawDebugRect':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:86:(.text+0x369): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:86:(.text+0x380): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:87:(.text+0x3a0): undefined reference to `DrawRectangleLinesEx'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `RectIntersection':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:103:(.text+0x4bc): undefined reference to `fmaxf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:104:(.text+0x4d7): undefined reference to `fmaxf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:105:(.text+0x50a): undefined reference to `fminf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:106:(.text+0x548): undefined reference to `fminf'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `IsKeyEnterPressed':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:115:(.text+0x659): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:115:(.text+0x667): undefined reference to `IsKeyPressed'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `CheckCollisionPointRecWithMargin':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:126:(.text+0x720): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `HSVToRGB':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:221:(.text+0xa52): undefined reference to `fmod'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `BeginScissorModeRect':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:241:(.text+0xcbd): undefined reference to `BeginScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `DrawTextureFullScreenKeep':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:271:(.text+0xd97): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:272:(.text+0xd9f): undefined reference to `GetScreenHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:292:(.text+0xef7): undefined reference to `DrawTexturePro'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `DrawTextureFullScreen':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:297:(.text+0xf13): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:298:(.text+0xf1b): undefined reference to `GetScreenHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:301:(.text+0xf48): undefined reference to `SetTextureFilter'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:302:(.text+0xf76): undefined reference to `SetTextureWrap'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:330:(.text+0x11b2): undefined reference to `DrawTexturePro'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `TrySetTargetMonitor':
+/home/dacanizares/source/raylib-examples-c/src/rayext.h:359:(.text+0x12d4): undefined reference to `GetMonitorCount'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:364:(.text+0x12f3): undefined reference to `GetCurrentMonitor'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/rayext.h:368:(.text+0x1317): undefined reference to `SetWindowMonitor'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_LoadIcons':
+/home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:38:(.text+0x1350): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:39:(.text+0x1364): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:40:(.text+0x1378): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:41:(.text+0x138c): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:42:(.text+0x13a0): undefined reference to `LoadTexture'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:43: more undefined references to `LoadTexture' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_GetFontAsset':
+/home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:76:(.text+0x1914): undefined reference to `GetFontDefault'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_GenerateThemeColor':
+/home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:108:(.text+0x19dc): undefined reference to `fmodf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:119:(.text+0x1a91): undefined reference to `ColorFromHSV'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_LoadFontSetupDefault':
+/home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:185:(.text+0x1dda): undefined reference to `SetTextureFilter'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:195:(.text+0x1eb3): undefined reference to `LoadFontEx'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:202:(.text+0x1f27): undefined reference to `SetTextureFilter'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_LoadCursorSetupForType':
+/home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:216:(.text+0x2000): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:225:(.text+0x2081): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:234:(.text+0x20fe): undefined reference to `LoadTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_setup.h:244:(.text+0x2174): undefined reference to `LoadTexture'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_GridHeightOrDefault':
+/home/dacanizares/source/raylib-examples-c/src/gui/_grid.h:61:(.text+0x269f): undefined reference to `GetScreenHeight'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_GridWidthOrDefault':
+/home/dacanizares/source/raylib-examples-c/src/gui/_grid.h:67:(.text+0x26de): undefined reference to `GetScreenWidth'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_MakeWorkspace':
+/home/dacanizares/source/raylib-examples-c/src/gui/_window.h:45:(.text+0x30f2): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:45:(.text+0x3104): undefined reference to `GetScreenHeight'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_UpdateAndDrawWindow':
+/home/dacanizares/source/raylib-examples-c/src/gui/_window.h:81:(.text+0x3325): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:82:(.text+0x334a): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:83:(.text+0x3383): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:84:(.text+0x33c7): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:85:(.text+0x33ee): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:104:(.text+0x34b2): undefined reference to `IsMouseButtonDown'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:112:(.text+0x3573): undefined reference to `Vector2Subtract'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:135:(.text+0x375e): undefined reference to `GetMouseWheelMove'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:138:(.text+0x37d5): undefined reference to `Clamp'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_UpdateAndDrawWindows':
+/home/dacanizares/source/raylib-examples-c/src/gui/_window.h:211:(.text+0x3a3c): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:230:(.text+0x3b39): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:265:(.text+0x3c81): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_BeginWindowContents':
+/home/dacanizares/source/raylib-examples-c/src/gui/_window.h:307:(.text+0x3e5a): undefined reference to `rlPushMatrix'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_window.h:308:(.text+0x3e84): undefined reference to `rlTranslatef'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_EndWindowContents':
+/home/dacanizares/source/raylib-examples-c/src/gui/_window.h:326:(.text+0x3f38): undefined reference to `rlPopMatrix'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_CloseOverlayOnInteraction':
+/home/dacanizares/source/raylib-examples-c/src/gui/_overlay.h:90:(.text+0x4b18): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_CheckCollisionCursorControl':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:124:(.text+0x4c23): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:135:(.text+0x4c74): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:139:(.text+0x4cdf): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:140:(.text+0x4d20): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawBorders':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:193:(.text+0x512e): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:195:(.text+0x51bf): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:197:(.text+0x525e): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:199:(.text+0x52fd): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:202:(.text+0x5398): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:205: more undefined references to `DrawRectangleRec' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawAdjustedTextEx':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:222:(.text+0x5629): undefined reference to `Vector2Scale'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:223:(.text+0x5649): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:224:(.text+0x56b7): undefined reference to `DrawTextEx'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_MeasureAdjustedText':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:236:(.text+0x57a2): undefined reference to `MeasureTextEx'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:245:(.text+0x582f): undefined reference to `Vector2Scale'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:246:(.text+0x584f): undefined reference to `Vector2Add'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawCursorFor':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:264:(.text+0x5974): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:264:(.text+0x59b0): undefined reference to `DrawTextureEx'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawCursorTrail':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:294:(.text+0x5b24): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:304:(.text+0x5c04): undefined reference to `Fade'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:307:(.text+0x5c4a): undefined reference to `Vector2AddValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:307:(.text+0x5c66): undefined reference to `DrawCircleV'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawIcon':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:316:(.text+0x5d19): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:319:(.text+0x5d6c): undefined reference to `DrawTextureEx'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:320:(.text+0x5d75): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_IconButton':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:335:(.text+0x5ed8): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:343:(.text+0x5f87): undefined reference to `ColorBrightness'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Face':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:364:(.text+0x6144): undefined reference to `sqrtf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:369:(.text+0x6183): undefined reference to `fminf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:393:(.text+0x6391): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:393:(.text+0x63ab): undefined reference to `DrawRectangleV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:394:(.text+0x6450): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:394:(.text+0x6466): undefined reference to `DrawRectangleV'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Image':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:424:(.text+0x668b): undefined reference to `DrawTexturePro'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:425:(.text+0x6694): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawButton':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:443:(.text+0x679e): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:449:(.text+0x67e1): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:449:(.text+0x67f8): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:451:(.text+0x682c): undefined reference to `EndScissorMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:461:(.text+0x6980): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Button':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:470:(.text+0x6a1a): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:474:(.text+0x6a88): undefined reference to `IsMouseButtonDown'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_ButtonMenu':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:487:(.text+0x6b46): undefined reference to `GetMouseWheelMove'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawText':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:532:(.text+0x6d1e): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawInput':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:556:(.text+0x6e9a): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:556:(.text+0x6eb7): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:558:(.text+0x6ed6): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:558:(.text+0x6ee6): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:558:(.text+0x6f03): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:560:(.text+0x6f30): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:560:(.text+0x6f40): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:560:(.text+0x6f5d): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:563:(.text+0x6f89): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:563:(.text+0x6fb0): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:566:(.text+0x7018): undefined reference to `EndScissorMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:607:(.text+0x7533): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:607:(.text+0x760b): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:614:(.text+0x7610): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Input':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:622:(.text+0x76ae): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:660:(.text+0x781d): undefined reference to `TextSubtext'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:674:(.text+0x78a2): undefined reference to `GetCharPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:699:(.text+0x79a2): undefined reference to `GetCharPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:732:(.text+0x7aa3): undefined reference to `GetCharPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:736:(.text+0x7aba): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:743:(.text+0x7b21): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:751:(.text+0x7b77): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:753:(.text+0x7b9e): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:755:(.text+0x7bc6): undefined reference to `IsKeyPressed'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:757: more undefined references to `IsKeyPressed' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Input':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:762:(.text+0x7bfb): undefined reference to `GetFrameTime'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:764:(.text+0x7c16): undefined reference to `GetFrameTime'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Float':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:787:(.text+0x7d73): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:801:(.text+0x7eea): undefined reference to `Clamp'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawCheckBox':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:826:(.text+0x8002): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:826:(.text+0x8019): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:828:(.text+0x8035): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:828:(.text+0x8045): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:828:(.text+0x805c): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:830:(.text+0x8086): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:830:(.text+0x8096): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:830:(.text+0x80ad): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:833:(.text+0x80d3): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:833:(.text+0x80fa): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:836:(.text+0x8153): undefined reference to `EndScissorMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:842:(.text+0x81fa): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_Check':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:850:(.text+0x8297): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_WindowButtonPanel':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:881:(.text+0x8493): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_WindowEndingPanel':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:897:(.text+0x8687): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:903:(.text+0x8742): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_DrawWindow':
+/home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:927:(.text+0x885c): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:927:(.text+0x891d): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:931:(.text+0x896f): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:931:(.text+0x898c): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:934:(.text+0x89f9): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:934:(.text+0x8a09): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:934:(.text+0x8a26): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:936:(.text+0x8a9b): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:938:(.text+0x8ae6): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:938:(.text+0x8af6): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:938:(.text+0x8b13): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:940:(.text+0x8b74): undefined reference to `ColorBrightness'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:950:(.text+0x8cb9): undefined reference to `EndScissorMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:968:(.text+0x8f79): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/_controls.h:974:(.text+0x901b): undefined reference to `DrawRectangleRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_MakeStateDefault':
+/home/dacanizares/source/raylib-examples-c/src/gui/main.h:49:(.text+0x9089): undefined reference to `LoadRenderTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/main.h:55:(.text+0x90cc): undefined reference to `SetTextureFilter'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_IsCursorOverOverlay':
+/home/dacanizares/source/raylib-examples-c/src/gui/main.h:164:(.text+0x94ce): undefined reference to `CheckCollisionPointRec'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GUI_BeginDraw':
+/home/dacanizares/source/raylib-examples-c/src/gui/main.h:182:(.text+0x9566): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/main.h:183:(.text+0x9578): undefined reference to `GetScreenHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/main.h:185:(.text+0x958a): undefined reference to `GetMousePosition'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/gui/main.h:187:(.text+0x95c4): undefined reference to `IsMouseButtonPressed'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `Game_MakeElement':
+/home/dacanizares/source/raylib-examples-c/src/game_structs.h:22:(.text+0x96ed): undefined reference to `LoadTexture'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GAME_MakeState':
+/home/dacanizares/source/raylib-examples-c/src/game_structs.h:80:(.text+0x9874): undefined reference to `Vector2Zero'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_structs.h:81:(.text+0x98cf): undefined reference to `Vector2Zero'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_structs.h:82:(.text+0x992a): undefined reference to `Vector2Zero'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_structs.h:83:(.text+0x9985): undefined reference to `Vector2Zero'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `WIN_Layouts':
+/home/dacanizares/source/raylib-examples-c/src/game_gui.h:147:(.text+0xa89b): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:148:(.text+0xa927): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:152:(.text+0xa9d4): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:153:(.text+0xaa60): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:158:(.text+0xab12): undefined reference to `ColorAlpha'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/game_gui.h:159: more undefined references to `ColorAlpha' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `WIN_Layouts':
+/home/dacanizares/source/raylib-examples-c/src/game_gui.h:177:(.text+0xb0b1): undefined reference to `EndScissorMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `WIN_CharacterDebug':
+/home/dacanizares/source/raylib-examples-c/src/game_gui.h:194:(.text+0xb1e8): undefined reference to `TextFormat'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:198:(.text+0xb2d7): undefined reference to `TextFormat'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:202:(.text+0xb3c6): undefined reference to `TextFormat'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:206:(.text+0xb4b5): undefined reference to `TextFormat'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/game_gui.h:211:(.text+0xb5ba): undefined reference to `TextFormat'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/game_gui.h:217: more undefined references to `TextFormat' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `WIN_Winman':
+/home/dacanizares/source/raylib-examples-c/src/game_gui.h:338:(.text+0xc7a6): undefined reference to `LoadTexture'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GAME_CheckRingCollision':
+/home/dacanizares/source/raylib-examples-c/src/game.h:41:(.text+0xc9c3): undefined reference to `Vector2Distance'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `DrawCharacter':
+/home/dacanizares/source/raylib-examples-c/src/lab.h:15:(.text+0xcb49): undefined reference to `Vector2Length'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:17:(.text+0xcb92): undefined reference to `fmodf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:20:(.text+0xcbaf): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:38:(.text+0xccc3): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:39:(.text+0xcd07): undefined reference to `cosf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:42:(.text+0xcd3d): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:48:(.text+0xcdad): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:49:(.text+0xce03): undefined reference to `cosf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:52:(.text+0xce4b): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:67:(.text+0xcf26): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:68:(.text+0xcf7c): undefined reference to `cosf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:71:(.text+0xcfc4): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:77:(.text+0xd028): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:78:(.text+0xd06f): undefined reference to `cosf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:81:(.text+0xd0ab): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:88:(.text+0xd110): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:89:(.text+0xd12d): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:90:(.text+0xd14a): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:94:(.text+0xd18b): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:95:(.text+0xd1aa): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:98:(.text+0xd1c9): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:99:(.text+0xd1eb): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:100:(.text+0xd20d): undefined reference to `DrawLineV'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/lab.h:101: more undefined references to `DrawLineV' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `DrawCharacter':
+/home/dacanizares/source/raylib-examples-c/src/lab.h:110:(.text+0xd2cc): undefined reference to `DrawCircleV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:111:(.text+0xd2ea): undefined reference to `DrawCircleV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:112:(.text+0xd308): undefined reference to `DrawCircleV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:113:(.text+0xd326): undefined reference to `DrawCircleV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:114:(.text+0xd344): undefined reference to `DrawCircleV'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o:/home/dacanizares/source/raylib-examples-c/src/lab.h:115: more undefined references to `DrawCircleV' follow
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `GenerateVoronoiTexture':
+/home/dacanizares/source/raylib-examples-c/src/lab.h:137:(.text+0xd443): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:137:(.text+0xd465): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:139:(.text+0xd4a0): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:142:(.text+0xd505): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:143:(.text+0xd52d): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:148:(.text+0xd59b): undefined reference to `LoadRenderTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:151:(.text+0xd5e8): undefined reference to `BeginTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:152:(.text+0xd60e): undefined reference to `ClearBackground'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:166:(.text+0xd688): undefined reference to `Vector2Distance'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:175:(.text+0xd6cf): undefined reference to `DrawPixel'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:179:(.text+0xd6fa): undefined reference to `EndTextureMode'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `DrawRain':
+/home/dacanizares/source/raylib-examples-c/src/lab.h:204:(.text+0xd773): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:204:(.text+0xd78f): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:206:(.text+0xd7c7): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:207:(.text+0xd804): undefined reference to `cosf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:207:(.text+0xd82f): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:209:(.text+0xd85c): undefined reference to `GetRandomValue'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:221:(.text+0xd92c): undefined reference to `cosf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:221:(.text+0xd957): undefined reference to `sinf'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:223:(.text+0xd99d): undefined reference to `Vector2Scale'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:223:(.text+0xd9c4): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:234:(.text+0xdb14): undefined reference to `Vector2Scale'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:234:(.text+0xdb35): undefined reference to `Vector2Add'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/lab.h:235:(.text+0xdb64): undefined reference to `DrawLineV'
+/usr/bin/ld: CMakeFiles/abstractica.dir/src/main.c.o: in function `main':
+/home/dacanizares/source/raylib-examples-c/src/main.c:38:(.text+0xdc75): undefined reference to `GetWorkingDirectory'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:38:(.text+0xdc9c): undefined reference to `TextFormat'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:38:(.text+0xdcae): undefined reference to `InitWindow'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:39:(.text+0xdcb8): undefined reference to `SetTargetFPS'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:44:(.text+0xdcd1): undefined reference to `GetMonitorWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:44:(.text+0xdceb): undefined reference to `GetMonitorHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:45:(.text+0xdd16): undefined reference to `SetWindowMaxSize'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:48:(.text+0xdd1b): undefined reference to `ToggleFullscreen'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:51:(.text+0xdd20): undefined reference to `MaximizeWindow'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:54:(.text+0xdd25): undefined reference to `HideCursor'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:81:(.text+0xe197): undefined reference to `LoadRenderTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:82:(.text+0xe1ca): undefined reference to `SetTextureFilter'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:84:(.text+0xe1d8): undefined reference to `SetTargetFPS'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:96:(.text+0xe244): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:104:(.text+0xe294): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:105:(.text+0xe2a9): undefined reference to `GetScreenHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:110:(.text+0xe30b): undefined reference to `BeginTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:112:(.text+0xe345): undefined reference to `ClearBackground'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:127:(.text+0xe46b): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:129:(.text+0xe4c5): undefined reference to `EndTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:143:(.text+0xe696): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:144:(.text+0xe6d4): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:148:(.text+0xe71e): undefined reference to `GetMouseWheelMove'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:154:(.text+0xe796): undefined reference to `IsKeyPressed'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:155:(.text+0xe7bb): undefined reference to `IsKeyDown'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:156:(.text+0xe7cc): undefined reference to `IsKeyDown'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:157:(.text+0xe7dd): undefined reference to `IsKeyDown'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:158:(.text+0xe7ee): undefined reference to `IsKeyDown'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:167:(.text+0xe8b2): undefined reference to `GetFrameTime'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:185:(.text+0xe9d3): undefined reference to `BeginTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:186:(.text+0xea00): undefined reference to `ClearBackground'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:189:(.text+0xea2a): undefined reference to `BeginMode2D'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:210:(.text+0xecb2): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:211:(.text+0xecf5): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:212:(.text+0xed38): undefined reference to `DrawLineV'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:223:(.text+0xede6): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:224:(.text+0xee23): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:226:(.text+0xeea5): undefined reference to `DrawRing'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:229:(.text+0xeeed): undefined reference to `EndMode2D'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:230:(.text+0xeef2): undefined reference to `EndTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:236:(.text+0xef05): undefined reference to `GetScreenHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:236:(.text+0xef24): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:236:(.text+0xef54): undefined reference to `LoadRenderTexture'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:238:(.text+0xeff5): undefined reference to `BeginTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:239:(.text+0xf022): undefined reference to `ClearBackground'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:240:(.text+0xf05c): undefined reference to `ColorAlpha'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:241:(.text+0xf080): undefined reference to `EndTextureMode'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:244:(.text+0xf085): undefined reference to `BeginDrawing'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:245:(.text+0xf0ae): undefined reference to `ClearBackground'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:249:(.text+0xf17b): undefined reference to `DrawTextureRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:256:(.text+0xf184): undefined reference to `GetScreenWidth'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:257:(.text+0xf1b7): undefined reference to `GetScreenHeight'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:260:(.text+0xf272): undefined reference to `BeginMode2D'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:305:(.text+0xf27b): undefined reference to `EndMode2D'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:316:(.text+0xf37f): undefined reference to `DrawTextureRec'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:321:(.text+0xf39c): undefined reference to `EndDrawing'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:85:(.text+0xf3a1): undefined reference to `WindowShouldClose'
+/usr/bin/ld: /home/dacanizares/source/raylib-examples-c/src/main.c:324:(.text+0xf3b1): undefined reference to `CloseWindow'
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.

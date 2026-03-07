@@ -14,7 +14,7 @@ GUI_Window      GUI_MakeEmptyWindow(void);
 //   SEE _controls.h > WINDOW
 
 // > WINDOW RUNTIME
-void            GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
+
 void            GUI_CleanAndPrepareZIndex();
 void            GUI_UpdateAndDrawWindows(Rectangle limits);
 Rectangle       GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font);
@@ -161,14 +161,14 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
     // UPDATE WINDOW TARGET ID
     // Check collisions to determine current window_target_id (not only z-index priority but actual collision for this frame
     // you can be pointing to a 2nd window with a lower z-index priority.
-    GUI_CTX.temp->window_target_id = 0;
+    GUI_CTX.temp->window_target_id = GUI_NO_WIN;
     // If overlay is displayed then force window_target_id
     // This allows clicking on the overlay when its in front of other window(s).
-    if (GUI_CTX.temp->overlay.window_target_id != 0) {
+    if (GUI_CTX.temp->overlay.window_target_id != GUI_NO_WIN) {
         GUI_CTX.temp->window_target_id = GUI_CTX.temp->overlay.window_target_id;
     }
     // Normal windows
-    if (GUI_CTX.temp->window_target_id == 0) {
+    if (GUI_CTX.temp->window_target_id == GUI_NO_WIN) {
         for (int j = 0; j < GUI_MAX_OPEN_WINS; ++j) {
             int id = state->z_index[j];
             if (id == 0) continue;
@@ -191,7 +191,7 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
             GUI_Window* window = &state->window_s[i];
             if (window->id != id) continue;
 
-            GUI_UpdateAndDrawWindow(window, limits);
+            GUI_ProcessWindow(window, limits);
             window->contents(window);
         }
     }
@@ -231,7 +231,8 @@ void GUI_EndWindowContents(GUI_Window* window)
     // Stored grid height
     window->content_height = GUI_CTX.temp->grid.used_height;
     // Reset temp values
-    GUI_CTX.temp->grid = GUI_MakeGrid();
+    GUI_CTX.temp->grid              = GUI_MakeGrid();
+    GUI_CTX.temp->window_target_id  = GUI_NO_WIN;
 
     // Finish draw instructions
     GUI_AfterWindowContents();
