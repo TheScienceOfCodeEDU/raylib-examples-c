@@ -511,13 +511,14 @@ bool GUI_ButtonMenu(
     Rectangle shape, const char* text_id, Texture2D* icon,
     GUI_ThemeColors colors, void (*draw_function)(void))
 {
+    int current_window_id   = GUI_CTX.temp->grid.current_window_idx;
     bool scrolled           = GetMouseWheelMove() != 0;
     bool is_open            = GUI_OverlayIsOpenBy(text_id);
     bool just_interacted    = GUI_Button(shape, text_id, icon, colors);
     if (just_interacted) {
         // Open it
         if (is_open == false) {
-            GUI_OverlayOpenFor(text_id);
+            GUI_OverlayOpenFor(text_id, current_window_id);
         // Close it
         } else {
             GUI_OverlayClose();

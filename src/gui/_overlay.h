@@ -12,7 +12,7 @@ void            GUI_DrawOverlay();
 bool            GUI_OverlayIsOpenBy(const char* text_id_owner);
 bool            GUI_OverlayWasJustEnabled();
 void            GUI_OverlayClose();
-void            GUI_OverlayOpenFor(const char* id);
+void            GUI_OverlayOpenFor(const char* id, int window_target_id);
 void            GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void));
 void            GUI_OverlaySetFinalShape(Rectangle shape);
 GUI_ThemeColors GUI_BeginOverlay();
@@ -60,11 +60,11 @@ void GUI_OverlayClose()
     GUI_CTX.temp->overlay = GUI_MakeOverlay();
 }
 
-void GUI_OverlayOpenFor(const char* id)
+void GUI_OverlayOpenFor(const char* id, int window_target_id)
 {
     Assert(id != NULL);
     GUI_CTX.temp->overlay.id_ptr            = id;
-    GUI_CTX.temp->overlay.window_target_id  = GUI_CTX.temp->window_target_id;
+    GUI_CTX.temp->overlay.window_target_id  = window_target_id;
 }
 
 void GUI_OverlaySetDrawCall(bool just_enabled, void (*draw_function)(void))

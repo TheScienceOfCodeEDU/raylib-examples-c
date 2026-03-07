@@ -184,7 +184,7 @@ typedef struct {
 
     // Window that is being processed right now
     // This is NOT the active window focused by the player.
-    int             current_window_idx;       // Current window being drawn
+    int             current_window_idx;       // Current window being drawn TODO@dc: REVIEW AGAINST TARGET_ID
     Rectangle       current_window_workspace; // Current window workspace
     bool            force_overflow;
 } GUI_GridTemp;
