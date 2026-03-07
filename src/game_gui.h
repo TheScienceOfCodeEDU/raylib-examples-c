@@ -97,18 +97,18 @@ void WIN_Window(GUI_Window* window)
         GUI_GridDuplicate();
         // 1st input (textbox)
         GUI_Text(GUI_GridNextX(), "Text", colors);
-        GUI_Input(GUI_GridNextXn(2), win_state->input_contents, EGUI_Input_Text, colors);
+        GUI_Input(GUI_GridNextXn(2), win_state->input_contents, (int)sizeof(win_state->input_contents), EGUI_Input_Text, colors);
 
         // 2nd input for integer
         // TODO@dc: add min, max and parsing
         GUI_GridDuplicate();
         GUI_Text(GUI_GridNextX(), "Int", colors);
-        GUI_Input(GUI_GridNextXn(2), win_state->input_int_contents, EGUI_Input_Int, colors);
+        GUI_Input(GUI_GridNextXn(2), win_state->input_int_contents, (int)sizeof(win_state->input_int_contents), EGUI_Input_Int, colors);
 
         // 3rd input for float
         GUI_GridDuplicate();
         GUI_Text(GUI_GridNextX(), "Float", colors);
-        GUI_Input(GUI_GridNextXn(2), win_state->input_float_contents, EGUI_Input_Float, colors);
+        GUI_Input(GUI_GridNextXn(2), win_state->input_float_contents, (int)sizeof(win_state->input_float_contents), EGUI_Input_Float, colors);
 
         // Wallpaper check (checkbox/switch)
         // With a theme.red color
@@ -338,4 +338,3 @@ void WIN_Winman(GUI_Window* window)
         GUI_Image(image, (Rectangle){ next.x, next.y, next.width, 320 });
     GUI_EndWindowContents(window);
 }
-
