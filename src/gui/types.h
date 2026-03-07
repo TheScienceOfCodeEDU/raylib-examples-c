@@ -210,6 +210,7 @@ typedef struct {
     EGUI_Status      status;
     void             *control_focus_ptr;            // Keeps track between frames if there is a focused control
     EGUI_Font        current_font;
+    GUI_ThemeColors  current_theme_colors;
 
     // Submodules
     GUI_GridTemp    grid;

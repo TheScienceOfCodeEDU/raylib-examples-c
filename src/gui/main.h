@@ -13,25 +13,22 @@
 //   INDEX
 
 // > CONTEXT
-GUI_State   GUI_MakeStateDefault(Vector2 screen_max);
-GUI_Temp    GUI_MakeTempDefault();
-void        GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
-GUI_State*  GUI_GetState();
-GUI_Setup*  GUI_GetSetup();
-// > FONT
-EGUI_Font   GUI_GetFont();
-void        GUI_SetFontType(EGUI_Font font);
-float       GUI_CalcDefaultHeightScaled(EGUI_Font font);
+GUI_State       GUI_MakeStateDefault(Vector2 screen_max);
+GUI_Temp        GUI_MakeTempDefault();
+void            GUI_SetContext(GUI_State* state, GUI_Setup* setup, GUI_Temp* temp);
+GUI_State*      GUI_GetState();
+GUI_Setup*      GUI_GetSetup();
 // > WINDOW RUNTIME EVENTS
-void        GUI_ProcessWindow(GUI_Window* window, Rectangle limits);
-void        GUI_AfterWindowContents();
+void            GUI_ProcessWindow(GUI_Window* window, Rectangle limits);
+void            GUI_AfterWindowContents();
 // > CURSOR
-bool        GUI_IsCursorOverGui();
-bool        GUI_IsCurrentWindowTarget(int window_id);
-bool        GUI_IsCursorOverOverlay();
+bool            GUI_IsCursorOverGui();
+bool            GUI_IsCurrentWindowTarget(int window_id);
+bool            GUI_IsCursorOverOverlay();
 // > FRAME PIPELINE
-void        GUI_BeginDraw(EGUI_Cursor cursor_style);
-void        GUI_EndDraw();
+void            GUI_BeginDraw(EGUI_Cursor cursor_style);
+void            GUI_ResetStyleDefaults();
+void            GUI_EndDraw();
 
 // > SUBMODULES
 #include "_grid.h"
@@ -70,6 +67,7 @@ GUI_Temp GUI_MakeTempDefault()
         .status                     = EGUI_Status_Off,
         .control_focus_ptr          = NULL,
         .current_font               = EGUI_Font_Default,
+        .current_theme_colors       = (GUI_ThemeColors) { 0 },
         .grid                       = GUI_MakeGrid(),
         .overlay                    = GUI_MakeOverlay(),
         .cursor                     = EGUI_Cursor_Default,
@@ -111,27 +109,6 @@ GUI_Setup* GUI_GetSetup()
     return GUI_CTX.setup;
 }
 
-// > FONT
-EGUI_Font GUI_GetFont()
-{
-    EGUI_Font font = GUI_CTX.temp->current_font;
-    return font;
-}
-
-void GUI_SetFontType(EGUI_Font font)
-{
-    GUI_CTX.temp->current_font = font;
-}
-
-float GUI_CalcDefaultHeightScaled(EGUI_Font font)
-{
-    GUI_Setup* setup = GUI_CTX.setup;
-    GUI_State* state = GUI_CTX.state;
-    return setup->fonts[font].default_height * state->scale;
-}
-// < END FONT
-
-
 // > WINDOW RUNTIME EVENTS
 void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
 {
@@ -147,8 +124,8 @@ void GUI_AfterWindowContents()
 }
 // < WINDOW RUNTIME EVENTS
 
+// > CURSOR
 // GUI_IsCursorOverGui() is meant to be called after EndDraw
-// If you need it internally, it means that you're creating and internal component so you could use GUI_CTX.temp->cursor_over_gui
 bool GUI_IsCursorOverGui()
 {
     Assert(GUI_CTX.temp->status == EGUI_Status_Ready);
@@ -171,11 +148,9 @@ bool GUI_IsCursorOverOverlay()
     bool is_cursor_over = CheckCollisionPointRec(cursor, shape);
     return is_cursor_over;
 }
-// < CONTEXT
+// < CURSOR
 
-// > FRAME
-//   PIPELINE
-
+// > FRAME PIPELINE
 void GUI_BeginDraw(EGUI_Cursor cursor_style)
 {
     Assert(GUI_CTX.temp->status == EGUI_Status_Ready);
@@ -188,9 +163,13 @@ void GUI_BeginDraw(EGUI_Cursor cursor_style)
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         GUI_CTX.temp->control_focus_ptr = NULL;
     }
+}
 
-    GUI_CTX.temp->grid = GUI_MakeGrid();
-    GUI_CTX.temp->current_font = EGUI_Font_Default;
+void GUI_ResetStyleDefaults()
+{
+    GUI_GridReset(GetScreenRect());
+    GUI_SetFont(EGUI_Font_Default);
+    GUI_SetThemeColors(GUI_GetTheme().abstractica);
 }
 
 void GUI_EndDraw()
@@ -202,4 +181,5 @@ void GUI_EndDraw()
     GUI_CTX.temp->status = EGUI_Status_Ready;
 }
 // < FRAME PIPELINE
+
 #endif

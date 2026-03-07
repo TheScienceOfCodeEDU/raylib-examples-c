@@ -137,7 +137,7 @@ void GUI_GridFor(float columns, Rectangle window_workspace, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
     GUI_GridForXY(window_workspace.width / columns, default_height);
-    GUI_SetFontType(font);
+    GUI_SetFont(font);
 }
 
 void GUI_GridForDuplicate()
@@ -253,8 +253,8 @@ Rectangle GUI_GridAvailable(Rectangle workspace)
 
 void GUI_GridReset(Rectangle workspace)
 {
-    GUI_CTX.temp->grid = GUI_MakeGrid();
-    GUI_CTX.temp->grid.current_workspace      = workspace;
+    GUI_CTX.temp->grid                      = GUI_MakeGrid();
+    GUI_CTX.temp->grid.current_workspace    = workspace;
 }
 
 void GUI_GridAutoJump()

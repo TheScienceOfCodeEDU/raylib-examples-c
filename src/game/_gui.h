@@ -23,24 +23,23 @@ void WIN_Winman(GUI_Window* window);
 
 void GUI_ProgramMenu()
 {
+    int x = -1;
     GUI_Icons *icons        = GUI_GetIcons();
-    GUI_ThemeColors colors =
+    GUI_ThemeColors colors  = GUI_GetTheme().gray;
     GUI_BeginOverlay();
-    //  GUI_Button(GUI_GridAt(-1, 0),      "Project [X]",  NULL,           theme->red);
-    GUI_Button(GUI_GridAt(-1,1),       "New",          &icons->New,    colors);
-    GUI_Button(GUI_GridAt(-1,2),       "Open",         &icons->Open,   colors);
-    if (GUI_Button(GUI_GridAt(-1,3),   "Quit",         &icons->New,    colors))
+    GUI_Button(GUI_GridAt(x,1),       "New",          &icons->New,    colors);
+    GUI_Button(GUI_GridAt(x,2),       "Open",         &icons->Open,   colors);
+    if (GUI_Button(GUI_GridAt(x,3),   "Quit",         &icons->New,    colors))
         exit(0);
 
-    GUI_EndOverlay(GUI_GridBetween(-1, 1, -1, 3));
+    GUI_EndOverlay(GUI_GridBetween(x, 1, x, 3));
 }
 
 void GUI_GameMenu()
 {
     GUI_Icons *icons        = GUI_GetIcons();
     PLAYER_Actions *actions = &GAME_CTX.temp->player_actions;
-
-    GUI_ThemeColors colors =
+    GUI_ThemeColors colors  = GUI_GetThemeColors();
     GUI_BeginOverlay();
     //GUI_Button(GUI_GridAt(-1, 0), "Game [X]", &icons->Dog, theme->gray);
     actions->reset_characters    = GUI_Button(GUI_GridAt(-1,1), "Reset",    &icons->New,    colors);
@@ -51,15 +50,14 @@ void GUI_GameMenu()
 
 void GUI_TopBar(Rectangle shape)
 {
-    GUI_Setup *setup    = GUI_GetSetup();
     GUI_Icons *icons    = GUI_GetIcons();
-    GUI_Theme *theme    = &setup->theme;
+    GUI_Theme theme     = GUI_GetTheme();
     const int BUTTONS   = 4;
 
     GUI_GridFor(BUTTONS, shape, EGUI_Font_GUI);
-    GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,           theme->red,    GUI_ProgramMenu);
-    GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,    theme->gray,   GUI_GameMenu);
-    GUI_ButtonMenu(GUI_GridNextX(), "Other",        &icons->Dog,   theme->abstractica,   GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,          theme.red,          GUI_ProgramMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,   theme.abstractica,  GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Other",       &icons->Dog,   theme.abstractica,  GUI_GameMenu);
 }
 
 //

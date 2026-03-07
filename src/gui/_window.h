@@ -199,18 +199,19 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
 Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font)
 {
     // Grant min dimensions
-    Rectangle min_size      =   GUI_MIN_WIN_RECT;
+    Rectangle min_size      = GUI_MIN_WIN_RECT;
     window->shape.width     = FloatMax(min_size.width, window->shape.width);
     window->shape.height    = FloatMax(min_size.height, window->shape.height);
 
     // Data
     Rectangle window_workspace      = GUI_GetWindowWorkspace(window);
     GUI_CTX.temp->window_current_id = window->id;
-    GUI_SetFontType(font);
+    GUI_SetFont(font);
+    GUI_SetThemeColors(window->colors);
 
     // Grid
     GUI_GridReset(window_workspace);
-    GUI_CTX.temp->grid.current_scroll            = -window->scroll_offset;
+    GUI_CTX.temp->grid.current_scroll = -window->scroll_offset;
 
     // Vertical scroll
     rlPushMatrix();
@@ -233,8 +234,7 @@ void GUI_EndWindowContents(GUI_Window* window)
     GUI_CTX.temp->window_current_id = GUI_NO_WIN;
     rlPopMatrix();
 
-    // Grid
-    GUI_GridReset(GetScreenRect());
+    GUI_ResetStyleDefaults();
 }
 // < END WINDOW RUNTIME
 
@@ -367,7 +367,7 @@ void GUI_WindowUpdateShapeForContent(GUI_Window *window)
 
 Rectangle GUI_GetWorkspaceFor(int window_id)
 {
-    Assert(window_id > 0);
+    Assert(window_id > GUI_NO_WIN);
     GUI_Window *window = GUI_GetWindow(window_id);
     if (window == NULL)
         return (Rectangle){ 0, 0, 0, 0};
