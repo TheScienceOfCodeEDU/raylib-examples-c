@@ -59,7 +59,7 @@ void GUI_TopBar(Rectangle shape)
     const int BUTTONS   = 4;
 
     GUI_GridReset(GUI_MakeWorkspace());
-    GUI_GridCols(BUTTONS, shape, EGUI_Font_GUI);
+    GUI_GridForCols(BUTTONS, shape, EGUI_Font_GUI);
     GUI_ButtonMenu(GUI_GridNextX(), "Project",     NULL,           theme->red,    GUI_ProgramMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,    theme->gray,   GUI_GameMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Other",        &icons->Dog,   theme->abstractica,   GUI_GameMenu);
@@ -89,7 +89,7 @@ void WIN_Window(GUI_Window* window)
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font);
         // A default layout with 3 columns
-        GUI_GridCols(3, window_workspace, font);
+        GUI_GridForCols(3, window_workspace, font);
 
         GUI_GridNextX();
         GUI_ButtonMenu(GUI_GridNextX(), "Game 2",    &icons->Dog,    theme.abstractica, GUI_GameMenu);
@@ -185,7 +185,7 @@ void WIN_CharacterDebug(GUI_Window* window)
     EGUI_Font font     = EGUI_Font_Default;
 
     Rectangle workspace = GUI_BeginWindowContents(window, font);
-        GUI_GridCols(2, workspace, font);
+        GUI_GridForCols(2, workspace, font);
 
         // Shape
         GUI_Text(GUI_GridNextX(), "shape.x", colors);
@@ -235,7 +235,7 @@ void WIN_Settings(GUI_Window* window)
 
     Rectangle window_workspace  =
     GUI_BeginWindowContents(window, font);
-        GUI_GridCols(3, window_workspace, font);
+        GUI_GridForCols(3, window_workspace, font);
         GUI_Text(GUI_GridNextX(), "Scale", colors);
         GUI_Float(GUI_GridNextXn(2), &state->scale, colors, 0.5f, 6.0f);
 

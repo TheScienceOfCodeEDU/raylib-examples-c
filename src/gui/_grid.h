@@ -10,27 +10,26 @@
 GUI_GridTemp    GUI_MakeGrid();
 float           GUI_GridHeightOrDefault();
 float           GUI_GridWidthOrDefault();
-
+Rectangle       GUI_GridRelative(Rectangle shape);
+Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
+// > IN PLACE QUERIES
 Rectangle       GUI_GridAt(int x, int y);
 Rectangle       GUI_GridBetween(int x, int y, int x_end, int Y_end);
-
-void            GUI_GridHorizontal(float horizontal_size);
-void            GUI_GridVertical(float size);
-void            GUI_GridSize(float width, float height);
-void            GUI_GridCols(float cols, Rectangle window_workspace, EGUI_Font font);
+// > GRID STARTERS
+void            GUI_GridForX(float x_size);
+void            GUI_GridForY(float y_size);
+void            GUI_GridFor(float x, float y);
+void            GUI_GridForCols(float cols, Rectangle window_workspace, EGUI_Font font);
 void            GUI_GridDuplicate();
-
+// > CONSUMABLES
 Rectangle       GUI_GridNextX();
 Rectangle       GUI_GridNextY();
 Rectangle       GUI_GridNextXn(int n);
 Rectangle       GUI_GridNextYn(int n);
-
+// > INFO
 Rectangle       GUI_GridAvailable(Rectangle workspace);
 void            GUI_GridReset(Rectangle workspace);
 void            GUI_GridAutoJump();
-
-Rectangle       GUI_GridRelative(Rectangle shape);
-Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -50,18 +49,6 @@ GUI_GridTemp GUI_MakeGrid()
     return grid;
 }
 
-void GUI_GridHorizontal(float size)
-{
-    GUI_CTX.temp->grid.horizontal_count = 0;
-    GUI_CTX.temp->grid.horizontal_size  = size;
-}
-
-void GUI_GridVertical(float size)
-{
-    GUI_CTX.temp->grid.vertical_count = 0;
-    GUI_CTX.temp->grid.vertical_size  = size;
-}
-
 float GUI_GridHeightOrDefault()
 {
     return GUI_CTX.temp->grid.vertical_size != DEFAULT_SIZE ? GUI_CTX.temp->grid.vertical_size
@@ -72,6 +59,37 @@ float GUI_GridWidthOrDefault()
 {
     return GUI_CTX.temp->grid.horizontal_size != DEFAULT_SIZE ? GUI_CTX.temp->grid.horizontal_size
                                                               : (float)GetScreenWidth();
+}
+
+Rectangle GUI_GridRelative(Rectangle shape)
+{
+    bool is_active_grid = GUI_CTX.temp->grid.current_workspace.width  > 0 &&
+                            GUI_CTX.temp->grid.current_workspace.height > 0;
+    if (is_active_grid) {
+        shape = RelativeToRect(shape, GUI_CTX.temp->grid.current_workspace);
+    }
+    return shape;
+}
+
+Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
+{
+    Rectangle shape_relative    = GUI_GridRelative(shape);
+    // Keep dimensions
+    shape_relative.width        = shape.width;
+    shape_relative.height       = shape.height;
+    return shape_relative;
+}
+
+void GUI_GridHorizontal(float size)
+{
+    GUI_CTX.temp->grid.horizontal_count = 0;
+    GUI_CTX.temp->grid.horizontal_size  = size;
+}
+
+void GUI_GridForY(float y_size)
+{
+    GUI_CTX.temp->grid.vertical_count = 0;
+    GUI_CTX.temp->grid.vertical_size  = y_size;
 }
 
 Rectangle GUI_GridAt(int x, int y)
@@ -206,22 +224,22 @@ void GUI_GridSize(float width, float height)
 
     // Vertical
     if (height > 0.0) {
-        GUI_GridVertical(height);
+        GUI_GridForY(height);
     } else if (height < 0.0) {
         // height is already negative
         // so this takes available space minus height
         float available  = GUI_CTX.temp->grid.current_workspace.height + height;
         if (available > 0) {
-            GUI_GridVertical(available);
+            GUI_GridForY(available);
         } else {
-            GUI_GridVertical(height * -1);
+            GUI_GridForY(height * -1);
         }
     } else {
-        GUI_GridVertical(GUI_CTX.temp->grid.current_workspace.height);
+        GUI_GridForY(GUI_CTX.temp->grid.current_workspace.height);
     }
 }
 
-void GUI_GridCols(float cols, Rectangle window_workspace, EGUI_Font font)
+void GUI_GridForCols(float cols, Rectangle window_workspace, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
     GUI_GridSize(window_workspace.width / cols, default_height);
@@ -231,24 +249,5 @@ void GUI_GridCols(float cols, Rectangle window_workspace, EGUI_Font font)
 void GUI_GridDuplicate()
 {
     GUI_GridSize(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size);
-}
-
-Rectangle GUI_GridRelative(Rectangle shape)
-{
-    bool is_active_grid = GUI_CTX.temp->grid.current_workspace.width  > 0 &&
-                            GUI_CTX.temp->grid.current_workspace.height > 0;
-    if (is_active_grid) {
-        shape = RelativeToRect(shape, GUI_CTX.temp->grid.current_workspace);
-    }
-    return shape;
-}
-
-Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
-{
-    Rectangle shape_relative    = GUI_GridRelative(shape);
-    // Keep dimensions
-    shape_relative.width        = shape.width;
-    shape_relative.height       = shape.height;
-    return shape_relative;
 }
 #endif
