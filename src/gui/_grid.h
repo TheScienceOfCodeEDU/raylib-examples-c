@@ -120,14 +120,14 @@ Rectangle GUI_GridNextY()
 }
 
 
-Rectangle GUI_GridNextXn(int quantity)
+Rectangle GUI_GridNextXn(int n)
 {
-    Assert(quantity > 1);
+    Assert(n > 1);
 
     // Push value for next element
     Rectangle first = GUI_GridNextX();
     Rectangle last = {0};
-    for (int i = 1; i < quantity; ++i) {
+    for (int i = 1; i < n; ++i) {
         last = GUI_GridNextX();
     }
 
@@ -140,14 +140,14 @@ Rectangle GUI_GridNextXn(int quantity)
     return result;
 }
 
-Rectangle GUI_GridNextYn(int quantity)
+Rectangle GUI_GridNextYn(int n)
 {
-    Assert(quantity > 1);
+    Assert(n > 1);
 
     // Push value for next element
     Rectangle first = GUI_GridNextY();
     Rectangle last = {0};
-    for (int i = 1; i < quantity; ++i) {
+    for (int i = 1; i < n; ++i) {
         last = GUI_GridNextY();
     }
 
