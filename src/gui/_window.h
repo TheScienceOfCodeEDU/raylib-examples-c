@@ -38,6 +38,8 @@ Rectangle       GUI_GetWindowWorkspace(GUI_Window *window);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
+
+// > CONSTRUCTORS
 Rectangle GUI_MakeWorkspace()
 {
     Rectangle workspace = {
@@ -62,8 +64,9 @@ GUI_Window GUI_MakeEmptyWindow(void)
     };
     return window;
 }
+// < END CONSTRUCTORS
 
-// > WINDOW
+// > WINDOW RUNTIME
 void GUI_CleanAndPrepareZIndex()
 {
     GUI_State* state = GUI_CTX.state;
@@ -233,10 +236,9 @@ void GUI_EndWindowContents(GUI_Window* window)
     // Grid
     GUI_GridReset(GetScreenRect());
 }
+// < END WINDOW RUNTIME
 
-// > WINDOW
-//   MODEL & GEOMETRY
-
+// > WINDOW STATE
 GUI_Window* GUI_GetWindow(int id)
 {
     if (id == GUI_NO_WIN) {
@@ -299,13 +301,9 @@ void GUI_RemoveWindow(int id)
         }
     }
 }
+// < END WINDOW STATE
 
-
-
-// > WINDOW
-//   MODEL & GEOMETRY
-//   STABILITY: 90%
-//   NOTES: Nothing here
+// > WINDOW GEOMETRY
 Rectangle GUI_GetWindowTitle(Rectangle shape)
 {
     float border    = GUI_GetFontSetup(EGUI_Font_GUI)->border;
@@ -398,4 +396,5 @@ Rectangle GUI_GetWindowWorkspace(GUI_Window *window)
     }
     return shape_workspace;
 }
+// < END WINDOW GEOMETRY
 #endif
