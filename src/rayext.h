@@ -214,6 +214,15 @@ Rectangle RectFromVector2(Vector2 position, float w, float h)
     return result;
 }
 
+Vector2 RectPosition(Rectangle rect)
+{
+    Vector2 result = {
+        .x = rect.x,
+        .y = rect.y,
+    };
+    return result;
+}
+
 static inline float SnapFloat(float x) { return floorf(x + 0.5f); }
 
 static inline Vector2 SnapVector2(Vector2 v) {

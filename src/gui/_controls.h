@@ -336,6 +336,7 @@ float GUI_DrawIcon(Rectangle shape, Texture2D* texture2d, Color tint)
 float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 {
     Assert(height > 0);
+    if (texture2d == NULL) return 0;
     Rectangle shape = RectFromVector2(position, height, height);
     return GUI_DrawIcon(shape, texture2d, tint);
 }

@@ -53,7 +53,7 @@ int main(void) {
     game_state  = GAME_MakeState();
     win_state   = GAME_MakeWindowState();
     game_temp   = GAME_MakeTemp();
-    Game_SetContext(&game_state, &win_state, &game_temp);
+    GAME_SetContext(&game_state, &win_state, &game_temp);
 
     // Game canvas
     RenderTexture2D game_canvas = LoadRenderTexture(GAME_RES_W, GAME_RES_H);
@@ -62,7 +62,7 @@ int main(void) {
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
         // RESET TEMP VALUES ONLY 1-FRAME
-        GAME_CTX.temp->player_actions   = PLAYER_MakeActions();
+        GAME_CTX.temp->player_actions   = GAME_MakeActions();
 
         //
         // UPDATE
@@ -114,7 +114,7 @@ int main(void) {
         camera->offset = (Vector2){ GAME_RES_HALF_W,  GAME_RES_HALF_H };
 
         // GUI Actions
-        PLAYER_Actions *player_actions = &GAME_CTX.temp->player_actions;
+        GAME_Actions *player_actions = &GAME_CTX.temp->player_actions;
         if (player_actions->reset_characters)   game_state = GAME_MakeState();
         if (player_actions->add_character)      GAME_AddCharacter();
         if (player_actions->toggle_character)   GAME_UpdateNextCharacter();

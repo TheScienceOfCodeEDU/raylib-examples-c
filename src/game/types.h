@@ -43,11 +43,11 @@ typedef struct {
     bool move_down;
     bool move_left;
     bool move_right;
-} PLAYER_Actions;
+} GAME_Actions;
 
-PLAYER_Actions PLAYER_MakeActions()
+GAME_Actions GAME_MakeActions()
 {
-    PLAYER_Actions actions = { 0 };
+    GAME_Actions actions = { 0 };
     return actions;
 }
 
@@ -110,7 +110,7 @@ GAME_WindowState GAME_MakeWindowState()
 }
 
 typedef struct {
-    PLAYER_Actions  player_actions;
+    GAME_Actions  player_actions;
 } GAME_Temp;
 
 GAME_Temp GAME_MakeTemp()
@@ -129,7 +129,7 @@ static struct {
     GAME_Temp           *temp;
 } GAME_CTX = { 0 };
 
-void Game_SetContext(GAME_State *state, GAME_WindowState *win_state, GAME_Temp *temp)
+void GAME_SetContext(GAME_State *state, GAME_WindowState *win_state, GAME_Temp *temp)
 {
     GAME_CTX.state      = state;
     GAME_CTX.win_state  = win_state;

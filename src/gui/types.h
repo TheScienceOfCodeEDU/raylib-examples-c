@@ -55,6 +55,7 @@ bool FocusOverridable(EGUI_Focus focus)
 // > TYPES
 //   SUBMODULE: SETUP
 typedef struct {
+    Texture2D None;
     Texture2D New;
     Texture2D Open;
     Texture2D Save;

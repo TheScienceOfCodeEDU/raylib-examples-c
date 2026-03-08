@@ -17,7 +17,7 @@ Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 void            GUI_GridForX(float w);
 void            GUI_GridForY(float h);
 void            GUI_GridForXY(float w, float h);
-void            GUI_GridFor(float columns, Rectangle window_workspace, EGUI_Font font);
+void            GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font);
 void            GUI_GridForDuplicate();
 // > IN PLACE QUERIES
 Rectangle       GUI_GridAt(int x, int y);
@@ -133,7 +133,7 @@ void GUI_GridForXY(float w, float h)
     }
 }
 
-void GUI_GridFor(float columns, Rectangle window_workspace, EGUI_Font font)
+void GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
     GUI_GridForXY(window_workspace.width / columns, default_height);

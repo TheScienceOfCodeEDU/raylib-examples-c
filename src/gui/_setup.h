@@ -268,6 +268,7 @@ void GUI_SetThemeColors(GUI_ThemeColors colors)
 GUI_Icons GUI_LoadIcons()
 {
     GUI_Icons icons = {
+        .None           = (Texture2D){0},
         .New            = LoadTexture("ico/new.png"),
         .Open           = LoadTexture("ico/open.png"),
         .Save           = LoadTexture("ico/save.png"),
