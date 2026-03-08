@@ -233,8 +233,6 @@ void GUI_EndWindowContents(GUI_Window* window)
     GUI_AfterWindowContents();
     GUI_CTX.temp->window_current_id = GUI_NO_WIN;
     rlPopMatrix();
-
-    GUI_ResetStyleDefaults();
 }
 // < END WINDOW RUNTIME
 

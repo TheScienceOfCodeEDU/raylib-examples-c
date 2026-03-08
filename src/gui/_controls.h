@@ -521,7 +521,7 @@ bool GUI_ButtonMenu(
             GUI_OverlayClose();
         } else {
             // Set overlay call
-            GUI_OverlaySetDrawCall(just_interacted, draw_function);
+            GUI_OverlaySetDrawCall(just_interacted, colors, draw_function);
         }
     }
 

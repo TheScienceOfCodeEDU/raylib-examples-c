@@ -25,7 +25,7 @@ void GUI_ProgramMenu()
 {
     int x = -1;
     GUI_Icons *icons        = GUI_GetIcons();
-    GUI_ThemeColors colors  = GUI_GetThemeColors();
+    GUI_ThemeColors colors  = GUI_OverlayColors();
     GUI_BeginOverlay();
     GUI_Button(GUI_GridAt(x,1),       "New",          &icons->New,    colors);
     GUI_Button(GUI_GridAt(x,2),       "Open",         &icons->Open,   colors);
@@ -38,8 +38,8 @@ void GUI_ProgramMenu()
 void GUI_GameMenu()
 {
     GUI_Icons *icons        = GUI_GetIcons();
-    GAME_Actions *actions = &GAME_CTX.temp->player_actions;
-    GUI_ThemeColors colors  = GUI_GetThemeColors();
+    GAME_Actions *actions   = &GAME_CTX.temp->player_actions;
+    GUI_ThemeColors colors  = GUI_OverlayColors();
     GUI_BeginOverlay();
     //GUI_Button(GUI_GridAt(-1, 0), "Game [X]", &icons->Dog, theme->gray);
     actions->reset_characters    = GUI_Button(GUI_GridAt(-1,1), "Reset",    &icons->New,    colors);
@@ -52,18 +52,18 @@ void GUI_TopBar(Rectangle shape)
 {
     GUI_Icons *icons    = GUI_GetIcons();
     GUI_Theme theme     = GUI_GetTheme();
+    Vector2 start       = RectPosition(GUI_GridAt(0,0));
     const int BUTTONS   = 4;
 
+    GUI_ResetStyleDefaults();
+    GUI_SetThemeColors(theme.red);
     GUI_GridFor(BUTTONS, shape, EGUI_Font_GUI);
-    Vector2 start_position    = RectPosition(GUI_GridAt(0,0));
     GUI_ButtonMenu(GUI_GridNextX(), "Project",     &icons->None,  theme.red,          GUI_ProgramMenu);
-    GUI_SetThemeColors(theme.red); GUI_DrawOverlay();
     GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,   theme.abstractica,  GUI_GameMenu);
-    GUI_SetThemeColors(theme.abstractica); GUI_DrawOverlay();
     GUI_ButtonMenu(GUI_GridNextX(), "Other",       &icons->Dog,   theme.gray,         GUI_GameMenu);
-    GUI_SetThemeColors(theme.gray); GUI_DrawOverlay();
 
-    GUI_Face(start_position, GUI_GridHeightOrDefault());
+    GUI_Face(start, GUI_GridHeightOrDefault());
+    GUI_DrawOverlay();
 }
 
 //

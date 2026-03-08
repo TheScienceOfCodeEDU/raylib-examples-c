@@ -169,7 +169,7 @@ void GUI_ResetStyleDefaults()
 {
     GUI_GridReset(GetScreenRect());
     GUI_SetFont(EGUI_Font_Default);
-    GUI_SetThemeColors(GUI_GetTheme().abstractica);
+    GUI_SetThemeColors(GUI_GetTheme().gray);
 }
 
 void GUI_EndDraw()
