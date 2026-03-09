@@ -2,16 +2,21 @@ imKairos
 
 - Fuentes: usar libreria para cargar fuentes TTF con alta calidad. Que VT323 se vea como aquí en un editor.
 
+- Scroll button menu -> botones mas abajo de lo q deberian
+- Consistency: todos los q permitan colores y fuentes deberian recibir param en la funcion. Usar global solo para obtener defaults desde afuera.
 - Textbox improvements
     - int y float
     - scroll contents           OK
     - copy/paste
     - jump between spaces
 - Limpieza:
-  - Overlay
-  - Grids
-  - Window
-  - Controls
+  - Overlay     OK
+    - Grids     OK
+    - Window    OK
+    - Controls  OK
+- THEME
+  - Revisar tema oscuro
+  - Revisar tema claro
 
 - Program menu
     - New

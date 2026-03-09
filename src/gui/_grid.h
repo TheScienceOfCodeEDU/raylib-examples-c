@@ -14,6 +14,7 @@ float           GUI_GridWidthOrDefault();
 Rectangle       GUI_GridRelative(Rectangle shape);
 Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 // > GRID STARTERS
+void            GUI_GridReset(Rectangle workspace);
 void            GUI_GridForX(float w);
 void            GUI_GridForY(float h);
 void            GUI_GridForXY(float w, float h);
@@ -27,10 +28,10 @@ Rectangle       GUI_GridNextX();
 Rectangle       GUI_GridNextY();
 Rectangle       GUI_GridNextXn(int n);
 Rectangle       GUI_GridNextYn(int n);
+void            GUI_GridAutoJump();
 // > INFO
 Rectangle       GUI_GridAvailable(Rectangle workspace);
-void            GUI_GridReset(Rectangle workspace);
-void            GUI_GridAutoJump();
+Rectangle       GUI_GridApplyScroll(Rectangle shape);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -84,6 +85,12 @@ Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
 // < END BASICS
 
 // > GRID STARTERS
+void GUI_GridReset(Rectangle workspace)
+{
+    GUI_CTX.temp->grid                      = GUI_MakeGrid();
+    GUI_CTX.temp->grid.current_workspace    = workspace;
+}
+
 void GUI_GridForX(float w)
 {
     GUI_CTX.temp->grid.horizontal_count = 0;
@@ -136,7 +143,7 @@ void GUI_GridForXY(float w, float h)
 void GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
-    GUI_GridForXY(window_workspace.width / columns, default_height);
+    GUI_GridForXY(window_workspace.width / (float)columns, default_height);
     GUI_SetFont(font);
 }
 
@@ -157,7 +164,7 @@ Rectangle GUI_GridAt(int x, int y)
         .width  = horizontal_size,
         .height = vertical_size
     };
-    return result;
+    return GUI_GridRelative(result);
 }
 
 Rectangle GUI_GridBetween(int x, int y, int x_end, int y_end)
@@ -231,6 +238,14 @@ Rectangle GUI_GridNextYn(int n)
     };
     return result;
 }
+
+void GUI_GridAutoJump()
+{
+    bool used_space = GUI_CTX.temp->grid.horizontal_count > 0 && GUI_CTX.temp->grid.vertical_count == 0;
+    if (used_space) {
+        GUI_GridNextY();
+    }
+}
 // < END CONSUMABLES
 
 // > INFO
@@ -251,18 +266,15 @@ Rectangle GUI_GridAvailable(Rectangle workspace)
     return result;
 }
 
-void GUI_GridReset(Rectangle workspace)
+Rectangle GUI_GridApplyScroll(Rectangle shape)
 {
-    GUI_CTX.temp->grid                      = GUI_MakeGrid();
-    GUI_CTX.temp->grid.current_workspace    = workspace;
-}
-
-void GUI_GridAutoJump()
-{
-    bool used_space = GUI_CTX.temp->grid.horizontal_count > 0 && GUI_CTX.temp->grid.vertical_count == 0;
-    if (used_space) {
-        GUI_GridNextY();
-    }
+    Rectangle result = (Rectangle){
+        .x      = shape.x,
+        .y      = shape.y /*- GUI_CTX.temp->grid.current_scroll*/,
+        .width  =  shape.width,
+        .height = shape.height
+    };
+    return result;
 }
 // < END INFO
 #endif

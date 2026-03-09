@@ -20,7 +20,7 @@ GUI_State*      GUI_GetState();
 GUI_Setup*      GUI_GetSetup();
 // > WINDOW RUNTIME EVENTS
 void            GUI_ProcessWindow(GUI_Window* window, Rectangle limits);
-void            GUI_AfterWindowContents();
+void            GUI_AfterWindowContents(GUI_Window* window);
 // > CURSOR
 bool            GUI_IsCursorOverGui();
 bool            GUI_IsCurrentWindowTarget(int window_id);
@@ -114,13 +114,37 @@ void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
 {
     Assert(window->id > 0);
     Assert(window->contents != NULL);
+    // Grant min dimensions
+    Rectangle min_size      = GUI_MIN_WIN_RECT;
+    window->shape.width     = FloatMax(min_size.width, window->shape.width);
+    window->shape.height    = FloatMax(min_size.height, window->shape.height);
 
+    // Data
     GUI_UpdateAndDrawWindow(window, limits);
+    GUI_GridReset(window->workspace);
+    GUI_CTX.temp->window_current_id = window->id;
+    GUI_SetFont(EGUI_Font_GUI);
+    GUI_SetThemeColors(window->colors);
+
+    // Grid
+    GUI_CTX.temp->grid.current_scroll = -window->scroll_offset;
+
+    // Vertical scroll
+    rlPushMatrix();
+    rlTranslatef(0, -window->scroll_offset, 0);
 }
 
-void GUI_AfterWindowContents()
+void GUI_AfterWindowContents(GUI_Window* window)
 {
+    // End window stuff
+    GUI_GridAutoJump();
+    // Vertical scroll
+    // Stored grid height
+    window->content_height = GUI_CTX.temp->grid.used_height;
+    rlPopMatrix();
+
     GUI_DrawOverlay();
+    GUI_CTX.temp->window_current_id = GUI_NO_WIN;
 }
 // < WINDOW RUNTIME EVENTS
 

@@ -296,6 +296,10 @@ int main(void) {
             // Finally, draw the pointer so it appears in the top of anything else
             GUI_DrawCursorTrail();
             GUI_DrawCursor();
+            #if DEV_DEBUG_GUI_STATE
+            if (GUI_IsCursorOverGui()) DrawText("Cursor over GUI", 0, topbar_height, 32, GREEN);
+            if (GUI_IsCursorOverOverlay()) DrawText("Cursor over OVERLAY", 0, topbar_height, 32, RED);
+            #endif
         EndDrawing();
     }
 

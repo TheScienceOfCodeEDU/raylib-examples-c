@@ -1,4 +1,5 @@
 #pragma once
+#include "_grid.h"
 #ifndef NON_EDITOR_BUILD
 #define IMPLEMENT_ALL   1
 #include "../common.h"
@@ -110,10 +111,9 @@ void GUI_EndOverlay(Rectangle final_shape)
     if (interacted && interactable) {
         GUI_OverlayClose();
     } else {
-        Rectangle relative_shape = GUI_GridRelativePositionOnly(final_shape);
-        GUI_OverlaySetFinalShape(relative_shape);
-    #if DEV_DEBUG_GUI == 1
-        DrawDebugRect(relative_shape, RED);
+        GUI_OverlaySetFinalShape(final_shape);
+    #if DEV_DEBUG_GUI_OVERLAY == 1
+        DrawDebugRect(GUI_GridApplyScroll(final_shape), BLUE);
     #endif
     }
     // End drawing

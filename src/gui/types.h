@@ -158,6 +158,7 @@ typedef struct GUI_Window {
     Texture2D       *icon;
     float           scroll_offset;
     bool            focused_face;
+    Rectangle       workspace;
     // Calc fields
     float           content_height; // Automatically stored by GUI_EndWindowContents. Calculated during grid processing.
     // Handlers

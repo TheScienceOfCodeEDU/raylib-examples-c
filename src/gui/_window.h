@@ -17,8 +17,6 @@ GUI_Window      GUI_MakeEmptyWindow(void);
 
 void            GUI_CleanAndPrepareZIndex();
 void            GUI_UpdateAndDrawWindows(Rectangle limits);
-Rectangle       GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font);
-void            GUI_EndWindowContents(GUI_Window* window);
 // > WINDOW STATE
 GUI_Window*     GUI_OpenWindow(
     int id, const char *title, GUI_ThemeColors colors,
@@ -34,7 +32,7 @@ Rectangle       GUI_GetWindowPanel(Rectangle shape);
 Rectangle       GUI_GetWindowBottom(Rectangle shape);
 void            GUI_WindowUpdateShapeForContent(GUI_Window *window);
 Rectangle       GUI_GetWorkspaceFor(int window_id);
-Rectangle       GUI_GetWindowWorkspace(GUI_Window *window);
+Rectangle       GUI_UpdateWindowWorkspace(GUI_Window *window);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -58,7 +56,7 @@ GUI_Window GUI_MakeEmptyWindow(void)
         .icon           = NULL,
         .scroll_offset  = 0.0f,
         .focused_face   = true,
-
+        .workspace      = (Rectangle) {0, 0, 0, 0},
         .content_height = 0.0f,
         .contents       = NULL,
     };
@@ -192,47 +190,9 @@ void GUI_UpdateAndDrawWindows(Rectangle limits)
 
             GUI_ProcessWindow(window, limits);
             window->contents(window);
+            GUI_AfterWindowContents(window);
         }
     }
-}
-
-Rectangle GUI_BeginWindowContents(GUI_Window* window, EGUI_Font font)
-{
-    // Grant min dimensions
-    Rectangle min_size      = GUI_MIN_WIN_RECT;
-    window->shape.width     = FloatMax(min_size.width, window->shape.width);
-    window->shape.height    = FloatMax(min_size.height, window->shape.height);
-
-    // Data
-    Rectangle window_workspace      = GUI_GetWindowWorkspace(window);
-    GUI_CTX.temp->window_current_id = window->id;
-    GUI_SetFont(font);
-    GUI_SetThemeColors(window->colors);
-
-    // Grid
-    GUI_GridReset(window_workspace);
-    GUI_CTX.temp->grid.current_scroll = -window->scroll_offset;
-
-    // Vertical scroll
-    rlPushMatrix();
-    rlTranslatef(0, -window->scroll_offset, 0);
-
-    return window_workspace;
-}
-
-void GUI_EndWindowContents(GUI_Window* window)
-{
-    // End window stuff
-    GUI_GridAutoJump();
-
-    // Vertical scroll
-    // Stored grid height
-    window->content_height = GUI_CTX.temp->grid.used_height;
-
-    // Finish draw instructions
-    GUI_AfterWindowContents();
-    GUI_CTX.temp->window_current_id = GUI_NO_WIN;
-    rlPopMatrix();
 }
 // < END WINDOW RUNTIME
 
@@ -369,10 +329,10 @@ Rectangle GUI_GetWorkspaceFor(int window_id)
     GUI_Window *window = GUI_GetWindow(window_id);
     if (window == NULL)
         return (Rectangle){ 0, 0, 0, 0};
-    return GUI_GetWindowWorkspace(window);
+    return window->workspace;
 }
 
-Rectangle GUI_GetWindowWorkspace(GUI_Window *window)
+Rectangle GUI_UpdateWindowWorkspace(GUI_Window *window)
 {
     Rectangle shape         = window->shape;
     float content_height    = window->content_height;

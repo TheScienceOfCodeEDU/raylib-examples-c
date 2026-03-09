@@ -131,7 +131,7 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
     // Vertical scroll data
     Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->grid.current_scroll };
     bool collide_scrolled       = CheckCollisionPointRec(cursor, MoveRect(shape, current_scroll));
-    bool collide_workspace      = CheckCollisionPointRec(cursor, GUI_GetWindowWorkspace(window));
+    bool collide_workspace      = CheckCollisionPointRec(cursor, window->workspace);
     bool overflow               = GUI_CTX.temp->grid.force_overflow;
 
     // Collide checks
@@ -143,7 +143,9 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
 
 bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 {
-    return GUI_CheckCollisionCursorControl(shape, GUI_GetWindow(GUI_CTX.temp->window_current_id));
+    GUI_Window *window  = GUI_GetWindow(GUI_CTX.temp->window_current_id);
+    bool collide        = GUI_CheckCollisionCursorControl(shape, window);
+    return collide;
 }
 
 
@@ -153,11 +155,11 @@ Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool i
 
     int window_id = GUI_CTX.temp->window_current_id;
     if (intersect_window && window_id != GUI_NO_WIN) {
-        Rectangle window_workspace  = GUI_GetWorkspaceFor(window_id);
-        Rectangle intersection      = RectIntersection(result, window_workspace);
+        GUI_Window *window          = GUI_GetWindow(window_id);
+        Rectangle intersection      = RectIntersection(result, window->workspace);
 #if DEV_DEBUG_GUI_SCROLL == 1
         if (GUI_CTX.temp->window_current_id == GUI_CTX.state->z_index[0]) {
-            GUI_DrawBorders(window_workspace, RED, RED, 1, false);
+            GUI_DrawBorders(window->workspace, RED, RED, 1, false);
             DrawDebugRect(result, ColorAlpha(GREEN, 0.1f));
             DrawDebugRect(intersection, ColorAlpha(ORANGE, 0.9f));
         }
@@ -177,7 +179,7 @@ void GUI_BeginControlScissor()
         if (window == NULL) {
             return;
         }
-        BeginScissorModeRect(GUI_GetWindowWorkspace(window));
+        BeginScissorModeRect(window->workspace);
     }
 }
 
@@ -344,16 +346,16 @@ float GUI_Icon(Texture2D* texture2d, Vector2 position, float height, Color tint)
 bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color tint)
 {
     Rectangle shape = RectFromVector2(position, height, height);
-    shape = GUI_GridRelative(shape);
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
     GUI_Theme *theme    = &GUI_CTX.setup->theme;
     float color_change  = theme->color_change;
 
     if (is_cursor_over)
-        GUI_Icon(texture2d, position, height, tint);
+        GUI_Icon(texture2d, position, height, WHITE);
     else
         GUI_Icon(texture2d, position, height, ColorBrightness(tint, -color_change));
+    DrawDebugRect(shape, GREEN);
     return is_active;
 }
 // < END ICONS
@@ -362,7 +364,7 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
 void GUI_Face(Vector2 position, float height)
 {
     Rectangle shape = { position.x, position.y, height, height };
-    shape = GUI_GridRelative(shape);
+
     position.x = shape.x;
     position.y = shape.y;
     Assert(height > 0);
@@ -411,7 +413,7 @@ void GUI_Face(Vector2 position, float height)
 
 void GUI_Image(Texture2D texture, Rectangle shape)
 {
-    shape = GUI_GridRelative(shape);
+
 
     if (texture.id == 0) return;
 
@@ -483,7 +485,7 @@ bool GUI_Button(
     GUI_ThemeColors colors)
 {
 
-    shape = GUI_GridRelative(shape);
+
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
     EGUI_Font font              = GUI_GetFont();
@@ -551,7 +553,7 @@ void GUI_DrawText(
 
 void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 {
-    shape = GUI_GridRelative(shape);
+
     GUI_DrawText(shape, text, colors, GUI_GetFont());
 }
 // < END TEXT
@@ -636,7 +638,7 @@ void GUI_Input(
     Assert(buffer_size > 0);
     int max_text_size = buffer_size - 1;
 
-    shape = GUI_GridRelative(shape);
+
     GUI_BASE_CONTROL_FOCUSED(buffer, shape)
 
     // Blink (text cursor)
@@ -797,7 +799,7 @@ void GUI_Input(
 void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max)
 {
     Rectangle shape_original = shape;
-    shape = GUI_GridRelative(shape);
+
 
     static char buf_default[256] = {0};
     static char buf_focused[256] = {0};
@@ -866,7 +868,7 @@ void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
     GUI_ThemeColors colors)
 {
-    shape = GUI_GridRelative(shape);
+
     GUI_BASE_CONTROL_FOCUSED(value, shape)
 
     // Focused
@@ -902,7 +904,7 @@ void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font)
     Vector2 position_button     = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
 
     DrawRectangleRec(shape_panel, colors.bg_color_0);
-    if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, WHITE)) {
+    if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, RED)) {
         GUI_RemoveWindow(window->id);
     }
     GUI_Icon(&icons->MinimizeSmall, AddVector2(position_button, 0, icon_sm_width + border * scale), icon_sm_width, WHITE);
@@ -982,7 +984,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font fo
 
     // Vertical scroll
     // Scrollbar
-    Rectangle workspace = GUI_GetWindowWorkspace(window);
+    Rectangle workspace = window->workspace;
     if (workspace.height < window->content_height) {
         float ratio = workspace.height / window->content_height;
         float bar_h = ratio * workspace.height;
@@ -1016,7 +1018,6 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     Rectangle shape_title   = GUI_GetWindowTitle(window->shape);
     Rectangle shape_panel   = GUI_GetWindowPanel(window->shape);
     Rectangle shape_bottom  = GUI_GetWindowBottom(window->shape);
-    Rectangle workspace     = GUI_GetWindowWorkspace(window);
     Vector2 mouse           = GUI_CTX.temp->cursor_current;
 
     // Conditions
@@ -1075,6 +1076,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     window->shape   = LimitRect(window->shape, limits);
 
     // Vertical scroll
+    Rectangle workspace     = GUI_UpdateWindowWorkspace(window);
     bool horizontal_scroll  = workspace.height < window->content_height;
     if (horizontal_scroll) {
         if (is_cursor_over) {
@@ -1085,6 +1087,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     } else {
         window->scroll_offset = 0;
     }
+    window->workspace = workspace;
 
     // Draw
     EGUI_ControlStatus status =     is_z_priority           ? EGUI_ControlStatus_Focused :
