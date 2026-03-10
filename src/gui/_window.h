@@ -31,7 +31,6 @@ Rectangle       GUI_GetWindowTitle(Rectangle shape);
 Rectangle       GUI_GetWindowPanel(Rectangle shape);
 Rectangle       GUI_GetWindowBottom(Rectangle shape);
 void            GUI_WindowUpdateShapeForContent(GUI_Window *window);
-Rectangle       GUI_GetWorkspaceFor(int window_id);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -320,15 +319,6 @@ void GUI_WindowUpdateShapeForContent(GUI_Window *window)
                             + shape_title.height + shape_bottom.height;
 
     window->shape.height    = current_height;
-}
-
-Rectangle GUI_GetWorkspaceFor(int window_id)
-{
-    Assert(window_id > GUI_NO_WIN);
-    GUI_Window *window = GUI_GetWindow(window_id);
-    if (window == NULL)
-        return (Rectangle){ 0, 0, 0, 0};
-    return window->workspace;
 }
 // < END WINDOW GEOMETRY
 #endif
