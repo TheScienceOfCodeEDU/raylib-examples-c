@@ -21,8 +21,8 @@ void            GUI_GridResetForScreen();
 void            GUI_GridReset(Rectangle workspace);
 void            GUI_GridForX(float w);
 void            GUI_GridForY(float h);
-void            GUI_GridForXY(float w, float h);
-void            GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font);
+void            GUI_GridForXY(float w, float h, float h_keep);
+void            GUI_GridForCols(int columns, EGUI_Font font);
 void            GUI_GridForDuplicate();
 void            GUI_GridClearWorkspace();
 // > IN PLACE QUERIES
@@ -122,7 +122,22 @@ void GUI_GridForY(float h)
     GUI_CTX.temp->grid.vertical_size  = h;
 }
 
-void GUI_GridForXY(float w, float h)
+/// Configure grid cell size in both horizontal and vertical directions
+/// GridReset...() must be called beforehand to set a workspace.
+///
+/// @param w Horizontal sizing behavior.
+///        > 0  Fixed width.
+///        == 0 Use full available workspace width.
+///        < 0  Responsive width (available_width - abs(w)).
+///
+/// @param h Vertical sizing behavior.
+///        > 0  Fixed height.
+///        == 0 Use full available workspace height.
+///        < 0  Resposive height (min_height = abs(h))
+///
+/// @param h_keep Reserved vertical space when using responsive height (h < 0).
+///               Prevents the control from consuming space needed for elements below.
+void GUI_GridForXY(float w, float h, float h_keep)
 {
     GUI_GridAutoJump();
 
@@ -130,9 +145,8 @@ void GUI_GridForXY(float w, float h)
     if (w > 0.0) {
         GUI_GridForX(w);
     } else if (w < 0.0) {
-        // width is already negative
-        // so this takes available space minus width
-        GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width + w);
+        w = FloatAbs(w);
+        GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width - w);
     } else {
         GUI_GridForX(GUI_CTX.temp->grid.current_workspace.width);
     }
@@ -146,29 +160,29 @@ void GUI_GridForXY(float w, float h)
     if (h > 0.0) {
         GUI_GridForY(h);
     } else if (h < 0.0) {
-        // height is already negative
-        // so this takes available space minus height
-        float available  = GUI_CTX.temp->grid.current_workspace.height + h;
-        if (available > 0) {
+        // Vertical Responsiveness
+        h = FloatAbs(h);
+        float available = GUI_CTX.temp->grid.current_workspace.height - h_keep;
+        if (available > h) {
             GUI_GridForY(available);
         } else {
-            GUI_GridForY(h * -1);
+            GUI_GridForY(h);
         }
     } else {
         GUI_GridForY(GUI_CTX.temp->grid.current_workspace.height);
     }
 }
 
-void GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font)
+void GUI_GridForCols(int columns, EGUI_Font font)
 {
     float default_height = GUI_CalcDefaultHeightScaled(font);
-    GUI_GridForXY(window_workspace.width / (float)columns, default_height);
+    GUI_GridForXY(GUI_CTX.temp->grid.current_workspace.width / (float)columns, default_height, 0);
     GUI_SetFont(font);
 }
 
 void GUI_GridForDuplicate()
 {
-    GUI_GridForXY(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size);
+    GUI_GridForXY(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size, 0);
 }
 
 void GUI_GridClearWorkspace()
@@ -188,7 +202,10 @@ Rectangle GUI_GridAt(int x, int y)
         .width  = horizontal_size,
         .height = vertical_size
     };
-    return GUI_GridRelative(result);
+    // Relativize, but keep vertical size to honor Vertical Responsiveness and Vertical Scroll
+    result = GUI_GridRelative(result);
+    result.height = vertical_size;
+    return result;
 }
 
 Rectangle GUI_GridBetween(int x, int y, int x_end, int y_end)

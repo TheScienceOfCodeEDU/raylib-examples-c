@@ -9,7 +9,7 @@
 //
 void GUI_ProgramMenu();
 void GUI_GameMenu();
-void GUI_TopBar(Rectangle shape);
+void GUI_TopBar();
 void WIN_Window(GUI_Window* window);
 void WIN_Layouts(GUI_Window* window);
 void WIN_CharacterDebug(GUI_Window* window);
@@ -47,14 +47,14 @@ void GUI_GameMenu()
     GUI_EndOverlay(GUI_GridBetween(-1, 1, -1, 3));
 }
 
-void GUI_TopBar(Rectangle shape)
+void GUI_TopBar()
 {
     GUI_Icons *icons    = GUI_GetIcons();
     GUI_Theme theme     = GUI_GetTheme();
     Vector2 start       = RectPosition(GUI_GridAt(0,0));
     const int BUTTONS   = 4;
     GUI_SetThemeColors(theme.red);
-    GUI_GridFor(BUTTONS, shape, EGUI_Font_GUI);
+    GUI_GridForCols(BUTTONS, EGUI_Font_GUI);
     GUI_ButtonMenu(GUI_GridNextX(), "Project",     &icons->None,  theme.red,          GUI_ProgramMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,   theme.abstractica,  GUI_GameMenu);
     GUI_ButtonMenu(GUI_GridNextX(), "Other",       &icons->Dog,   theme.gray,         GUI_GameMenu);
@@ -83,12 +83,10 @@ void WIN_Window(GUI_Window* window)
     GUI_ThemeColors colors      = window->colors;
     // Set your font
     EGUI_Font font     = win_state->font_toggle ? EGUI_Font_GUI: EGUI_Font_Default;
-    // And define your UI
-    Rectangle window_workspace  = window->workspace;
-    GUI_SetFont(font);
 
+    GUI_SetFont(font);
     // A default layout with 3 columns
-    GUI_GridFor(3, window_workspace, font);
+    GUI_GridForCols(3, font);
 
     GUI_GridNextX();
     GUI_ButtonMenu(GUI_GridNextX(), "Game 2",    &icons->Dog,    theme.abstractica, GUI_GameMenu);
@@ -131,44 +129,43 @@ void WIN_Layouts(GUI_Window* window)
     GUI_SetFont(EGUI_Font_Default);
 
     // First block
-    GUI_GridForXY(window_workspace.width, default_height);
+    GUI_GridForXY(window_workspace.width, default_height, 0);
     GUI_Text(GUI_GridNextY(), "Some sample layouts for imKairos", setup->theme.gray);
 
-    // and more verticals of full width (can be written as Horizontals too, but requires
-    // an explicit call to GUI_BeginBlock() to end each line)
+    float color_alpha = 0.9f;
     GUI_BeginControlScissor();
-        float color_alpha = 0.9f;
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextY()), ColorAlpha(BROWN, color_alpha));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextY()), ColorAlpha(BEIGE, color_alpha));
+        DrawDebugRect(GUI_GridNextY(), ColorAlpha(BROWN, color_alpha));
+        DrawDebugRect(GUI_GridNextY(), ColorAlpha(BEIGE, color_alpha));
 
         // 1/3rd and 2/3rds blocks
-        GUI_GridForXY(window_workspace.width / 3, default_height);
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(YELLOW, color_alpha));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextXn(2)), ColorAlpha(GREEN, color_alpha));
+        GUI_GridForXY(window_workspace.width / 3, default_height, 0);
+        DrawDebugRect(GUI_GridNextX(), ColorAlpha(YELLOW, color_alpha));
+        DrawDebugRect(GUI_GridNextXn(2), ColorAlpha(GREEN, color_alpha));
 
         // Second block
         // 3 horizontals of 1/3 of the available space
-        GUI_GridForXY(window_workspace.width / 3, default_height);
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(DARKGRAY, color_alpha));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(GRAY, color_alpha));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(LIGHTGRAY, color_alpha));
+        GUI_GridForXY(window_workspace.width / 3, default_height, 0);
+        DrawDebugRect(GUI_GridNextX(), ColorAlpha(DARKGRAY, color_alpha));
+        DrawDebugRect(GUI_GridNextX(), ColorAlpha(GRAY, color_alpha));
+        DrawDebugRect(GUI_GridNextX(), ColorAlpha(LIGHTGRAY, color_alpha));
 
         // Prepare for a new block with 5 elements per row
         // You can send negative values to use AVAILABLE - YOUR_VALUE
         // Ex:
-        // -default_height means take all space minus a default_height to insert a final row
-        GUI_GridForXY(window_workspace.width / 5, -default_height);
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.1f));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.2f));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.3f));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.4f));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLACK, 0.5f));
+        // -200 means take all space but at least 200
+        GUI_GridForXY(window_workspace.width / 5, -200, default_height);
+        DrawDebugRect(GUI_GridNextX(), BLACK);
+        DrawDebugRect(GUI_GridNextX(), BLACK);
+        DrawDebugRect(GUI_GridNextX(), BLACK);
+        DrawDebugRect(GUI_GridNextX(), BLACK);
+        DrawDebugRect(GUI_GridNextX(), BLACK);
 
         // Final row
-        GUI_GridForXY(window_workspace.width / 2, default_height);
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(RED, color_alpha));
-        DrawDebugRect(GUI_GridRelative(GUI_GridNextX()), ColorAlpha(BLUE, color_alpha));
+        GUI_GridForXY(window_workspace.width / 2, default_height, 0);
+        DrawDebugRect(GUI_GridNextX(), ColorAlpha(RED, color_alpha));
+        DrawDebugRect(GUI_GridNextX(), ColorAlpha(BLUE, color_alpha));
     EndScissorMode();
+
 }
 
 
@@ -179,8 +176,7 @@ void WIN_CharacterDebug(GUI_Window* window)
     GUI_ThemeColors colors      = window->colors;
     EGUI_Font font     = EGUI_Font_Default;
 
-    Rectangle workspace = window->workspace;
-    GUI_GridFor(2, workspace, font);
+    GUI_GridForCols(2, font);
 
     // Shape
     GUI_Text(GUI_GridNextX(), "shape.x", colors);
@@ -226,9 +222,7 @@ void WIN_Settings(GUI_Window* window)
     GUI_ThemeColors colors      = window->colors;
     EGUI_Font font     = EGUI_Font_Default;
 
-    Rectangle window_workspace  = window->workspace;
-
-    GUI_GridFor(3, window_workspace, font);
+    GUI_GridForCols(3, font);
     GUI_Text(GUI_GridNextX(), "Scale", colors);
     GUI_Float(GUI_GridNextXn(2), &state->scale, colors, 0.5f, 6.0f);
 
@@ -247,7 +241,7 @@ void WIN_Winman(GUI_Window* window)
 
     Rectangle window_workspace = window->workspace;
 
-    GUI_GridForXY(window_workspace.width, default_height);
+    GUI_GridForXY(window_workspace.width, default_height, 0);
 
     static GUI_Window* win_window = NULL;
     if (GUI_Button(GUI_GridNextY(), "Sample window", NULL, window->colors)) {
