@@ -32,7 +32,6 @@ Rectangle       GUI_GetWindowPanel(Rectangle shape);
 Rectangle       GUI_GetWindowBottom(Rectangle shape);
 void            GUI_WindowUpdateShapeForContent(GUI_Window *window);
 Rectangle       GUI_GetWorkspaceFor(int window_id);
-Rectangle       GUI_CalcWindowWorkspace(GUI_Window *window);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -330,29 +329,6 @@ Rectangle GUI_GetWorkspaceFor(int window_id)
     if (window == NULL)
         return (Rectangle){ 0, 0, 0, 0};
     return window->workspace;
-}
-
-Rectangle GUI_CalcWindowWorkspace(GUI_Window *window)
-{
-    Rectangle shape         = window->shape;
-    float content_height    = window->content_height;
-    float border            = GUI_GetFontSetup(EGUI_Font_GUI)->border;
-    float scale             = GUI_CTX.state->scale;
-
-    Rectangle shape_title  = GUI_GetWindowTitle(shape);
-    Rectangle shape_bottom = GUI_GetWindowBottom(shape);
-    Rectangle shape_workspace = {
-        .x          = shape_title.x,
-        .y          = shape_title.y + shape_title.height + (shape_title.y - shape.y),
-        .width      = shape.width - (shape_title.x - shape.x ) * 3,
-        .height     = shape.height - shape_title.height - (shape_title.y - shape.y) - border * scale - shape_bottom.height
-    };
-
-    // Vertical scroll
-    if (shape_workspace.height < content_height) {
-        shape_workspace.width -= border * scale * 3;
-    }
-    return shape_workspace;
 }
 // < END WINDOW GEOMETRY
 #endif

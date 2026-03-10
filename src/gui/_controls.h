@@ -1065,8 +1065,18 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     // Limit
     window->shape   = LimitRect(window->shape, limits);
 
-    // Vertical scroll
-    Rectangle workspace     = GUI_CalcWindowWorkspace(window);
+    // Workspace
+    // Update
+    GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
+    float border                = font_setup->border;
+    float scale                 = GUI_CTX.state->scale;
+    Rectangle workspace   = (Rectangle){
+        .x      = shape_title.x,
+        .y      = shape_title.y + shape_title.height + (shape_title.y - window->shape.y),
+        .width  = window->shape.width - (shape_title.x - window->shape.x ) * 3,
+        .height = window->shape.height - shape_title.height - (shape_title.y - window->shape.y) - border * scale - shape_bottom.height
+    };
+
     bool horizontal_scroll  = workspace.height < window->content_height;
     if (horizontal_scroll) {
         if (is_cursor_over) {
