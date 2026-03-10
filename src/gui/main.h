@@ -128,10 +128,6 @@ void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
 
     // Grid
     GUI_CTX.temp->grid.current_scroll = -window->scroll_offset;
-
-    // Vertical scroll
-    rlPushMatrix();
-    rlTranslatef(0, -window->scroll_offset, 0);
 }
 
 void GUI_AfterWindowContents(GUI_Window* window)
@@ -141,10 +137,10 @@ void GUI_AfterWindowContents(GUI_Window* window)
     // Vertical scroll
     // Stored grid height
     window->content_height = GUI_CTX.temp->grid.used_height;
-    rlPopMatrix();
 
-    GUI_DrawOverlay();
+    //rlPopMatrix();
     GUI_CTX.temp->window_current_id = GUI_NO_WIN;
+    GUI_DrawOverlay();
 }
 // < WINDOW RUNTIME EVENTS
 

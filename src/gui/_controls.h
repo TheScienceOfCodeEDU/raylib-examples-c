@@ -13,7 +13,7 @@
 
 // > CONTROL HELPERS
 bool        GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window);
-bool        GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape);
+bool        GUI_CheckCollisionCursorControlWin(Rectangle shape);
 Rectangle   GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window);
 void        GUI_BeginControlScissor();
 void        GUI_BeginInnerControlScissor(Rectangle shape, float border, float scale);
@@ -68,7 +68,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     /*   is_active          : control activated                             */\
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp->window_current_action == EGUI_WindowAction_None;    \
-    bool is_cursor_over     = GUI_CheckCollisionCursorControlCurrentWin(shape);                 \
+    bool is_cursor_over     = GUI_CheckCollisionCursorControlWin(shape);                 \
     bool is_cursor_active   = is_activable && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);          \
     \
     /* Activation */                                            \
@@ -85,7 +85,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits);
     /*   is_focused         : control retains focus state                   */\
     /* Conditions */ \
     bool is_activable       = GUI_CTX.temp->window_current_action == EGUI_WindowAction_None;    \
-    bool is_cursor_over     = GUI_CheckCollisionCursorControlCurrentWin(shape);                 \
+    bool is_cursor_over     = GUI_CheckCollisionCursorControlWin(shape);                 \
     bool is_cursor_active   = is_activable && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT));        \
     \
     /* Gains focus */                                           \
@@ -105,43 +105,37 @@ bool GUI_CheckCollisionCursorControl(Rectangle shape, GUI_Window *window)
     GUI_State *state    = GUI_CTX.state;
     Vector2 cursor      = GUI_CTX.temp->cursor_current;
 
-    // Special case overlay
+    // Overlay
     if (GUI_OverlayIsDrawing()) {
         return CheckCollisionPointRec(cursor, shape);
+    } else if (GUI_IsCursorOverOverlay()) {
+        return false;
     }
 
-    // If cursor is over overlay, control cannot be interacted
-    if (GUI_IsCursorOverOverlay()) return false;
-
-    // Simple collision (outside a window)
+    // Outside a window
     int focused_window_id   = state->z_index[0];
     bool outside_window     = window == NULL || focused_window_id == GUI_NO_WIN;
     if (outside_window) {
         return CheckCollisionPointRec(cursor, shape);
     }
 
-    // Or inside a window... (window != NULL)
+    // Inside a window
+    Assert(window != NULL);
     bool current_target = GUI_IsCurrentWindowTarget(window->id);
     if (current_target == false) {
         return false;
     }
-    // Focused window data
-    bool collide_focused        = CheckCollisionPointRec(cursor, window->shape);
-
-    // Vertical scroll data
-    Vector2 current_scroll      = (Vector2) { 0, GUI_CTX.temp->grid.current_scroll };
-    bool collide_scrolled       = CheckCollisionPointRec(cursor, MoveRect(shape, current_scroll));
-    bool collide_workspace      = CheckCollisionPointRec(cursor, window->workspace);
-    bool overflow               = GUI_CTX.temp->grid.force_overflow;
-
-    // Collide checks
-    bool collide                = collide_scrolled && (collide_workspace || overflow);
-    bool result                 = collide && (focused_window_id == window->id || !collide_focused);
-
+    // Window
+    bool collide_window     = CheckCollisionPointRec(cursor, window->shape);
+    bool collide_control    = CheckCollisionPointRec(cursor, shape);
+    bool collide_workspace  = CheckCollisionPointRec(cursor, window->workspace);
+    bool overflow           = GUI_CTX.temp->grid.force_overflow;
+    bool collide                = collide_control && (collide_workspace || overflow);
+    bool result                 = collide && (focused_window_id == window->id || !collide_window);
     return result;
 }
 
-bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
+bool GUI_CheckCollisionCursorControlWin(Rectangle shape)
 {
     GUI_Window *window  = GUI_GetWindow(GUI_CTX.temp->window_current_id);
     bool collide        = GUI_CheckCollisionCursorControl(shape, window);
@@ -151,7 +145,7 @@ bool GUI_CheckCollisionCursorControlCurrentWin(Rectangle shape)
 
 Rectangle GUI_ControlShapeCut(Rectangle shape, float border, float scale, bool intersect_window) {
     Rectangle result = AddRect(shape, border * scale, border * scale, -border * scale * 2, -border * scale * 2);
-    result.y += GUI_CTX.temp->grid.current_scroll;
+    //TODO@dc: result.y += GUI_CTX.temp->grid.current_scroll;
 
     int window_id = GUI_CTX.temp->window_current_id;
     if (intersect_window && window_id != GUI_NO_WIN) {
@@ -355,7 +349,6 @@ bool GUI_IconButton(Texture2D* texture2d, Vector2 position, float height, Color 
         GUI_Icon(texture2d, position, height, WHITE);
     else
         GUI_Icon(texture2d, position, height, ColorBrightness(tint, -color_change));
-    DrawDebugRect(shape, GREEN);
     return is_active;
 }
 // < END ICONS
@@ -484,8 +477,6 @@ bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
     GUI_ThemeColors colors)
 {
-
-
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
     EGUI_Font font              = GUI_GetFont();
@@ -894,7 +885,6 @@ void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font)
 {
     GUI_Icons *icons            = GUI_GetIcons();
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
-    GUI_ThemeColors colors      = window->colors;
 
     float border                = font_setup->border;
     float scale                 = GUI_CTX.state->scale;
@@ -903,10 +893,10 @@ void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font)
     Rectangle shape_panel       = GUI_GetWindowPanel(window->shape);
     Vector2 position_button     = (Vector2) { shape_panel.x + border * scale, shape_panel.y };
 
-    DrawRectangleRec(shape_panel, colors.bg_color_0);
-    if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, RED)) {
+    if (GUI_IconButton(&icons->CloseSmall, position_button, icon_sm_width, WHITE)) {
         GUI_RemoveWindow(window->id);
     }
+
     GUI_Icon(&icons->MinimizeSmall, AddVector2(position_button, 0, icon_sm_width + border * scale), icon_sm_width, WHITE);
 }
 
@@ -1076,7 +1066,7 @@ void GUI_UpdateAndDrawWindow(GUI_Window *window, Rectangle limits)
     window->shape   = LimitRect(window->shape, limits);
 
     // Vertical scroll
-    Rectangle workspace     = GUI_UpdateWindowWorkspace(window);
+    Rectangle workspace     = GUI_CalcWindowWorkspace(window);
     bool horizontal_scroll  = workspace.height < window->content_height;
     if (horizontal_scroll) {
         if (is_cursor_over) {

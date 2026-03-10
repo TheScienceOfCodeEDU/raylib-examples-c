@@ -46,6 +46,10 @@ void GUI_DrawOverlay()
         // Draw call
         overlay->function();
         overlay->function = NULL;
+
+        #if DEV_DEBUG_GUI_OVERLAY == 1
+        DrawDebugRect(overlay->final_shape, RED);
+        #endif
     }
 }
 
@@ -86,7 +90,15 @@ void GUI_OverlaySetDrawCall(bool just_enabled, GUI_ThemeColors colors, void (*dr
 void GUI_OverlaySetFinalShape(Rectangle shape)
 {
     Assert(GUI_CTX.temp->overlay.id_ptr != NULL);
-    GUI_CTX.temp->overlay.final_shape = shape;
+    Rectangle final_shape = (Rectangle) {
+        .x      = shape.x,
+        .y      = shape.y,// + GUI_CTX.temp->grid.current_scroll,
+        .width  = shape.width,
+        .height = shape.height
+    };
+
+    GUI_CTX.temp->overlay.grid.current_scroll = -GUI_CTX.temp->grid.current_scroll;
+    GUI_CTX.temp->overlay.final_shape = final_shape;
 }
 
 bool GUI_OverlayIsDrawing()
@@ -112,9 +124,6 @@ void GUI_EndOverlay(Rectangle final_shape)
         GUI_OverlayClose();
     } else {
         GUI_OverlaySetFinalShape(final_shape);
-    #if DEV_DEBUG_GUI_OVERLAY == 1
-        DrawDebugRect(GUI_GridApplyScroll(final_shape), BLUE);
-    #endif
     }
     // End drawing
     GUI_CTX.temp->overlay.is_drawing = false;

@@ -68,10 +68,20 @@ Rectangle GUI_GridRelative(Rectangle shape)
 {
     bool is_active_grid = GUI_CTX.temp->grid.current_workspace.width  > 0 &&
                           GUI_CTX.temp->grid.current_workspace.height > 0;
-    if (is_active_grid) {
-        shape = RelativeToRect(shape, GUI_CTX.temp->grid.current_workspace);
+    if (is_active_grid == false) {
+        return shape;
     }
-    return shape;
+    // Grid
+    bool overflow   = GUI_CTX.temp->grid.force_overflow;
+    // Vertical scroll
+    shape.y += GUI_CTX.temp->grid.current_scroll;
+    Rectangle shape_relative = RelativeToRect(shape, GUI_CTX.temp->grid.current_workspace);
+    if (overflow) {
+        // Keep dimensions
+        shape_relative.width        = shape.width;
+        shape_relative.height       = shape.height;
+    }
+    return shape_relative;
 }
 
 Rectangle GUI_GridRelativePositionOnly(Rectangle shape)

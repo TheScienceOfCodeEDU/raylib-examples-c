@@ -32,7 +32,7 @@ Rectangle       GUI_GetWindowPanel(Rectangle shape);
 Rectangle       GUI_GetWindowBottom(Rectangle shape);
 void            GUI_WindowUpdateShapeForContent(GUI_Window *window);
 Rectangle       GUI_GetWorkspaceFor(int window_id);
-Rectangle       GUI_UpdateWindowWorkspace(GUI_Window *window);
+Rectangle       GUI_CalcWindowWorkspace(GUI_Window *window);
 
 // > IMPLEMENTATION
 #ifdef IMPLEMENT_ALL
@@ -332,7 +332,7 @@ Rectangle GUI_GetWorkspaceFor(int window_id)
     return window->workspace;
 }
 
-Rectangle GUI_UpdateWindowWorkspace(GUI_Window *window)
+Rectangle GUI_CalcWindowWorkspace(GUI_Window *window)
 {
     Rectangle shape         = window->shape;
     float content_height    = window->content_height;
