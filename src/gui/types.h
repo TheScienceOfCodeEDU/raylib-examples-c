@@ -105,7 +105,7 @@ typedef struct {
     float           border;
 
     float           scale;
-    Vector2         delta;             // Delta adjustement
+    Vector2         delta;             // Delta adjustment
     Font            custom;
     bool            use_custom;        // Indicates if a custom font is used
     float           spacing;
@@ -200,11 +200,11 @@ typedef struct {
 
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
-    GUI_GridTemp    grid;               // Grid state when the overlay draw was queued (used to draw with correct transform the opened menu)
+    GUI_GridTemp    grid;               // Grid state when the overlay draw was queued
     GUI_ThemeColors colors;             // Colors when the overlay draw was queued
     bool            just_enabled;       // TRUE if the overlay was JUST ENABLED on this frame
     Rectangle       final_shape;        // Final shape of the overlay
-    bool            is_drawing;         // True if Draw function is being executed
+    bool            is_drawing;         // True if *function is being executed
     void            (*function)(void);  // Draw function
 }  GUI_Overlay;
 
