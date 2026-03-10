@@ -102,6 +102,8 @@ int main(void) {
                 }
             }
             GUI_UpdateAndDrawWindows(window_limits);
+
+            GUI_ResetStyleDefaults();
             GUI_TopBar((Rectangle){ 0, 0, (float) GetScreenWidth(), topbar_height });
         GUI_EndDraw();
         EndTextureMode();

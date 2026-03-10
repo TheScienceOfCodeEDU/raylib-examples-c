@@ -18,7 +18,7 @@ void            GUI_OverlayOpenFor(const char* id);
 void            GUI_OverlaySetDrawCall(bool just_enabled, GUI_ThemeColors colors, void (*draw_function)(void));
 void            GUI_OverlaySetFinalShape(Rectangle shape);
 bool            GUI_OverlayIsDrawing();
-void            GUI_BeginOverlay();
+void            GUI_BeginOverlay(bool force_overflow, bool restore_grid);
 void            GUI_EndOverlay(Rectangle final_shape);
 
 // > IMPLEMENTATION
@@ -106,14 +106,18 @@ bool GUI_OverlayIsDrawing()
     return GUI_CTX.temp->overlay.is_drawing;
 }
 
-void GUI_BeginOverlay()
+void GUI_BeginOverlay(bool force_overflow, bool restore_grid)
 {
     GUI_Overlay *overlay    = &GUI_CTX.temp->overlay;
     // Prepare state
-    GUI_CTX.temp->grid                      = overlay->grid;
-    GUI_CTX.temp->grid.force_overflow       = true;
+    if (restore_grid) {
+        GUI_CTX.temp->grid = overlay->grid;
+    } else {
+        GUI_GridResetForScreen();
+    }
+    GUI_CTX.temp->grid.force_overflow = force_overflow;
     // Begin is drawing
-    GUI_CTX.temp->overlay.is_drawing        = true;
+    GUI_CTX.temp->overlay.is_drawing = true;
 }
 
 void GUI_EndOverlay(Rectangle final_shape)

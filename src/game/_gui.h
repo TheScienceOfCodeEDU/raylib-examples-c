@@ -26,12 +26,11 @@ void GUI_ProgramMenu()
     int x = -1;
     GUI_Icons *icons        = GUI_GetIcons();
     GUI_ThemeColors colors  = GUI_OverlayColors();
-    GUI_BeginOverlay();
-    GUI_Button(GUI_GridAt(x,1),       "New",          &icons->New,    colors);
-    GUI_Button(GUI_GridAt(x,2),       "Open",         &icons->Open,   colors);
-    if (GUI_Button(GUI_GridAt(x,3),   "Quit",         &icons->New,    colors))
-        exit(0);
-
+    GUI_BeginOverlay(true, true);
+        GUI_Button(GUI_GridAt(x,1),       "New",          &icons->New,    colors);
+        GUI_Button(GUI_GridAt(x,2),       "Open",         &icons->Open,   colors);
+        if (GUI_Button(GUI_GridAt(x,3),   "Quit",         &icons->New,    colors))
+            exit(0);
     GUI_EndOverlay(GUI_GridBetween(x, 1, x, 3));
 }
 
@@ -40,18 +39,16 @@ void GUI_GameMenu()
     GUI_Icons *icons        = GUI_GetIcons();
     GAME_Actions *actions   = &GAME_CTX.temp->player_actions;
     GUI_ThemeColors colors  = GUI_OverlayColors();
-    GUI_BeginOverlay();
-    //GUI_Button(GUI_GridAt(-1, 0), "Game [X]", &icons->Dog, theme->gray);
-    actions->reset_characters    = GUI_Button(GUI_GridAt(-1,1), "Reset",    &icons->New,    colors);
-    actions->add_character       = GUI_Button(GUI_GridAt(-1,2), "Add",      &icons->Open,   colors);
-    actions->toggle_character    = GUI_Button(GUI_GridAt(-1,3), "Change",   &icons->Error,  colors);
+    GUI_BeginOverlay(true, true);
+        GUI_Button(GUI_GridAt(-1, 1), "Game [X]", &icons->Dog, colors);
+        actions->reset_characters    = GUI_Button(GUI_GridAt(-1,1), "Reset",    &icons->New,    colors);
+        actions->add_character       = GUI_Button(GUI_GridAt(-1,2), "Add",      &icons->Open,   colors);
+        actions->toggle_character    = GUI_Button(GUI_GridAt(-1,3), "Change",   &icons->Error,  colors);
     GUI_EndOverlay(GUI_GridBetween(-1, 1, -1, 3));
 }
 
 void GUI_TopBar(Rectangle shape)
 {
-    GUI_ResetStyleDefaults();
-
     GUI_Icons *icons    = GUI_GetIcons();
     GUI_Theme theme     = GUI_GetTheme();
     Vector2 start       = RectPosition(GUI_GridAt(0,0));

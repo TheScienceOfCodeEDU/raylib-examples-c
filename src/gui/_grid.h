@@ -6,6 +6,9 @@
 
 
 // > SUBMODULE: GRID
+//   1. Grid has a workspace: GUI_GridReset(Rectangle workspace) or  GUI_GridResetForScreen()
+//   2. The workspace is divided: GUI_GridFor(...)
+//   3. GUI_GridAt(x,y) to get shapes OR GUI_GridNextX() to directly consume the workspace
 // > INDEX
 // > BASICS
 GUI_GridTemp    GUI_MakeGrid();
@@ -14,12 +17,14 @@ float           GUI_GridWidthOrDefault();
 Rectangle       GUI_GridRelative(Rectangle shape);
 Rectangle       GUI_GridRelativePositionOnly(Rectangle shape);
 // > GRID STARTERS
+void            GUI_GridResetForScreen();
 void            GUI_GridReset(Rectangle workspace);
 void            GUI_GridForX(float w);
 void            GUI_GridForY(float h);
 void            GUI_GridForXY(float w, float h);
 void            GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font);
 void            GUI_GridForDuplicate();
+void            GUI_GridClearWorkspace();
 // > IN PLACE QUERIES
 Rectangle       GUI_GridAt(int x, int y);
 Rectangle       GUI_GridBetween(int x, int y, int x_end, int y_end);
@@ -95,6 +100,10 @@ Rectangle GUI_GridRelativePositionOnly(Rectangle shape)
 // < END BASICS
 
 // > GRID STARTERS
+void GUI_GridResetForScreen()
+{
+    GUI_GridReset(GetScreenRect());
+}
 void GUI_GridReset(Rectangle workspace)
 {
     GUI_CTX.temp->grid                      = GUI_MakeGrid();
@@ -160,6 +169,11 @@ void GUI_GridFor(int columns, Rectangle window_workspace, EGUI_Font font)
 void GUI_GridForDuplicate()
 {
     GUI_GridForXY(GUI_CTX.temp->grid.horizontal_size, GUI_CTX.temp->grid.vertical_size);
+}
+
+void GUI_GridClearWorkspace()
+{
+    GUI_CTX.temp->grid.current_workspace = (Rectangle){ 0 };
 }
 // < END GRID STARTERS
 
