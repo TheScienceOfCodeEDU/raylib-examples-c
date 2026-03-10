@@ -92,7 +92,7 @@ void GUI_OverlaySetFinalShape(Rectangle shape)
     Assert(GUI_CTX.temp->overlay.id_ptr != NULL);
     Rectangle final_shape = (Rectangle) {
         .x      = shape.x,
-        .y      = shape.y,// + GUI_CTX.temp->grid.current_scroll,
+        .y      = shape.y,
         .width  = shape.width,
         .height = shape.height
     };

@@ -280,7 +280,7 @@ Rectangle GUI_GridApplyScroll(Rectangle shape)
 {
     Rectangle result = (Rectangle){
         .x      = shape.x,
-        .y      = shape.y /*- GUI_CTX.temp->grid.current_scroll*/,
+        .y      = shape.y,
         .width  =  shape.width,
         .height = shape.height
     };

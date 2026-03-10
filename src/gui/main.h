@@ -119,14 +119,14 @@ void GUI_ProcessWindow(GUI_Window* window, Rectangle limits)
     window->shape.width     = FloatMax(min_size.width, window->shape.width);
     window->shape.height    = FloatMax(min_size.height, window->shape.height);
 
-    // Data
     GUI_UpdateAndDrawWindow(window, limits);
+
     GUI_GridReset(window->workspace);
     GUI_CTX.temp->window_current_id = window->id;
     GUI_SetFont(EGUI_Font_GUI);
     GUI_SetThemeColors(window->colors);
 
-    // Grid
+    // Vertical scroll
     GUI_CTX.temp->grid.current_scroll = -window->scroll_offset;
 }
 
