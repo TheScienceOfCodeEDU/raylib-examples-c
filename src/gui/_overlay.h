@@ -12,10 +12,10 @@ GUI_Overlay     GUI_MakeOverlay();
 void            GUI_DrawOverlay();
 bool            GUI_OverlayOpenedBy(const char* text_id_owner);
 bool            GUI_OverlayWasJustEnabled();
-GUI_ThemeColors GUI_OverlayColors();
+EGUI_ThemeColor GUI_OverlayColors();
 void            GUI_OverlayClose();
 void            GUI_OverlayOpenFor(const char* id);
-void            GUI_OverlaySetDrawCall(bool just_enabled, GUI_ThemeColors colors, void (*draw_function)(void));
+void            GUI_OverlaySetDrawCall(bool just_enabled, EGUI_ThemeColor colors, void (*draw_function)(void));
 void            GUI_OverlaySetFinalShape(Rectangle shape);
 bool            GUI_OverlayIsDrawing();
 void            GUI_BeginOverlay(bool force_overflow, bool restore_grid);
@@ -28,7 +28,7 @@ GUI_Overlay GUI_MakeOverlay()
     GUI_Overlay overlay = {
         .id_ptr             = NULL,
         .grid               = GUI_MakeGrid(),
-        .colors             = (GUI_ThemeColors) { 0 },
+        .colors             = EGUI_ThemeColor_Gray,
         .just_enabled       = false,
         .final_shape        = (Rectangle){0,0,0,0},
         .is_drawing         = false,
@@ -63,7 +63,7 @@ bool GUI_OverlayWasJustEnabled()
     return GUI_CTX.temp->overlay.just_enabled;
 }
 
-GUI_ThemeColors GUI_OverlayColors()
+EGUI_ThemeColor GUI_OverlayColors()
 {
     return GUI_CTX.temp->overlay.colors;
 }
@@ -79,7 +79,7 @@ void GUI_OverlayOpenFor(const char* id)
     GUI_CTX.temp->overlay.id_ptr            = id;
 }
 
-void GUI_OverlaySetDrawCall(bool just_enabled, GUI_ThemeColors colors, void (*draw_function)(void))
+void GUI_OverlaySetDrawCall(bool just_enabled, EGUI_ThemeColor colors, void (*draw_function)(void))
 {
     GUI_CTX.temp->overlay.grid             = GUI_CTX.temp->grid;
     GUI_CTX.temp->overlay.just_enabled     = just_enabled;

@@ -92,7 +92,7 @@ int main(void) {
             {
                 static GUI_Window* win_man = NULL;
                 if (win_man == NULL) {
-                    win_man = GUI_OpenWindow(1, "WinMan", gui_setup.theme.gray, &icons.Setup, true, WIN_Winman);
+                    win_man = GUI_OpenWindow(1, "WinMan", EGUI_ThemeColor_Gray, &icons.Setup, true, WIN_Winman);
                 } else {
                     float win_forth          = window_limits.width / 4.0f;
                     win_man->shape.x         = win_forth * 3;
@@ -226,7 +226,7 @@ int main(void) {
 
             // Wallpaper
             if (win_state.checkbox_value == 1) {
-                DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, gui_setup.theme.gray.bg_color_3);
+                DrawTextureRec(wp_voronoi, GetSourceRec(wp_voronoi), (Vector2){ 0, 0 }, gui_setup.theme.colors[EGUI_ThemeColor_Gray].bg_color_3);
                 /*DrawTexturePro(rain_buffer.texture, GetSourceRec(rain_buffer.texture), MoveAndExtendXY(window_limits, 0, 100), (Vector2){0,0}, 0.0, WHITE);*/
             }
 

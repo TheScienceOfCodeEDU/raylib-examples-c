@@ -85,11 +85,16 @@ typedef struct {
     Color bg_color_3;
 } GUI_ThemeColors;
 
+typedef enum {
+    EGUI_ThemeColor_Gray,
+    EGUI_ThemeColor_Red,
+    EGUI_ThemeColor_Green,
+    EGUI_ThemeColor_Abstractica,
+    EGUI_ThemeColor_Count
+} EGUI_ThemeColor;
+
 typedef struct {
-    GUI_ThemeColors     gray;
-    GUI_ThemeColors     red;
-    GUI_ThemeColors     green;
-    GUI_ThemeColors     abstractica;
+    GUI_ThemeColors     colors[EGUI_ThemeColor_Count];
     float               bg_alpha;
     float               color_change;
 } GUI_Theme;
@@ -153,7 +158,7 @@ typedef enum {
 typedef struct GUI_Window {
     int             id;
     Rectangle       shape;
-    GUI_ThemeColors colors;
+    EGUI_ThemeColor colors;
     const char      *title;
     Texture2D       *icon;
     float           scroll_offset;
@@ -201,7 +206,7 @@ typedef struct {
 typedef struct {
     const char      *id_ptr;            // Control Owner. A unique pointer representing the control owner
     GUI_GridTemp    grid;               // Grid state when the overlay draw was queued
-    GUI_ThemeColors colors;             // Colors when the overlay draw was queued
+    EGUI_ThemeColor colors;             // Colors when the overlay draw was queued
     bool            just_enabled;       // TRUE if the overlay was JUST ENABLED on this frame
     Rectangle       final_shape;        // Final shape of the overlay
     bool            is_drawing;         // True if *function is being executed
@@ -213,7 +218,7 @@ typedef struct {
     EGUI_Status      status;
     void             *control_focus_ptr;            // Keeps track between frames if there is a focused control
     EGUI_Font        current_font;
-    GUI_ThemeColors  current_theme_colors;
+    EGUI_ThemeColor  current_theme_colors;
 
     // Submodules
     GUI_GridTemp    grid;

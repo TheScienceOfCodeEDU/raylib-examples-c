@@ -18,13 +18,15 @@ Font                GUI_GetFontAsset(EGUI_Font font);
 EGUI_Font           GUI_GetFont();
 void                GUI_SetFont(EGUI_Font font);
 // > THEME
+GUI_ThemeColors     GUI_LoadThemeColorsDefault(EGUI_ThemeColor color);
 GUI_ThemeColors     GUI_MakeThemeColors(Color tx_color_0, Color tx_color_1, Color bg_color_0, Color bg_color_1, Color bg_color_2, Color bg_color_3);
 Color               GUI_GenerateThemeColor(float hue, float intensity);
 GUI_ThemeColors     GUI_GenerateThemeColors(float hue);
 GUI_Theme           GUI_GenerateTheme();
 GUI_Theme           GUI_GetTheme();
-GUI_ThemeColors     GUI_GetThemeColors();
-void                GUI_SetThemeColors(GUI_ThemeColors colors);
+GUI_ThemeColors     GUI_GetThemeColors(EGUI_ThemeColor color);
+EGUI_ThemeColor     GUI_GetThemeColor();
+void                GUI_SetThemeColors(EGUI_ThemeColor color);
 // > ICONS
 GUI_Icons           GUI_LoadIcons();
 GUI_IconSetup       GUI_MakeIconSetup(GUI_Icons icons);
@@ -170,6 +172,25 @@ float GUI_CalcDefaultHeightScaled(EGUI_Font font)
 }
 
 // > THEME
+GUI_ThemeColors GUI_LoadThemeColorsDefault(EGUI_ThemeColor color)
+{
+    _Static_assert(EGUI_ThemeColor_Count == 4, "Update theme colors here");
+
+    switch (color) {
+    case EGUI_ThemeColor_Red:
+        return GUI_GenerateThemeColors(3.0f);
+    case EGUI_ThemeColor_Green:
+        return GUI_GenerateThemeColors(97.0f);
+    case EGUI_ThemeColor_Abstractica:
+        return GUI_MakeThemeColors(
+            MakeColor(153, 155, 163), MakeColor(150, 149, 150),
+            MakeColor(65,67,72), MakeColor(43,45,48), MakeColor(25,26,28), MakeColor(29,25,30));
+    case EGUI_ThemeColor_Gray:
+    default:
+        return GUI_GenerateThemeColors(180.0f);
+    }
+}
+
 GUI_ThemeColors GUI_MakeThemeColors(Color tx_color_0, Color tx_color_1,
     Color bg_color_0, Color bg_color_1, Color bg_color_2, Color bg_color_3)
 {
@@ -221,31 +242,14 @@ GUI_ThemeColors GUI_GenerateThemeColors(float hue)
 
 GUI_Theme GUI_GenerateTheme()
 {
-    /*// Background colors for another theme...
-        (Color) { 80, 67, 48, opacity },    // bg_color_0: Dark brown with variable opacity
-        (Color) { 116, 100, 67, opacity },  // bg_color_1: Medium brown with variable opacity
-        (Color) { 58, 49, 35, opacity },    // bg_color_2: Very dark brown with variable opacity
-
-        // Primary colors
-        (Color) { 171, 158, 127, 255 },    // color_0: Light beige, fully opaque
-        (Color) { 238, 208, 147, 255 },    // color_1: Warm beige, fully opaque
-        (Color) { 253, 250, 85, 255 },     // color_2: Light yellow, fully opaque
-
-        // Border colors
-        (Color) { 33, 33, 33, 200 },       // b_color_0: Very dark gray, semi-opaque
-        (Color) { 118, 118, 118, 200 },    // b_color_1: Medium gray, semi-opaque*/
-
     GUI_Theme theme = {
-        // Theme colors
-        .gray           = GUI_GenerateThemeColors(180.0f),
-        .red            = GUI_GenerateThemeColors(3.0f),
-        .green          = GUI_GenerateThemeColors(97.0f),
-        .abstractica    = GUI_MakeThemeColors(
-            MakeColor(153, 155, 163), MakeColor(150, 149, 150),
-            MakeColor(65,67,72), MakeColor(43,45,48), MakeColor(25,26,28), MakeColor(29,25,30)),
         .bg_alpha       = 1.0f,
         .color_change   = 0.05f
     };
+
+    for (int i = 0; i < EGUI_ThemeColor_Count; i++) {
+        theme.colors[i] = GUI_LoadThemeColorsDefault((EGUI_ThemeColor)i);
+    }
 
     return theme;
 }
@@ -253,14 +257,20 @@ GUI_Theme GUI_GetTheme()
 {
     return GUI_CTX.setup->theme;
 }
-GUI_ThemeColors GUI_GetThemeColors()
+GUI_ThemeColors GUI_GetThemeColors(EGUI_ThemeColor color)
+{
+    Assert(color >= 0 && color < EGUI_ThemeColor_Count);
+    return GUI_CTX.setup->theme.colors[color];
+}
+
+EGUI_ThemeColor GUI_GetThemeColor()
 {
     return GUI_CTX.temp->current_theme_colors;
 }
 
-void GUI_SetThemeColors(GUI_ThemeColors colors)
+void GUI_SetThemeColors(EGUI_ThemeColor color)
 {
-    GUI_CTX.temp->current_theme_colors = colors;
+    GUI_CTX.temp->current_theme_colors = color;
 }
 // < THEME
 

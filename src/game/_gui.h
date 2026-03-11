@@ -25,7 +25,7 @@ void GUI_ProgramMenu()
 {
     int x = -1;
     GUI_Icons *icons        = GUI_GetIcons();
-    GUI_ThemeColors colors  = GUI_OverlayColors();
+    EGUI_ThemeColor colors  = GUI_OverlayColors();
     GUI_BeginOverlay(true, true);
         GUI_Button(GUI_GridAt(x,1),       "New",          &icons->New,    colors);
         GUI_Button(GUI_GridAt(x,2),       "Open",         &icons->Open,   colors);
@@ -38,9 +38,9 @@ void GUI_GameMenu()
 {
     GUI_Icons *icons        = GUI_GetIcons();
     GAME_Actions *actions   = &GAME_CTX.temp->player_actions;
-    GUI_ThemeColors colors  = GUI_OverlayColors();
+    EGUI_ThemeColor colors  = GUI_OverlayColors();
     GUI_BeginOverlay(true, true);
-        GUI_Button(GUI_GridAt(-1, 1), "Game [X]", &icons->Dog, colors);
+        GUI_Button(GUI_GridAt(-1, 0), "Game [X]", &icons->Dog, colors);
         actions->reset_characters    = GUI_Button(GUI_GridAt(-1,1), "Reset",    &icons->New,    colors);
         actions->add_character       = GUI_Button(GUI_GridAt(-1,2), "Add",      &icons->Open,   colors);
         actions->toggle_character    = GUI_Button(GUI_GridAt(-1,3), "Change",   &icons->Error,  colors);
@@ -50,14 +50,13 @@ void GUI_GameMenu()
 void GUI_TopBar()
 {
     GUI_Icons *icons    = GUI_GetIcons();
-    GUI_Theme theme     = GUI_GetTheme();
     Vector2 start       = RectPosition(GUI_GridAt(0,0));
     const int BUTTONS   = 4;
-    GUI_SetThemeColors(theme.red);
+    GUI_SetThemeColors(EGUI_ThemeColor_Red);
     GUI_GridForCols(BUTTONS, EGUI_Font_GUI);
-    GUI_ButtonMenu(GUI_GridNextX(), "Project",     &icons->None,  theme.red,          GUI_ProgramMenu);
-    GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,   theme.abstractica,  GUI_GameMenu);
-    GUI_ButtonMenu(GUI_GridNextX(), "Other",       &icons->Dog,   theme.gray,         GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Project",     &icons->None,  EGUI_ThemeColor_Red,          GUI_ProgramMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Game",        &icons->Dog,   EGUI_ThemeColor_Abstractica,  GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Other",       &icons->Dog,   EGUI_ThemeColor_Gray,         GUI_GameMenu);
 
     GUI_Face(start, GUI_GridHeightOrDefault());
     GUI_DrawOverlay();
@@ -76,11 +75,9 @@ void WIN_Window(GUI_Window* window)
     // Responsive height (if you require it)
     // GUI_WindowUpdateShapeForContent(window);
 
-    GUI_Setup *setup            = GUI_GetSetup();
     GUI_Icons *icons            = GUI_GetIcons();
-    GUI_Theme theme             = setup->theme;
     // Keep or modify colors
-    GUI_ThemeColors colors      = window->colors;
+    EGUI_ThemeColor colors      = window->colors;
     // Set your font
     EGUI_Font font     = win_state->font_toggle ? EGUI_Font_GUI: EGUI_Font_Default;
 
@@ -89,7 +86,7 @@ void WIN_Window(GUI_Window* window)
     GUI_GridForCols(3, font);
 
     GUI_GridNextX();
-    GUI_ButtonMenu(GUI_GridNextX(), "Game 2",    &icons->Dog,    theme.abstractica, GUI_GameMenu);
+    GUI_ButtonMenu(GUI_GridNextX(), "Game 2",    &icons->Dog,    EGUI_ThemeColor_Abstractica, GUI_GameMenu);
 
     GUI_GridForDuplicate();
     // 1st input (textbox)
@@ -111,7 +108,7 @@ void WIN_Window(GUI_Window* window)
     // With a theme.red color
     GUI_GridForDuplicate();
     GUI_Text(GUI_GridNextX(), "Wallpaper",  colors);
-    GUI_Check(GUI_GridNextXn(2), &win_state->checkbox_value, "ON", "OFF", setup->theme.red);
+    GUI_Check(GUI_GridNextXn(2), &win_state->checkbox_value, "ON", "OFF", EGUI_ThemeColor_Red);
 
     // Font toggler
     GUI_GridForDuplicate();
@@ -121,7 +118,6 @@ void WIN_Window(GUI_Window* window)
 
 void WIN_Layouts(GUI_Window* window)
 {
-    GUI_Setup* setup = GUI_GetSetup();
     EGUI_Font font = EGUI_Font_Default;
     float default_height = GUI_CalcDefaultHeightScaled(font);
 
@@ -130,7 +126,7 @@ void WIN_Layouts(GUI_Window* window)
 
     // First block
     GUI_GridForXY(window_workspace.width, default_height, 0);
-    GUI_Text(GUI_GridNextY(), "Some sample layouts for imKairos", setup->theme.gray);
+    GUI_Text(GUI_GridNextY(), "Some sample layouts for imKairos", EGUI_ThemeColor_Gray);
 
     float color_alpha = 0.9f;
     GUI_BeginControlScissor();
@@ -173,7 +169,7 @@ void WIN_CharacterDebug(GUI_Window* window)
 {
     GAME_State *game_state      = GAME_CTX.state;
     GAME_Character *ch          = &game_state->characters[game_state->current_character];
-    GUI_ThemeColors colors      = window->colors;
+    EGUI_ThemeColor colors      = window->colors;
     EGUI_Font font     = EGUI_Font_Default;
 
     GUI_GridForCols(2, font);
@@ -219,7 +215,7 @@ void WIN_CharacterDebug(GUI_Window* window)
 void WIN_Settings(GUI_Window* window)
 {
     GUI_State *state            = GUI_GetState();
-    GUI_ThemeColors colors      = window->colors;
+    EGUI_ThemeColor colors      = window->colors;
     EGUI_Font font     = EGUI_Font_Default;
 
     GUI_GridForCols(3, font);
@@ -234,7 +230,6 @@ void WIN_Settings(GUI_Window* window)
 void WIN_Winman(GUI_Window* window)
 {
     GUI_State *state = GUI_GetState();
-    GUI_Setup *setup = GUI_GetSetup();
     GUI_Icons *icons = GUI_GetIcons();
     EGUI_Font font = EGUI_Font_Default;
     float default_height = GUI_CalcDefaultHeightScaled(font);
@@ -247,7 +242,7 @@ void WIN_Winman(GUI_Window* window)
     if (GUI_Button(GUI_GridNextY(), "Sample window", NULL, window->colors)) {
         int win_id = 2;
         if (win_window == NULL || win_window->id == 0) {
-            win_window = GUI_OpenWindow(win_id, "Sample window", setup->theme.abstractica, &icons->Dog, false, WIN_Window);
+            win_window = GUI_OpenWindow(win_id, "Sample window", EGUI_ThemeColor_Abstractica, &icons->Dog, false, WIN_Window);
         }
         GUI_ForceZindex(win_id);
     }
@@ -255,7 +250,7 @@ void WIN_Winman(GUI_Window* window)
     if (GUI_Button(GUI_GridNextY(), "Layouts window", NULL, window->colors)) {
         int win_id = 3;
         if (win_layouts == NULL || win_layouts->id == 0) {
-            win_layouts = GUI_OpenWindow(win_id, "Layouts window", setup->theme.gray, &icons->Layouts, false, WIN_Layouts);
+            win_layouts = GUI_OpenWindow(win_id, "Layouts window", EGUI_ThemeColor_Gray, &icons->Layouts, false, WIN_Layouts);
         }
         GUI_ForceZindex(win_id);
     }
@@ -263,7 +258,7 @@ void WIN_Winman(GUI_Window* window)
     if (GUI_Button(GUI_GridNextY(), "Character debug", NULL, window->colors)) {
         int win_id = 4;
         if (win_character_debug == NULL || win_character_debug->id == 0) {
-            win_character_debug = GUI_OpenWindow(win_id, "Character debug", setup->theme.gray, &icons->Dog, false, WIN_CharacterDebug);
+            win_character_debug = GUI_OpenWindow(win_id, "Character debug", EGUI_ThemeColor_Gray, &icons->Dog, false, WIN_CharacterDebug);
         }
         GUI_ForceZindex(win_id);
     }
@@ -271,7 +266,7 @@ void WIN_Winman(GUI_Window* window)
     if (GUI_Button(GUI_GridNextY(), "Settings", &icons->Setup, window->colors)) {
         int win_id = 5;
         if (win_settings == NULL || win_settings->id == 0) {
-            win_settings = GUI_OpenWindow(win_id, "Settings", setup->theme.gray, &icons->Face, true, WIN_Settings);
+            win_settings = GUI_OpenWindow(win_id, "Settings", EGUI_ThemeColor_Gray, &icons->Face, true, WIN_Settings);
         }
         GUI_ForceZindex(win_id);
     }

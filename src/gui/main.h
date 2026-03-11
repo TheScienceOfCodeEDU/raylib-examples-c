@@ -67,7 +67,7 @@ GUI_Temp GUI_MakeTempDefault()
         .status                     = EGUI_Status_Off,
         .control_focus_ptr          = NULL,
         .current_font               = EGUI_Font_Default,
-        .current_theme_colors       = (GUI_ThemeColors) { 0 },
+        .current_theme_colors       = EGUI_ThemeColor_Gray,
         .grid                       = GUI_MakeGrid(),
         .overlay                    = GUI_MakeOverlay(),
         .cursor                     = EGUI_Cursor_Default,
@@ -189,7 +189,7 @@ void GUI_ResetStyleDefaults()
 {
     GUI_GridReset(GetScreenRect());
     GUI_SetFont(EGUI_Font_Default);
-    GUI_SetThemeColors(GUI_GetTheme().gray);
+    GUI_SetThemeColors(EGUI_ThemeColor_Gray);
 }
 
 void GUI_EndDraw()

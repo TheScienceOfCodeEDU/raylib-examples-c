@@ -19,7 +19,7 @@ void            GUI_CleanAndPrepareZIndex();
 void            GUI_UpdateAndDrawWindows(Rectangle limits);
 // > WINDOW STATE
 GUI_Window*     GUI_OpenWindow(
-    int id, const char *title, GUI_ThemeColors colors,
+    int id, const char *title, EGUI_ThemeColor colors,
     Texture2D *icon, bool focused_face, void (*contents)(GUI_Window*));
 void            GUI_RemoveWindow(int id);
 
@@ -49,7 +49,7 @@ GUI_Window GUI_MakeEmptyWindow(void)
     GUI_Window window = {
         .id             = 0,
         .shape          = (Rectangle){ 0, 0, 0, 0 },
-        .colors         = {{ 0 }},
+        .colors         = EGUI_ThemeColor_Gray,
         .title          = NULL,
         .icon           = NULL,
         .scroll_offset  = 0.0f,
@@ -224,7 +224,7 @@ void GUI_ForceZindex(int win_id)
 }
 
 GUI_Window* GUI_OpenWindow(
-    int id, const char *title, GUI_ThemeColors colors,
+    int id, const char *title, EGUI_ThemeColor colors,
     Texture2D *icon, bool focused_face, void (*contents)(GUI_Window*))
 {
     GUI_Window *existing = GUI_GetWindow(id);

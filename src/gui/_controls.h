@@ -33,19 +33,19 @@ bool        GUI_IconButton(Texture2D* texture2d, Vector2 position, float height,
 void        GUI_Face(Vector2 position, float height);
 void        GUI_Image(Texture2D texture, Rectangle shape);
 // > BUTTON
-void GUI_DrawButton(Rectangle shape, const char *text, Texture2D *icon, EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
-bool GUI_Button(Rectangle shape, const char* text, Texture2D* icon, GUI_ThemeColors colors);
-bool GUI_ButtonMenu(Rectangle shape, const char* text_id, Texture2D* icon, GUI_ThemeColors colors, void (*draw_function)(void));
+void GUI_DrawButton(Rectangle shape, const char *text, Texture2D *icon, EGUI_ControlStatus status, EGUI_ThemeColor colors, EGUI_Font font);
+bool GUI_Button(Rectangle shape, const char* text, Texture2D* icon, EGUI_ThemeColor colors);
+bool GUI_ButtonMenu(Rectangle shape, const char* text_id, Texture2D* icon, EGUI_ThemeColor colors, void (*draw_function)(void));
 // > TEXT
-void GUI_DrawText(Rectangle shape, const char* text, GUI_ThemeColors colors, EGUI_Font font);
-void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors);
+void GUI_DrawText(Rectangle shape, const char* text, EGUI_ThemeColor colors, EGUI_Font font);
+void GUI_Text(Rectangle shape, const char* text, EGUI_ThemeColor colors);
 // > INPUTS
-void GUI_DrawInput(Rectangle shape, char* buffer, int blink_cursor, EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font);
-void GUI_Input(Rectangle shape, char *buffer, int buffer_size, EGUI_InputType type, GUI_ThemeColors colors);
-void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max);
+void GUI_DrawInput(Rectangle shape, char* buffer, int blink_cursor, EGUI_ControlStatus status, EGUI_ThemeColor colors, bool blink, EGUI_Font font);
+void GUI_Input(Rectangle shape, char *buffer, int buffer_size, EGUI_InputType type, EGUI_ThemeColor colors);
+void GUI_Float(Rectangle shape, float *value, EGUI_ThemeColor colors, float min, float max);
 // > CHECK
-void GUI_DrawCheck(Rectangle shape, bool value, const char *on_txt, const char *off_txt, EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font);
-void GUI_Check(Rectangle shape, bool *value, const char *on_txt, const char *off_txt, GUI_ThemeColors colors);
+void GUI_DrawCheck(Rectangle shape, bool value, const char *on_txt, const char *off_txt, EGUI_ControlStatus status, EGUI_ThemeColor colors, EGUI_Font font);
+void GUI_Check(Rectangle shape, bool *value, const char *on_txt, const char *off_txt, EGUI_ThemeColor colors);
 
 // > WINDOW
 //   CONTROLS
@@ -439,11 +439,12 @@ void GUI_Image(Texture2D texture, Rectangle shape)
 // > BUTTON
 void GUI_DrawButton(
     Rectangle shape, const char *text, Texture2D *icon,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
+    EGUI_ControlStatus status, EGUI_ThemeColor colors, EGUI_Font font)
 {
     GUI_State *state            = GUI_CTX.state;
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
     GUI_Theme *theme            = &GUI_CTX.setup->theme;
+    GUI_ThemeColors theme_colors = GUI_GetThemeColors(colors);
 
     float border        = font_setup->border;
     float scale         = state->scale;
@@ -451,12 +452,12 @@ void GUI_DrawButton(
     float bg_alpha      = theme->bg_alpha;
     float icon_w        = icon != NULL ? GUI_GetIconWidthForShape(shape, border) : 0;
 
-    Color bg_color =    status == EGUI_ControlStatus_Focused  ? colors.bg_color_3 :
-                        status == EGUI_ControlStatus_Collide  ? ColorBrightness(colors.bg_color_2, color_change) :
-                                                                colors.bg_color_2;
-    Color b_color_a =   status == EGUI_ControlStatus_Focused  ? colors.bg_color_3:
-                                                                colors.bg_color_0;
-    Color b_color_b =   colors.bg_color_2;
+    Color bg_color =    status == EGUI_ControlStatus_Focused  ? theme_colors.bg_color_3 :
+                        status == EGUI_ControlStatus_Collide  ? ColorBrightness(theme_colors.bg_color_2, color_change) :
+                                                                theme_colors.bg_color_2;
+    Color b_color_a =   status == EGUI_ControlStatus_Focused  ? theme_colors.bg_color_3:
+                                                                theme_colors.bg_color_0;
+    Color b_color_b =   theme_colors.bg_color_2;
     GUI_BeginControlScissor();
         DrawRectangleRec(shape,  ColorAlpha(bg_color, bg_alpha));
         GUI_DrawBorders(shape, b_color_a, b_color_b, border * scale, false);
@@ -465,7 +466,7 @@ void GUI_DrawButton(
     GUI_BeginInnerControlScissor(shape, border, scale);
         GUI_DrawAdjustedTextEx(text,
             (Vector2){ shape.x + icon_w + (border) * scale, shape.y + (border) * scale},
-            colors.tx_color_0, scale, font);
+            theme_colors.tx_color_0, scale, font);
 
     if (icon_w > 0) {
         GUI_Icon(icon, (Vector2) { shape.x + font_setup->border * state->scale, shape.y + font_setup->border * state->scale }, icon_w, WHITE);
@@ -475,7 +476,7 @@ void GUI_DrawButton(
 
 bool GUI_Button(
     Rectangle shape, const char* text, Texture2D* icon,
-    GUI_ThemeColors colors)
+    EGUI_ThemeColor colors)
 {
     GUI_BASE_CONTROL_ACTIVATED(shape);
 
@@ -492,7 +493,7 @@ bool GUI_Button(
 
 bool GUI_ButtonMenu(
     Rectangle shape, const char* text_id, Texture2D* icon,
-    GUI_ThemeColors colors, void (*draw_function)(void))
+    EGUI_ThemeColor colors, void (*draw_function)(void))
 {
     bool scrolled           = GetMouseWheelMove() != 0;
     bool is_open            = GUI_OverlayOpenedBy(text_id);
@@ -527,10 +528,11 @@ bool GUI_ButtonMenu(
 // > TEXT
 void GUI_DrawText(
     Rectangle shape, const char* text,
-    GUI_ThemeColors colors, EGUI_Font font)
+    EGUI_ThemeColor colors, EGUI_Font font)
 {
     GUI_State *state            = GUI_CTX.state;
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
+    GUI_ThemeColors theme_colors = GUI_GetThemeColors(colors);
 
     float border    = font_setup->border;
     float scale     = state->scale;
@@ -538,11 +540,11 @@ void GUI_DrawText(
     GUI_BeginControlScissor();
         GUI_DrawAdjustedTextEx(text,
             (Vector2){ shape.x + (border) * scale, shape.y + (border) * scale},
-            colors.tx_color_0, scale, font);
+            theme_colors.tx_color_0, scale, font);
     EndScissorMode();
 }
 
-void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
+void GUI_Text(Rectangle shape, const char* text, EGUI_ThemeColor colors)
 {
 
     GUI_DrawText(shape, text, colors, GUI_GetFont());
@@ -552,11 +554,12 @@ void GUI_Text(Rectangle shape, const char* text, GUI_ThemeColors colors)
 // > INPUTS
 void GUI_DrawInput(
     Rectangle shape, char* buffer, int blink_cursor,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, bool blink, EGUI_Font font)
+    EGUI_ControlStatus status, EGUI_ThemeColor colors, bool blink, EGUI_Font font)
 {
     GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
+    GUI_ThemeColors theme_colors    = GUI_GetThemeColors(colors);
 
     float border        = font_setup->border;
     float scale         = state->scale;
@@ -565,16 +568,16 @@ void GUI_DrawInput(
 
     GUI_BeginControlScissor();
         if (status == EGUI_ControlStatus_Default)
-            DrawRectangleRec(shape, ColorAlpha(colors.bg_color_1, bg_alpha));
+            DrawRectangleRec(shape, ColorAlpha(theme_colors.bg_color_1, bg_alpha));
         else if (status == EGUI_ControlStatus_Collide)
-            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, color_change), bg_alpha));
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(theme_colors.bg_color_1, color_change), bg_alpha));
         else if (status == EGUI_ControlStatus_Focused)
-            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(colors.bg_color_1, -color_change), bg_alpha));
+            DrawRectangleRec(shape, ColorAlpha(ColorBrightness(theme_colors.bg_color_1, -color_change), bg_alpha));
 
         if (status == EGUI_ControlStatus_Focused)
-            GUI_DrawBorders(shape, ColorBrightness(colors.bg_color_2, -color_change), ColorBrightness(colors.bg_color_0, color_change), border * scale, false);
+            GUI_DrawBorders(shape, ColorBrightness(theme_colors.bg_color_2, -color_change), ColorBrightness(theme_colors.bg_color_0, color_change), border * scale, false);
         else
-            GUI_DrawBorders(shape, colors.bg_color_2, colors.bg_color_0, border * scale, false);
+            GUI_DrawBorders(shape, theme_colors.bg_color_2, theme_colors.bg_color_0, border * scale, false);
     EndScissorMode();
 
     // Auto horizontal scroll
@@ -604,7 +607,7 @@ void GUI_DrawInput(
             (Vector2) {
                 shape.x + (border) * scale - auto_scroll_x,
                 shape.y + (border) * scale
-            }, colors.tx_color_0, scale, font);
+            }, theme_colors.tx_color_0, scale, font);
 
 
         if (status == EGUI_ControlStatus_Focused && blink) {
@@ -616,14 +619,14 @@ void GUI_DrawInput(
                 shape.y + (border + font_setup->blink_delta.y) * scale,
                 font_setup->blink_size.x * scale,
                 font_setup->blink_size.y * scale
-            }, ColorAlpha(colors.tx_color_0, font_setup->blink_alpha));
+            }, ColorAlpha(theme_colors.tx_color_0, font_setup->blink_alpha));
         }
     EndScissorMode();
 }
 
 void GUI_Input(
     Rectangle shape, char *buffer, int buffer_size,
-    EGUI_InputType type, GUI_ThemeColors colors)
+    EGUI_InputType type, EGUI_ThemeColor colors)
 {
     Assert(buffer != NULL);
     Assert(buffer_size > 0);
@@ -787,7 +790,7 @@ void GUI_Input(
     GUI_DrawInput(shape, buffer, blink_cursor, status, colors, blink_state, font);
 }
 
-void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min, float max)
+void GUI_Float(Rectangle shape, float *value, EGUI_ThemeColor colors, float min, float max)
 {
     Rectangle shape_original = shape;
 
@@ -818,21 +821,22 @@ void GUI_Float(Rectangle shape, float *value, GUI_ThemeColors colors, float min,
 // > CHECK
 void GUI_DrawCheck(
     Rectangle shape, bool value, const char *on_txt, const char *off_txt,
-    EGUI_ControlStatus status, GUI_ThemeColors colors, EGUI_Font font)
+    EGUI_ControlStatus status, EGUI_ThemeColor colors, EGUI_Font font)
 {
     GUI_State       *state          = GUI_CTX.state;
     GUI_FontSetup   *font_setup     = GUI_GetFontSetup(font);
     GUI_Theme       *theme          = &GUI_CTX.setup->theme;
+    GUI_ThemeColors theme_colors    = GUI_GetThemeColors(colors);
 
     float border        = font_setup->border;
     float scale         = state->scale;
     float color_change  = theme->color_change;
     float bg_alpha      = theme->bg_alpha;
 
-    Color tx = value ? colors.tx_color_0 : colors.bg_color_0;
-    Color bg = value ? colors.bg_color_3 : colors.bg_color_2;
-    Color b1 = value ? colors.bg_color_2 : colors.bg_color_0;
-    Color b2 = value ? colors.bg_color_0 : colors.bg_color_2;
+    Color tx = value ? theme_colors.tx_color_0 : theme_colors.bg_color_0;
+    Color bg = value ? theme_colors.bg_color_3 : theme_colors.bg_color_2;
+    Color b1 = value ? theme_colors.bg_color_2 : theme_colors.bg_color_0;
+    Color b2 = value ? theme_colors.bg_color_0 : theme_colors.bg_color_2;
 
     GUI_BeginControlScissor();
         if (status == EGUI_ControlStatus_Default)
@@ -857,7 +861,7 @@ void GUI_DrawCheck(
 
 void GUI_Check(
     Rectangle shape, bool *value, const char *on_txt, const char *off_txt,
-    GUI_ThemeColors colors)
+    EGUI_ThemeColor colors)
 {
 
     GUI_BASE_CONTROL_FOCUSED(value, shape)
@@ -903,7 +907,7 @@ void GUI_WindowButtonPanel(GUI_Window* window, EGUI_Font font)
 void GUI_WindowEndingPanel(GUI_Window* window, EGUI_Font font)
 {
     GUI_FontSetup *font_setup   = GUI_GetFontSetup(font);
-    GUI_ThemeColors colors      = window->colors;
+    GUI_ThemeColors colors      = GUI_GetThemeColors(window->colors);
 
     float border        = font_setup->border;
     float scale         = GUI_CTX.state->scale;
@@ -930,7 +934,7 @@ void GUI_DrawWindow(GUI_Window* window,  EGUI_ControlStatus status, EGUI_Font fo
 
     Rectangle        shape          = window->shape;
     Rectangle        shape_title    = GUI_GetWindowTitle(window->shape);
-    GUI_ThemeColors  colors         = window->colors;
+    GUI_ThemeColors  colors         = GUI_GetThemeColors(window->colors);
     GUI_Theme        *theme         = &GUI_CTX.setup->theme;
 
     float border        = font_setup->border;
